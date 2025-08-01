@@ -1,0 +1,7 @@
+# MongoDB Atlas Connection String
+# Replace YOUR_PASSWORD with your actual MongoDB password
+# Replace YOUR_CLUSTER_URL with your actual cluster URL
+MONGODB_URI=mongodb+srv://stellartree-user:YOUR_PASSWORD@YOUR_CLUSTER_URL/stellartmanagement?retryWrites=true&w=majority
+
+# Optional: Server port (defaults to 3000)
+PORT=3000 

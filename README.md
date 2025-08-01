@@ -1,78 +1,148 @@
-# Stellar Tree Management 🌲
+# Stellar Tree Management System
 
-> Professional tree removal and maintenance services in Calgary.  
-> From safe tree felling to precision pruning and stump grinding, we keep your property safe, clean, and beautiful.
+A comprehensive booking and management system for tree services, featuring customer management, booking system, quotes, and invoices.
 
----
+## 🔒 Security Setup (IMPORTANT)
 
-## 📋 Table of Contents
+Before running the application, you must set up your environment variables:
 
-1. [About](#about)  
-2. [Pages](#pages)  
-3. [Domain](#domain)  
-4. [Versioning](#versioning)  
-5. [Contact](#contact)  
+1. Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
 
----
+2. Update `.env` with your secure values:
+```env
+# Get this from MongoDB Atlas
+MONGODB_URI=your_mongodb_connection_string
 
-## 🔎 About
+# Change this to a secure password
+ADMIN_PASSWORD=your_secure_admin_password
 
-Stellar Tree Management offers comprehensive arboriculture services tailored to Calgary’s unique urban and suburban environments. Our team specializes in:
+# Update with your email
+ADMIN_EMAIL=your@email.com
+```
 
-- **Tree Removal & Safe Felling** – Expert assessment and controlled removal of hazardous or unwanted trees.  
-- **Precision Pruning** – Health-focused trimming to encourage growth, reduce risk, and enhance appearance.  
-- **Stump Grinding** – Effective removal of unsightly stumps, preventing regrowth and improving site usability.  
+## 📋 Prerequisites
 
----
+- Node.js (v14.0.0 or higher)
+- MongoDB Atlas account
+- npm or yarn
 
-## 📂 Pages
+## 🚀 Installation
 
-- **About** — Company history, mission, and team credentials.  
-- **Projects** — Showcase of recent removals, prunings, and site clean-ups.  
-- **Contact** — Easy request form, phone, and email for quotes and inquiries.  
+1. Clone the repository (DO NOT include .env file)
+```bash
+git clone <repository-url>
+cd stellartmanagement
+```
 
----
+2. Install dependencies
+```bash
+npm install
+```
 
-## 🌐 Domain
+3. Set up environment variables (see Security Setup above)
 
-**stellartreemanagement.ca**
+4. Create uploads directory
+```bash
+mkdir -p uploads
+```
 
----
+5. Start the server
+```bash
+npm start
+```
 
-## 🏷 Versioning
+## 🌐 Access Points
 
-This is **v1.0.0** of the Stellar Tree Management website.  
-We will continue to improve and expand the site with new features, enhanced content, and client feedback.
+- Main website: `http://localhost:3000`
+- Booking page: `http://localhost:3000/booking/`
+- Admin panel: `http://localhost:3000/admin.html`
 
----
+## 📦 Features
 
-## 🔄 Changelog
+- 📅 Booking System
+  - Real-time availability
+  - Double booking prevention
+  - Image uploads
+  - Email notifications (requires setup)
 
-Track updates and additions. Add new entries at the top:
+- 💼 Admin Panel
+  - Booking management
+  - Customer management
+  - Quote generation
+  - Invoice management
 
-- **2025-07-20 • v1.1.5** 
-- Updated social icons:
-  - Added a notification display for icons without a connected social link
-  - Quality-of-life improvement for users navigating incomplete profiles
-- Organized stylesheet for the Projects section to streamline future development
-- Replaced the site logo from `.png` to `.ico`:
-  - Enables proper favicon rendering in Google search results
+- 📊 Customer Management
+  - Customer profiles
+  - Booking history
+  - Spending tracking
+  - Contact information
 
-- **2025-07-19 • v1.1.0**  
-  - Cleaned up the Projects page UI for a more intuitive experience  
-  - Made Projects more dynamic for easy fetching
-  - Refactored Posts to use tags for better organization  
-  - Improved domain structure: URLs no longer display `.html`
+## 🔐 Security Notes
 
-- **2025-07-19 • v1.0.0**  
-  - Initial launch: About, Projects, Contact pages, Domain
+- NEVER commit `.env` file
+- NEVER commit SSL certificates
+- NEVER commit `uploads` directory content
+- ALWAYS use environment variables for sensitive data
+- Keep MongoDB connection string private
+- Regularly update admin password
 
----
+## 📁 Directory Structure
 
-## 📞 Contact
+```
+stellartmanagement/
+├── .env.example          # Template for environment variables
+├── .gitignore           # Git ignore rules
+├── server.js            # Main server file
+├── database.js          # Database connection
+├── admin-config.js      # Admin configuration
+├── booking/            # Booking system files
+├── uploads/            # Upload directory (git ignored)
+└── ssl/               # SSL certificates (git ignored)
+```
 
-For service requests or questions:  
-- **Phone:** (250) 551-1021 
-- **Email:** stellartmanagement@outlook.com 
-- **Location:** Calgary, Alberta  
+## 🛠️ Development
+
+1. Start in development mode:
+```bash
+npm run dev
+```
+
+2. Run tests:
+```bash
+npm test
+```
+
+## 📝 Environment Variables
+
+Required environment variables:
+
+- `MONGODB_URI`: MongoDB connection string
+- `ADMIN_PASSWORD`: Admin panel password
+- `NODE_ENV`: 'development' or 'production'
+- `PORT`: Server port (default: 3000)
+
+Optional environment variables:
+
+- `SESSION_TIMEOUT`: Admin session timeout in minutes
+- `MAX_LOGIN_ATTEMPTS`: Maximum login attempts
+- `LOCKOUT_DURATION`: Account lockout duration
+- `SMTP_*`: Email configuration (if using email)
+
+## 🤝 Contributing
+
+1. Create a new branch
+2. Make your changes
+3. Test thoroughly
+4. Submit a pull request
+
+## 📄 License
+
+This project is proprietary and confidential.
+
+## 🆘 Support
+
+For support, email support@stellartreemanagement.com
 

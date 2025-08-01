@@ -41,6 +41,22 @@
       ],
       "featured": true,
       "date": "2025-05-28"
+    },
+    {
+      "id": "removing-lilac-shrubs",
+      "title": "Removing Lilac Shrubs",
+      "description": "Removal of overgrown lilac shrubs to clear space and improve aesthetics at Cold Garden Brewery.",
+      "duration": "2 Hours",
+      "location": "Cold Garden Brewery",
+      "services": "Shrub removal, Root extraction, Site cleanup, Vegetation disposal, Landscape preparation",
+      "images": [
+        "../images/projects/project_4/image_1.jpg",
+        "../images/projects/project_4/image_2.jpg"
+      ],
+      "featured": true,
+      "date": "2025-05-28"
     }
+
+
   ]
 }
