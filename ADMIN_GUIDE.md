@@ -8,7 +8,7 @@
 
 ### **Default Login Credentials:**
 - **Password**: `stellar2024`
-
+ 
 ### **Login Process:**
 1. Navigate to the admin panel URL
 2. Enter the admin password
