@@ -5271,8 +5271,26 @@
             location.reload();
         }
 
+        // Load admin configuration from server
+        async function loadAdminConfig() {
+            try {
+                const response = await fetch('/api/admin-config');
+                if (response.ok) {
+                    const config = await response.json();
+                    window.ADMIN_CONFIG = config;
+                    console.log('Loaded admin config:', config);
+                } else {
+                    console.warn('Failed to load admin config, using defaults');
+                }
+            } catch (error) {
+                console.warn('Error loading admin config:', error);
+            }
+        }
+
         // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Load admin configuration first
+            await loadAdminConfig();
             if (sessionStorage.getItem('adminAuthenticated') === 'true' && isSessionValid()) {
                 document.getElementById('loginModal').classList.remove('show');
                 document.getElementById('adminContent').style.display = 'block';

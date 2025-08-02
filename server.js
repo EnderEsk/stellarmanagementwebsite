@@ -59,6 +59,22 @@ const upload = multer({
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
+// Serve admin configuration
+app.get('/api/admin-config', (req, res) => {
+    const adminConfig = {
+        PASSWORD: process.env.ADMIN_PASSWORD || 'stellar2024',
+        SESSION_TIMEOUT: process.env.NODE_ENV === 'production' 
+            ? (parseInt(process.env.SESSION_TIMEOUT) || 120)
+            : (parseInt(process.env.SESSION_TIMEOUT) || 60),
+        MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
+        LOCKOUT_DURATION: parseInt(process.env.LOCKOUT_DURATION) || 15,
+        ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@stellartreemanagement.com',
+        COMPANY_NAME: process.env.COMPANY_NAME || 'Stellar Tree Management'
+    };
+    
+    res.json(adminConfig);
+});
+
 // Initialize MongoDB connection and start server
 async function startServer() {
     try {
