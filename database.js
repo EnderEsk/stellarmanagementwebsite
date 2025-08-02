@@ -1,7 +1,21 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
+// Debug environment variables
+console.log('=== Database Connection Debug ===');
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
+
+if (!process.env.MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is not set!');
+    console.error('Please set MONGODB_URI in Railway environment variables');
+    process.exit(1);
+}
+
 const uri = process.env.MONGODB_URI;
+console.log('URI starts with mongodb:', uri.startsWith('mongodb'));
+console.log('URI preview:', uri.substring(0, 50) + '...');
+
 const client = new MongoClient(uri);
 
 let db;
