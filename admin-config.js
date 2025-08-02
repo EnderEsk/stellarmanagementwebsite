@@ -7,7 +7,10 @@ const ADMIN_CONFIG = {
     PASSWORD: process.env.ADMIN_PASSWORD || 'stellar2024', // Default only for development
     
     // Session timeout in minutes (0 = no timeout)
-    SESSION_TIMEOUT: parseInt(process.env.SESSION_TIMEOUT) || 60,
+    // Use longer timeout in production to prevent premature expiration
+    SESSION_TIMEOUT: process.env.NODE_ENV === 'production' 
+        ? (parseInt(process.env.SESSION_TIMEOUT) || 120)  // 2 hours in production
+        : (parseInt(process.env.SESSION_TIMEOUT) || 60),   // 1 hour in development
     
     // Maximum login attempts before temporary lockout
     MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,

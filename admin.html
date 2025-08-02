@@ -3299,7 +3299,7 @@
                 padding: 0.4rem;
             }
 
-            /* Compact styles for small screens */
+            /* Compact date column for empty days */
             .timeline-item:has(.status-block) .date-column {
                 width: 60px;
                 margin-right: 0.4rem;
@@ -5189,10 +5189,13 @@
                 lockoutTime = 0;
                 
                 // Set session with timestamp for timeout
+                const sessionTimeout = window.ADMIN_CONFIG ? window.ADMIN_CONFIG.SESSION_TIMEOUT : 60;
+                console.log('Setting session timeout to:', sessionTimeout, 'minutes');
+                
                 const sessionData = {
                     authenticated: true,
-                    timestamp: now,
-                    timeout: window.ADMIN_CONFIG ? window.ADMIN_CONFIG.SESSION_TIMEOUT : 60
+                    timestamp: Date.now(),
+                    timeout: sessionTimeout
                 };
                 sessionStorage.setItem('adminSession', JSON.stringify(sessionData));
                 sessionStorage.setItem('adminAuthenticated', 'true');
@@ -5226,12 +5229,17 @@
             const sessionData = JSON.parse(sessionStorage.getItem('adminSession') || '{}');
             if (!sessionData.timeout || sessionData.timeout <= 0) return;
             
+            console.log('Starting session timeout check with timeout:', sessionData.timeout, 'minutes');
+            
             setInterval(() => {
                 const sessionData = JSON.parse(sessionStorage.getItem('adminSession') || '{}');
                 if (!sessionData.authenticated) return;
                 
                 const elapsed = (Date.now() - sessionData.timestamp) / 60000; // minutes
+                console.log('Session check - Elapsed:', elapsed.toFixed(2), 'minutes, Timeout:', sessionData.timeout, 'minutes');
+                
                 if (elapsed >= sessionData.timeout) {
+                    console.log('Session expired, logging out');
                     logout();
                     showNotification('Session expired. Please log in again.', 'warning');
                 }
@@ -5245,7 +5253,9 @@
             
             if (sessionData.timeout > 0) {
                 const elapsed = (Date.now() - sessionData.timestamp) / 60000;
+                console.log('Session validation - Elapsed:', elapsed.toFixed(2), 'minutes, Timeout:', sessionData.timeout, 'minutes');
                 if (elapsed >= sessionData.timeout) {
+                    console.log('Session expired during validation');
                     return false;
                 }
             }
