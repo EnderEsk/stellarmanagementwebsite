@@ -2252,6 +2252,15 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
+// Add this near the top of your routes, after middleware
+app.use((req, res, next) => {
+    // Force www version for consistency (optional)
+    if (req.hostname === 'stellartreemanagement.ca') {
+        return res.redirect(301, `https://www.stellartreemanagement.ca${req.url}`);
+    }
+    next();
+});
+
 // Start the server
 startServer();
 

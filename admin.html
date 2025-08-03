@@ -5190,7 +5190,6 @@
                 
                 // Set session with timestamp for timeout
                 const sessionTimeout = window.ADMIN_CONFIG ? window.ADMIN_CONFIG.SESSION_TIMEOUT : 60;
-                console.log('Setting session timeout to:', sessionTimeout, 'minutes');
                 
                 const sessionData = {
                     authenticated: true,
@@ -5229,17 +5228,12 @@
             const sessionData = JSON.parse(sessionStorage.getItem('adminSession') || '{}');
             if (!sessionData.timeout || sessionData.timeout <= 0) return;
             
-            console.log('Starting session timeout check with timeout:', sessionData.timeout, 'minutes');
-            
             setInterval(() => {
                 const sessionData = JSON.parse(sessionStorage.getItem('adminSession') || '{}');
                 if (!sessionData.authenticated) return;
                 
                 const elapsed = (Date.now() - sessionData.timestamp) / 60000; // minutes
-                console.log('Session check - Elapsed:', elapsed.toFixed(2), 'minutes, Timeout:', sessionData.timeout, 'minutes');
-                
                 if (elapsed >= sessionData.timeout) {
-                    console.log('Session expired, logging out');
                     logout();
                     showNotification('Session expired. Please log in again.', 'warning');
                 }
@@ -5253,9 +5247,7 @@
             
             if (sessionData.timeout > 0) {
                 const elapsed = (Date.now() - sessionData.timestamp) / 60000;
-                console.log('Session validation - Elapsed:', elapsed.toFixed(2), 'minutes, Timeout:', sessionData.timeout, 'minutes');
                 if (elapsed >= sessionData.timeout) {
-                    console.log('Session expired during validation');
                     return false;
                 }
             }
@@ -5278,7 +5270,6 @@
                 if (response.ok) {
                     const config = await response.json();
                     window.ADMIN_CONFIG = config;
-                    console.log('Loaded admin config:', config);
                 } else {
                     console.warn('Failed to load admin config, using defaults');
                 }
