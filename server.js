@@ -2252,13 +2252,27 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-// Add this near the top of your routes, after middleware
+
+// Add this right after the middleware section (around line 12)
+// Domain handling middleware
 app.use((req, res, next) => {
-    // Force www version for consistency (optional)
+    // Log the hostname for debugging
+    console.log('Request hostname:', req.hostname);
+    
+    // Handle both www and non-www versions
     if (req.hostname === 'stellartreemanagement.ca') {
+        // Option 1: Redirect to www version (recommended for SEO)
         return res.redirect(301, `https://www.stellartreemanagement.ca${req.url}`);
+        
+        // Option 2: Or serve the same content without redirect
+        // next();
     }
     next();
+});
+
+// Add a catch-all route for client-side routing (add this near the end of your routes)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start the server
