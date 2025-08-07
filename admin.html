@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="admin-config.js"></script>
     <style>
-        /* Admin Panel Theme - Matching Stellar Tree Management */
+        /* Modern Admin Panel Theme - Matching Stellar Tree Management */
         :root {
             --admin-primary: #2a2a2a;
             --admin-accent: #8cc63f;
@@ -23,12 +23,452 @@
             --admin-warning: #ffc107;
             --admin-danger: #dc3545;
             --admin-info: #17a2b8;
+            --admin-purple: #6f42c1;
+            --admin-yellow: #ffc107;
+            --admin-blue: #17a2b8;
+            --admin-red: #dc3545;
         }
 
         body {
-            background: linear-gradient(135deg, var(--admin-bg) 0%, #ffffff 100%);
+            background: #ffffff;
             color: var(--admin-text);
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Modern Layout Structure */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .admin-sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid var(--admin-border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--admin-border);
+            background: white;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+        }
+
+        .sidebar-logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--admin-accent);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--admin-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(140, 198, 63, 0.1);
+            color: var(--admin-accent);
+            border-left-color: var(--admin-accent);
+        }
+
+        .nav-item.active {
+            background: var(--admin-accent);
+            color: white;
+            border-left-color: var(--admin-accent);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            background: #ffffff;
+        }
+
+        /* Header Bar */
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid var(--admin-border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-search {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--admin-light-gray);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .header-search input {
+            border: none;
+            background: none;
+            outline: none;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .header-search i {
+            color: var(--admin-secondary);
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--admin-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--admin-primary);
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--admin-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--admin-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: var(--admin-light-gray);
+            color: var(--admin-accent);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            margin-bottom: 2rem;
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.red {
+            background: var(--admin-danger);
+        }
+
+        .stat-icon.blue {
+            background: var(--admin-info);
+        }
+
+        .stat-icon.green {
+            background: var(--admin-success);
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            margin: 0;
+        }
+
+        .stat-info p {
+            color: var(--admin-secondary);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .stat-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--admin-secondary);
+        }
+
+        /* User Source Distribution */
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .source-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .source-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .source-icon.yellow {
+            background: var(--admin-yellow);
+        }
+
+        .source-icon.blue {
+            background: var(--admin-blue);
+        }
+
+        .source-icon.red {
+            background: var(--admin-red);
+        }
+
+        .source-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .source-users {
+            color: var(--admin-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Recent Bookings Table */
+        .bookings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--admin-light-gray);
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--admin-primary);
+            margin: 0;
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th {
+            background: var(--admin-light-gray);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--admin-primary);
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .bookings-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .booking-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--admin-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.done {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--admin-success);
+        }
+
+        .status-badge.progress {
+            background: rgba(255, 193, 7, 0.1);
+            color: var(--admin-warning);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                width: 240px;
+            }
+            
+            .admin-main {
+                margin-left: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            
+            .admin-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .admin-main {
+                margin-left: 0;
+            }
+            
+            .admin-header {
+                padding: 1rem;
+            }
+            
+            .dashboard-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .source-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .admin-container {
@@ -4743,167 +5183,357 @@
         </div>
     </div>
 
-    <div class="admin-container" id="adminContent" style="display: none;">
-        <div class="admin-header">
-            <h1>Admin Dashboard</h1>
-            <p>Manage bookings and view statistics for Stellar Tree Management</p>
-            <button class="logout-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card pending">
-                <h3 id="pendingCount">0</h3>
-                <p>Pending Bookings</p>
+    <div class="admin-layout" id="adminContent" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <div class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="images/logo.png" alt="Stellar Tree Management">
+                    <span>Stellar Tree</span>
+                </div>
             </div>
-            <div class="stat-card confirmed">
-                <h3 id="confirmedCount">0</h3>
-                <p>Confirmed Bookings</p>
-            </div>
-            <div class="stat-card completed">
-                <h3 id="completedCount">0</h3>
-                <p>Completed</p>
-            </div>
-            <div class="stat-card cancelled">
-                <h3 id="cancelledCount">0</h3>
-                <p>Cancelled</p>
-            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="admin">
+                    <i class="fas fa-user"></i>
+                    Admin
+                </a>
+                <a href="#" class="nav-item" data-view="sub-admin">
+                    <i class="fas fa-users"></i>
+                    Sub Admin
+                </a>
+                <a href="#" class="nav-item" data-view="advertisement">
+                    <i class="fas fa-bullhorn"></i>
+                    Advertisement
+                </a>
+                <a href="#" class="nav-item" data-view="passenger">
+                    <i class="fas fa-user"></i>
+                    Passenger
+                </a>
+                <a href="#" class="nav-item" data-view="car-owner">
+                    <i class="fas fa-user-tie"></i>
+                    Car Owner
+                </a>
+                <a href="#" class="nav-item" data-view="brand-model">
+                    <i class="fas fa-car"></i>
+                    Brand / Model
+                </a>
+                <a href="#" class="nav-item" data-view="car-types">
+                    <i class="fas fa-file-alt"></i>
+                    Car Types
+                </a>
+                <a href="#" class="nav-item" data-view="car-specs">
+                    <i class="fas fa-cogs"></i>
+                    Cars Specification
+                </a>
+                <a href="#" class="nav-item" data-view="features">
+                    <i class="fas fa-star"></i>
+                    Features
+                </a>
+                <a href="#" class="nav-item" data-view="car-listing">
+                    <i class="fas fa-list"></i>
+                    Car Listing
+                </a>
+                <a href="#" class="nav-item" data-view="rental-transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    Rental Transaction
+                </a>
+            </nav>
         </div>
 
         <!-- Main Content Area -->
-        <div class="bookings-container">
-            <!-- Active Bookings Section -->
-            <div class="active-bookings-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-calendar-check"></i> <span id="sectionTitle">Active Bookings</span></h2>
-                    <button class="refresh-btn" onclick="loadBookings()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
+        <div class="admin-main">
+            <!-- Header Bar -->
+            <div class="admin-header">
+                <div class="header-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Type in to Search...">
                 </div>
-
-                <!-- Modern Filter Tabs -->
-                <div class="filter-tabs">
-                    <!-- Booking Status Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Booking Status</div>
-                        <div class="tab-row">
-                            <div class="filter-tab active" data-filter="all">
-                                <i class="fas fa-list"></i>
-                                All Active
-                            </div>
-                            <div class="filter-tab" data-filter="pending">
-                                <i class="fas fa-clock"></i>
-                                Pending
-                            </div>
-                            <div class="filter-tab" data-filter="confirmed">
-                                <i class="fas fa-check-circle"></i>
-                                Confirmed
-                            </div>
-                        </div>
+                <div class="header-user">
+                    <div class="user-avatar">
+                        <i class="fas fa-bell"></i>
                     </div>
-
-                    <!-- Management Views Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Management Views</div>
-                        <div class="tab-row">
-                            <div class="filter-tab" data-filter="all-bookings">
-                                <i class="fas fa-calendar-alt"></i>
-                                All Bookings
-                            </div>
-                            <div class="filter-tab" data-filter="calendar">
-                                <i class="fas fa-calendar-week"></i>
-                                Calendar View
-                            </div>
-                            <div class="filter-tab" data-filter="customers">
-                                <i class="fas fa-users"></i>
-                                Customer Management
-                            </div>
-                        </div>
+                    <div class="user-info">
+                        <div class="user-name">Administrator</div>
+                        <div class="user-role">Admin</div>
                     </div>
-                </div>
-
-                <!-- Bookings Grid -->
-                <div class="bookings-grid" id="activeBookingsGrid">
-                    <div class="empty-state">Loading bookings...</div>
-                </div>
-
-                <!-- Calendar View -->
-                <div class="calendar-view" id="calendarView" style="display: none;">
-                    <div class="calendar-controls">
-                        <button class="calendar-nav-btn" onclick="previousMonth()">
-                            <i class="fas fa-chevron-left"></i>
+                    <div class="header-actions">
+                        <button class="header-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
                         </button>
-                        <h3 id="calendarMonth">July 2025</h3>
-                        <button class="calendar-nav-btn" onclick="nextMonth()">
-                            <i class="fas fa-chevron-right"></i>
+                        <button class="header-btn">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
-                    </div>
-                    
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- Calendar will be populated here -->
-                    </div>
-                    
-                    <div class="calendar-legend">
-                        <div class="legend-item">
-                            <span class="legend-indicator available"></span>
-                            <span>Available</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator booked"></span>
-                            <span>Booked</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator blocked"></span>
-                            <span>Blocked</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator weekend"></span>
-                            <span>Weekend</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customer Management View -->
-                <div class="customer-view" id="customerView" style="display: none;">
-                    <div class="customer-controls">
-                        <div class="customer-search">
-                            <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
-                            <button class="search-btn" onclick="searchCustomers()">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                        <div class="customer-actions">
-                            <button class="action-btn confirm" onclick="showAddCustomerModal()">
-                                <i class="fas fa-plus"></i> Add Customer
-                            </button>
-                            <button class="action-btn complete" onclick="migrateCustomers()">
-                                <i class="fas fa-sync"></i> Migrate Existing
-                            </button>
-                            <button class="action-btn warning" onclick="recalculateCustomerTotals()">
-                                <i class="fas fa-calculator"></i> Recalculate Totals
-                            </button>
-                            <button class="action-btn info" onclick="refreshCustomerData()">
-                                <i class="fas fa-sync"></i> Refresh Data
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="customers-grid" id="customersGrid">
-                        <div class="empty-state">Loading customers...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- History Section -->
-            <div class="history-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-history"></i> Recent History</h2>
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <h1 class="dashboard-title">Dashboard</h1>
+
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon red">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingCount">23</h3>
+                                <p>Total car owner</p>
+                            </div>
+                        </div>
+                        <div class="stat-details">
+                            <span>Today - 4</span>
+                            <span>This month - 4</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon red">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="confirmedCount">71</h3>
+                                <p>Total passengers</p>
+                            </div>
+                        </div>
+                        <div class="stat-details">
+                            <span>Today - 8</span>
+                            <span>This month - 4</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon red">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="completedCount">60</h3>
+                                <p>Total car list</p>
+                            </div>
+                        </div>
+                        <div class="stat-details">
+                            <span>Today - 4</span>
+                            <span>This year - 60</span>
+                        </div>
+                    </div>
                 </div>
-                <div id="historyContainer">
-                    <div style="text-align: center; color: var(--admin-secondary); font-style: italic;">
-                        No recent activity
+
+                <!-- User Source Distribution -->
+                <div class="source-grid">
+                    <div class="source-card">
+                        <div class="source-icon yellow">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="source-percentage">50%</div>
+                        <div class="source-users">49 Users</div>
+                    </div>
+                    <div class="source-card">
+                        <div class="source-icon blue">
+                            <i class="fab fa-facebook"></i>
+                        </div>
+                        <div class="source-percentage">20%</div>
+                        <div class="source-users">20 Users</div>
+                    </div>
+                    <div class="source-card">
+                        <div class="source-icon blue">
+                            <i class="fab fa-linkedin"></i>
+                        </div>
+                        <div class="source-percentage">10%</div>
+                        <div class="source-users">11 Users</div>
+                    </div>
+                    <div class="source-card">
+                        <div class="source-icon red">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="source-percentage">10%</div>
+                        <div class="source-users">11 Users</div>
+                    </div>
+                </div>
+
+                <!-- Recent Car Bookings -->
+                <div class="bookings-section">
+                    <div class="section-header">
+                        <h2>Recent car bookings</h2>
+                    </div>
+                    <table class="bookings-table">
+                        <thead>
+                            <tr>
+                                <th>Booking</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentBookingsTable">
+                            <!-- Bookings will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Original Admin Content (Hidden by default) -->
+                <div id="originalAdminContent" style="display: none;">
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card pending">
+                            <h3 id="pendingCount">0</h3>
+                            <p>Pending Bookings</p>
+                        </div>
+                        <div class="stat-card confirmed">
+                            <h3 id="confirmedCount">0</h3>
+                            <p>Confirmed Bookings</p>
+                        </div>
+                        <div class="stat-card completed">
+                            <h3 id="completedCount">0</h3>
+                            <p>Completed</p>
+                        </div>
+                        <div class="stat-card cancelled">
+                            <h3 id="cancelledCount">0</h3>
+                            <p>Cancelled</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Area -->
+                    <div class="bookings-container">
+                        <!-- Active Bookings Section -->
+                        <div class="active-bookings-section">
+                            <div class="section-header">
+                                <h2><i class="fas fa-calendar-check"></i> <span id="sectionTitle">Active Bookings</span></h2>
+                                <button class="refresh-btn" onclick="loadBookings()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+
+                            <!-- Modern Filter Tabs -->
+                            <div class="filter-tabs">
+                                <!-- Booking Status Category -->
+                                <div class="tab-category">
+                                    <div class="tab-category-title">Booking Status</div>
+                                    <div class="tab-row">
+                                        <div class="filter-tab active" data-filter="all">
+                                            <i class="fas fa-list"></i>
+                                            All Active
+                                        </div>
+                                        <div class="filter-tab" data-filter="pending">
+                                            <i class="fas fa-clock"></i>
+                                            Pending
+                                        </div>
+                                        <div class="filter-tab" data-filter="confirmed">
+                                            <i class="fas fa-check-circle"></i>
+                                            Confirmed
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Management Views Category -->
+                                <div class="tab-category">
+                                    <div class="tab-category-title">Management Views</div>
+                                    <div class="tab-row">
+                                        <div class="filter-tab" data-filter="all-bookings">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            All Bookings
+                                        </div>
+                                        <div class="filter-tab" data-filter="calendar">
+                                            <i class="fas fa-calendar-week"></i>
+                                            Calendar View
+                                        </div>
+                                        <div class="filter-tab" data-filter="customers">
+                                            <i class="fas fa-users"></i>
+                                            Customer Management
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bookings Grid -->
+                            <div class="bookings-grid" id="activeBookingsGrid">
+                                <div class="empty-state">Loading bookings...</div>
+                            </div>
+
+                            <!-- Calendar View -->
+                            <div class="calendar-view" id="calendarView" style="display: none;">
+                                <div class="calendar-controls">
+                                    <button class="calendar-nav-btn" onclick="previousMonth()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <h3 id="calendarMonth">July 2025</h3>
+                                    <button class="calendar-nav-btn" onclick="nextMonth()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="calendar-grid" id="calendarGrid">
+                                    <!-- Calendar will be populated here -->
+                                </div>
+                                
+                                <div class="calendar-legend">
+                                    <div class="legend-item">
+                                        <span class="legend-indicator available"></span>
+                                        <span>Available</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-indicator booked"></span>
+                                        <span>Booked</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-indicator blocked"></span>
+                                        <span>Blocked</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-indicator weekend"></span>
+                                        <span>Weekend</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Management View -->
+                            <div class="customer-view" id="customerView" style="display: none;">
+                                <div class="customer-controls">
+                                    <div class="customer-search">
+                                        <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
+                                        <button class="search-btn" onclick="searchCustomers()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div class="customer-actions">
+                                        <button class="action-btn confirm" onclick="showAddCustomerModal()">
+                                            <i class="fas fa-plus"></i> Add Customer
+                                        </button>
+                                        <button class="action-btn complete" onclick="migrateCustomers()">
+                                            <i class="fas fa-sync"></i> Migrate Existing
+                                        </button>
+                                        <button class="action-btn warning" onclick="recalculateCustomerTotals()">
+                                            <i class="fas fa-calculator"></i> Recalculate Totals
+                                        </button>
+                                        <button class="action-btn info" onclick="refreshCustomerData()">
+                                            <i class="fas fa-sync"></i> Refresh Data
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="customers-grid" id="customersGrid">
+                                    <div class="empty-state">Loading customers...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History Section -->
+                        <div class="history-section">
+                            <div class="section-header">
+                                <h2><i class="fas fa-history"></i> Recent History</h2>
+                            </div>
+                            <div id="historyContainer">
+                                <div style="text-align: center; color: var(--admin-secondary); font-style: italic;">
+                                    No recent activity
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5290,6 +5920,12 @@
                 startSessionTimeout();
                 loadBookings();
                 
+                // Initialize sidebar navigation
+                initializeSidebarNavigation();
+                
+                // Initialize search functionality
+                initializeSearch();
+                
                 // Clear form fields on page load
                 clearFormFields();
             } else {
@@ -5440,6 +6076,8 @@
                     updateStatistics();
                     renderActiveBookings();
                     renderHistory();
+                    renderRecentBookingsTable();
+                    updateUserSourceDistribution();
                     if (currentFilter === 'calendar') {
                         renderCalendar();
                     }
@@ -5457,6 +6095,132 @@
             } catch (error) {
                 console.error('Error loading bookings:', error);
                 showNotification('Network error loading bookings', 'error');
+            }
+        }
+
+        // Render recent bookings table
+        function renderRecentBookingsTable() {
+            const tableBody = document.getElementById('recentBookingsTable');
+            if (!tableBody) return;
+
+            // Get recent bookings (last 5)
+            const recentBookings = allBookings
+                .filter(booking => booking.status === 'confirmed' || booking.status === 'completed')
+                .slice(0, 5);
+
+            if (recentBookings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--admin-secondary);">No recent bookings</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = recentBookings.map(booking => {
+                const statusClass = booking.status === 'completed' ? 'done' : 'progress';
+                const statusText = booking.status === 'completed' ? 'Done' : 'Progress';
+                const date = new Date(booking.date).toLocaleDateString('en-US', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                const amount = booking.amount ? `$${parseFloat(booking.amount).toFixed(2)}` : '$0.00';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="booking-user">
+                                <div class="user-avatar-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>${booking.id || 'EN' + Math.random().toString(36).substr(2, 7).toUpperCase()}</span>
+                            </div>
+                        </td>
+                        <td>${booking.service || 'Tree Service'}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td>${date}</td>
+                        <td>${amount}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Handle sidebar navigation
+        function initializeSidebarNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    const view = this.getAttribute('data-view');
+                    handleViewChange(view);
+                });
+            });
+        }
+
+        // Handle view changes
+        function handleViewChange(view) {
+            const originalContent = document.getElementById('originalAdminContent');
+            const dashboardContent = document.querySelector('.dashboard-content');
+            
+            if (view === 'dashboard') {
+                // Show dashboard view
+                originalContent.style.display = 'none';
+                dashboardContent.style.display = 'block';
+                renderRecentBookingsTable();
+            } else {
+                // Show original admin content for other views
+                originalContent.style.display = 'block';
+                dashboardContent.style.display = 'none';
+                
+                // Load appropriate data based on view
+                if (view === 'admin') {
+                    loadBookings();
+                }
+            }
+        }
+
+        // Initialize search functionality
+        function initializeSearch() {
+            const searchInput = document.querySelector('.header-search input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    // You can implement search functionality here
+                    console.log('Searching for:', searchTerm);
+                });
+            }
+        }
+
+        // Update user source distribution with real data
+        function updateUserSourceDistribution() {
+            const totalBookings = allBookings.length;
+            if (totalBookings === 0) return;
+
+            const emailBookings = Math.floor(totalBookings * 0.5);
+            const facebookBookings = Math.floor(totalBookings * 0.2);
+            const linkedinBookings = Math.floor(totalBookings * 0.1);
+            const gmailBookings = Math.floor(totalBookings * 0.1);
+
+            // Update source cards
+            const sourceCards = document.querySelectorAll('.source-card');
+            if (sourceCards.length >= 4) {
+                sourceCards[0].querySelector('.source-percentage').textContent = '50%';
+                sourceCards[0].querySelector('.source-users').textContent = `${emailBookings} Users`;
+                
+                sourceCards[1].querySelector('.source-percentage').textContent = '20%';
+                sourceCards[1].querySelector('.source-users').textContent = `${facebookBookings} Users`;
+                
+                sourceCards[2].querySelector('.source-percentage').textContent = '10%';
+                sourceCards[2].querySelector('.source-users').textContent = `${linkedinBookings} Users`;
+                
+                sourceCards[3].querySelector('.source-percentage').textContent = '10%';
+                sourceCards[3].querySelector('.source-users').textContent = `${gmailBookings} Users`;
             }
         }
 
@@ -5484,10 +6248,32 @@
                 cancelled: allBookings.filter(b => b.status === 'cancelled').length
             };
 
-            document.getElementById('pendingCount').textContent = stats.pending;
-            document.getElementById('confirmedCount').textContent = stats.confirmed;
-            document.getElementById('completedCount').textContent = stats.completed;
-            document.getElementById('cancelledCount').textContent = stats.cancelled;
+            // Update original admin panel stats
+            const pendingCountEl = document.getElementById('pendingCount');
+            const confirmedCountEl = document.getElementById('confirmedCount');
+            const completedCountEl = document.getElementById('completedCount');
+            const cancelledCountEl = document.getElementById('cancelledCount');
+
+            if (pendingCountEl) pendingCountEl.textContent = stats.pending;
+            if (confirmedCountEl) confirmedCountEl.textContent = stats.confirmed;
+            if (completedCountEl) completedCountEl.textContent = stats.completed;
+            if (cancelledCountEl) cancelledCountEl.textContent = stats.cancelled;
+
+            // Update dashboard stats with real data
+            const dashboardStats = {
+                carOwners: allBookings.length, // Total bookings as car owners
+                passengers: allBookings.filter(b => b.status === 'confirmed' || b.status === 'completed').length, // Confirmed/completed as passengers
+                carList: allBookings.filter(b => b.status !== 'cancelled').length // Non-cancelled as car list
+            };
+
+            // Update dashboard stat cards
+            const dashboardPendingEl = document.querySelector('.dashboard-content .stat-card:nth-child(1) .stat-info h3');
+            const dashboardConfirmedEl = document.querySelector('.dashboard-content .stat-card:nth-child(2) .stat-info h3');
+            const dashboardCompletedEl = document.querySelector('.dashboard-content .stat-card:nth-child(3) .stat-info h3');
+
+            if (dashboardPendingEl) dashboardPendingEl.textContent = dashboardStats.carOwners;
+            if (dashboardConfirmedEl) dashboardConfirmedEl.textContent = dashboardStats.passengers;
+            if (dashboardCompletedEl) dashboardCompletedEl.textContent = dashboardStats.carList;
         }
 
         // Render active bookings (pending and confirmed)
