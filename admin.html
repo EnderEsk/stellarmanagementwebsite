@@ -10,10 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <script src="simple-google-oauth.js"></script>
-    <style>
-        /* Admin Panel Theme - Matching Stellar Tree Management */
-        
-    </style>
+
 </head>
 <body>
     <nav>
@@ -79,19 +76,19 @@
 
         <!-- Statistics Cards -->
         <div class="stats-grid">
-            <div class="stat-card pending">
+            <div class="stat-card pending clickable" data-filter="pending" onclick="filterByStatCard('pending')">
                 <h3 id="pendingCount">0</h3>
                 <p>Request Quote</p>
             </div>
-            <div class="stat-card confirmed">
+            <div class="stat-card confirmed clickable" data-filter="confirmed" onclick="filterByStatCard('confirmed')">
                 <h3 id="confirmedCount">0</h3>
                 <p>Request Booking</p>
             </div>
-            <div class="stat-card pending-booking">
+            <div class="stat-card pending-booking clickable" data-filter="pending-booking" onclick="filterByStatCard('pending-booking')">
                 <h3 id="pendingBookingCount">0</h3>
                 <p>Booking Pending</p>
             </div>
-            <div class="stat-card completed">
+            <div class="stat-card completed clickable" data-filter="completed" onclick="filterByStatCard('completed')">
                 <h3 id="completedCount">0</h3>
                 <p>Confirmed Booking</p>
             </div>
@@ -804,6 +801,55 @@
             document.getElementById('completedCount').textContent = stats.completed;
         }
 
+        // Filter by stat card click
+        function filterByStatCard(filter) {
+            // Find the corresponding filter tab and trigger its click
+            const filterTab = document.querySelector(`.filter-tab[data-filter="${filter}"]`);
+            if (filterTab) {
+                // Remove active class from all tabs and stat cards
+                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+                
+                // Add active class to the clicked filter tab and corresponding stat card
+                filterTab.classList.add('active');
+                document.querySelector(`.stat-card[data-filter="${filter}"]`).classList.add('active');
+                
+                // Update current filter
+                currentFilter = filter;
+                
+                // Update section title
+                updateSectionTitle();
+                
+                // Hide calendar view if it's showing
+                document.getElementById('calendarView').style.display = 'none';
+                document.getElementById('customerManagementView').style.display = 'none';
+                
+                // Show bookings grid
+                document.getElementById('activeBookingsGrid').style.display = 'grid';
+                
+                // Render filtered bookings
+                renderActiveBookings();
+                
+                // Scroll to bookings section smoothly
+                document.querySelector('.active-bookings-section').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+
+        // Update stat card active states when filter changes
+        function updateStatCardActiveStates() {
+            // Remove active class from all stat cards
+            document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+            
+            // Add active class to current filter's stat card
+            const activeStatCard = document.querySelector(`.stat-card[data-filter="${currentFilter}"]`);
+            if (activeStatCard) {
+                activeStatCard.classList.add('active');
+            }
+        }
+
         // Render active bookings (pending and confirmed)
         function renderActiveBookings() {
             const grid = document.getElementById('activeBookingsGrid');
@@ -1258,6 +1304,9 @@
                 // Update filter
                 currentFilter = e.target.dataset.filter;
                 updateSectionTitle();
+                
+                // Update stat card active states
+                updateStatCardActiveStates();
                 
                 // Show/hide appropriate view
                 if (currentFilter === 'calendar') {
@@ -4848,6 +4897,12 @@
                     tab.classList.remove('loading');
                 });
                 e.target.classList.add('active');
+                
+                // Update current filter
+                currentFilter = filter;
+                
+                // Update stat card active states
+                updateStatCardActiveStates();
                 
                 // Update section title smoothly
                 const sectionTitle = document.getElementById('sectionTitle');

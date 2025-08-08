@@ -122,6 +122,30 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
         }
+
+        /* Clickable stat cards */
+        .stat-card.clickable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .stat-card.clickable:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--admin-accent);
+        }
+
+        .stat-card.clickable:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Active state for stat cards */
+        .stat-card.clickable.active {
+            border-color: var(--admin-accent);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+        }
         
         .stat-card h3 {
             font-size: 2rem;
@@ -4248,6 +4272,17 @@
             align-items: center;
         }
 
+        /* On desktop, flatten the item-controls to show quantity and price as separate grid items */
+        .item-controls {
+            display: contents;
+        }
+
+        /* Ensure quantity and price inputs have proper styling on desktop */
+        .item-quantity input,
+        .item-price input {
+            width: 100%;
+        }
+
         /* Keep footer children as separate grid items on desktop */
         .item-footer { 
             display: contents; 
@@ -5314,8 +5349,16 @@
             min-height: 80px;
         }
 
+        /* Tablet and medium screen adjustments */
+        @media (max-width: 768px) and (min-width: 601px) {
+            .item-row {
+                grid-template-columns: 2fr 80px 80px 1fr auto;
+                gap: 0.5rem;
+            }
+        }
+
         /* Mobile Responsiveness */
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .booking-actions {
                 gap: 0.3rem;
                 justify-content: center;
@@ -5413,7 +5456,7 @@
                 order: 3;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
+                justify-content: flex-start;
                 padding: 0.5rem;
                 background: #f8f9fa;
                 border-radius: 6px;
@@ -5421,12 +5464,7 @@
                 min-height: 36px; /* match delete button height for even alignment */
             }
 
-            .item-total::before {
-                content: "Total:";
-                font-weight: 600;
-                color: #555;
-                min-width: 50px;
-            }
+            /* Removed "Total:" prefix to show only the amount */
 
             .item-total-amount {
                 font-size: 1rem;
@@ -5441,6 +5479,7 @@
                 grid-template-columns: 1fr auto;
                 align-items: center;
                 gap: 0.75rem;
+                margin-top: 0.25rem; /* slight spacing from controls above */
             }
 
             .item-actions {
@@ -5453,7 +5492,7 @@
             .remove-item-btn {
                 background: transparent;
                 color: var(--admin-danger);
-                padding: 0.4rem;
+                padding: 0;
                 width: 36px;
                 height: 36px;
                 display: inline-flex;
@@ -5461,6 +5500,7 @@
                 justify-content: center;
                 border-radius: 8px;
                 border: 1px solid rgba(220,53,69,0.2);
+                flex-shrink: 0; /* prevent shrinking */
             }
 
             .remove-item-btn i { pointer-events: none; }
