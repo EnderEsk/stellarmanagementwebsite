@@ -181,11 +181,74 @@
             gap: 0.5rem;
         }
         
-        .refresh-btn:hover {
+                .refresh-btn:hover {
             background: #7ab33a;
             transform: translateY(-1px);
         }
-
+        
+        /* Admin two-column layout with sidebar */
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        .admin-sidebar {
+            background: #ffffff;
+            border: 1px solid var(--admin-border);
+            border-radius: 16px;
+            padding: 1rem;
+            position: sticky;
+            top: 120px;
+            height: max-content;
+        }
+        .admin-main {
+            min-width: 0;
+        }
+        /* Sidebar-specific look for tabs to mimic admin menu */
+        .admin-sidebar .filter-tabs {
+            margin: 0;
+            padding: 0.5rem;
+            box-shadow: none;
+            border: none;
+            background: transparent;
+            gap: 0.75rem;
+        }
+        .admin-sidebar .tab-category-title {
+            font-size: 0.75rem;
+            color: var(--admin-secondary);
+            margin: 0.5rem 0 0.25rem 0.25rem;
+        }
+        .admin-sidebar .tab-row {
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .admin-sidebar .filter-tab {
+            width: 100%;
+            justify-content: flex-start;
+            background: #f6f7f9;
+            color: var(--admin-primary);
+            border: 1px solid var(--admin-border);
+            border-radius: 10px;
+            padding: 0.6rem 0.75rem;
+        }
+        .admin-sidebar .filter-tab i {
+            width: 20px;
+            color: var(--admin-secondary);
+        }
+        .admin-sidebar .filter-tab.active {
+            background: var(--admin-accent);
+            color: #ffffff;
+            border-color: var(--admin-accent);
+        }
+        /* Hide original inline tabs inside the content */
+        .active-bookings-section .filter-tabs { display: none; }
+        
+        @media (max-width: 1024px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .admin-sidebar { position: static; }
+        }
+        
         /* Slim and Sleek Tab Navigation System */
         .filter-tabs {
             display: flex;
@@ -4752,8 +4815,49 @@
             </button>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
+        <div class="admin-layout">
+            <aside class="admin-sidebar" aria-label="Admin navigation">
+                <!-- Sidebar menu: reuses existing filter tabs -->
+                <div class="filter-tabs">
+                    <div class="tab-category">
+                        <div class="tab-category-title">Booking Status</div>
+                        <div class="tab-row">
+                            <div class="filter-tab active" data-filter="all">
+                                <i class="fas fa-list"></i>
+                                All Active
+                            </div>
+                            <div class="filter-tab" data-filter="pending">
+                                <i class="fas fa-clock"></i>
+                                Pending
+                            </div>
+                            <div class="filter-tab" data-filter="confirmed">
+                                <i class="fas fa-check-circle"></i>
+                                Confirmed
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-category">
+                        <div class="tab-category-title">Management Views</div>
+                        <div class="tab-row">
+                            <div class="filter-tab" data-filter="all-bookings">
+                                <i class="fas fa-calendar-alt"></i>
+                                All Bookings
+                            </div>
+                            <div class="filter-tab" data-filter="calendar">
+                                <i class="fas fa-calendar-week"></i>
+                                Calendar View
+                            </div>
+                            <div class="filter-tab" data-filter="customers">
+                                <i class="fas fa-users"></i>
+                                Customer Management
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <main class="admin-main">
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
             <div class="stat-card pending">
                 <h3 id="pendingCount">0</h3>
                 <p>Pending Bookings</p>
@@ -4783,8 +4887,8 @@
                     </button>
                 </div>
 
-                <!-- Modern Filter Tabs -->
-                <div class="filter-tabs">
+                <!-- Modern Filter Tabs (now shown in sidebar) -->
+                <div class="filter-tabs" style="display:none;">
                     <!-- Booking Status Category -->
                     <div class="tab-category">
                         <div class="tab-category-title">Booking Status</div>
@@ -4907,6 +5011,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+            </main>
         </div>
     </div>
 
