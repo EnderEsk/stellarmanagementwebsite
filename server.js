@@ -1,15 +1,34 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const fs = require('fs');
 const multer = require('multer');
 const { connectToDatabase, getDatabase, closeConnection } = require('./database');
+const { Binary, ObjectId } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files per booking
+    },
+    fileFilter: function (req, file, cb) {
+        // Allow only image files
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
+});
+
 // Middleware
 app.use(cors());
+app.use(express.json());
 app.use(express.static('.')); // Serve static files from current directory
 
 // Add JSON parsing for specific routes that need it
@@ -29,35 +48,274 @@ app.use('/api/bookings/stats/overview', express.json());
 app.use('/api/customers/recalculate-totals', express.json());
 app.use('/api/customers/:customerId/recalculate-total', express.json());
 
-// File upload configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'booking-' + uniqueSuffix + path.extname(file.originalname));
+// OAuth Configuration
+const ALLOWED_ADMIN_EMAILS = [
+    'aiplanet100@gmail.com',
+    'stellartreemanagement@outlook.com'
+];
+
+const GOOGLE_CLIENT_ID = '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = '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';
+
+// Add CORS headers for OAuth
+app.use('/api/auth/*', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
     }
+    
+    next();
 });
 
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
-        files: 5 // Maximum 5 files per booking
-    },
-    fileFilter: function (req, file, cb) {
-        // Allow only image files
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed'), false);
+// Test endpoint to check if server is running
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
+// OAuth Authentication Endpoints
+app.post('/api/auth/google/verify', async (req, res) => {
+    try {
+        console.log('🔐 Google OAuth verification request received');
+        console.log('Request body:', req.body);
+        
+        const { idToken, email, name, picture } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is required'
+            });
         }
+        
+        console.log('📧 Verifying email:', email);
+        console.log('📋 Allowed emails:', ALLOWED_ADMIN_EMAILS);
+        
+        // Verify the email is in the allowed list
+        if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
+            console.log('❌ Access denied for email:', email);
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied. This email is not authorized to access the admin panel.'
+            });
+        }
+        
+        console.log('✅ Email verified successfully');
+        
+        // In a production environment, you would verify the ID token with Google
+        // For now, we'll trust the client-side verification for development
+        // In production, you should use Google's token verification API
+        
+        const userProfile = {
+            email: email,
+            name: name || 'Admin User',
+            picture: picture || '',
+            provider: 'google'
+        };
+        
+        console.log('✅ User profile created:', userProfile);
+        
+        res.json({
+            success: true,
+            userProfile: userProfile
+        });
+        
+    } catch (error) {
+        console.error('❌ Google OAuth verification error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Authentication failed: ' + error.message
+        });
     }
 });
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+app.post('/api/auth/microsoft/verify', async (req, res) => {
+    try {
+        const { email, name, picture } = req.body;
+        
+        // Verify the email is in the allowed list
+        if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied. This email is not authorized to access the admin panel.'
+            });
+        }
+        
+        const userProfile = {
+            email: email,
+            name: name,
+            picture: picture,
+            provider: 'microsoft'
+        };
+        
+        res.json({
+            success: true,
+            userProfile: userProfile
+        });
+        
+    } catch (error) {
+        console.error('Microsoft OAuth verification error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Authentication failed'
+        });
+    }
+});
+
+// Google OAuth callback endpoint
+app.post('/api/auth/google/callback', async (req, res) => {
+    console.log('🔄 Google OAuth callback received');
+    console.log('Request body:', req.body);
+    
+    const { code } = req.body;
+    
+    if (!code) {
+        console.log('❌ No authorization code provided');
+        return res.status(400).json({
+            success: false,
+            error: 'No authorization code provided'
+        });
+    }
+    
+    try {
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                code: code,
+                client_id: '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com',
+                client_secret: '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',
+                redirect_uri: 'http://localhost:3000/admin.html',
+                grant_type: 'authorization_code'
+            })
+        });
+        
+        const tokenData = await tokenResponse.json();
+        
+        if (tokenData.error) {
+            console.log('❌ Token exchange failed:', tokenData.error);
+            return res.status(400).json({
+                success: false,
+                error: 'Token exchange failed'
+            });
+        }
+        
+        // Get user info with access token
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`
+            }
+        });
+        
+        const userInfo = await userInfoResponse.json();
+        
+        console.log('📧 User info received:', userInfo.email);
+        console.log('📋 Allowed emails:', ALLOWED_ADMIN_EMAILS);
+        
+        // Check if email is in allowed list
+        if (ALLOWED_ADMIN_EMAILS.includes(userInfo.email)) {
+            console.log('✅ Email verified successfully');
+            
+            const userProfile = {
+                email: userInfo.email,
+                name: userInfo.name || userInfo.email,
+                picture: userInfo.picture || '',
+                provider: 'google'
+            };
+            
+            console.log('✅ User profile created:', userProfile);
+            
+            res.json({
+                success: true,
+                userProfile: userProfile
+            });
+        } else {
+            console.log('❌ Email not authorized:', userInfo.email);
+            res.status(401).json({
+                success: false,
+                error: 'Email not authorized'
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ OAuth callback error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'OAuth callback failed'
+        });
+    }
+});
+
+// File upload configuration removed - using the one at the top
+
+// Serve images from MongoDB or filesystem (for backward compatibility)
+app.get('/uploads/:imageId', async (req, res) => {
+    try {
+        const imageId = req.params.imageId;
+        
+        // First, try to serve from MongoDB (new format)
+        try {
+            const objectId = new ObjectId(imageId);
+            const image = await db.collection('images').findOne({ _id: objectId });
+            
+            if (image) {
+                // Set content type and cache headers
+                res.set('Content-Type', image.contentType);
+                res.set('Cache-Control', 'public, max-age=86400'); // 1 day cache
+                
+                // Send the image data
+                res.send(image.data.buffer);
+                return;
+            }
+        } catch (error) {
+            // Not a valid ObjectId, continue to filesystem check
+        }
+        
+        // If not found in MongoDB, try filesystem (old format)
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(__dirname, 'uploads');
+        
+        // Check if this looks like an old filesystem path
+        if (imageId.includes('booking-') && (imageId.includes('.jpg') || imageId.includes('.jpeg') || imageId.includes('.png') || imageId.includes('.gif') || imageId.includes('.webp'))) {
+            const filePath = path.join(uploadsDir, imageId);
+            
+            if (fs.existsSync(filePath)) {
+                const ext = path.extname(imageId).toLowerCase();
+                const contentType = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.gif': 'image/gif',
+                    '.webp': 'image/webp'
+                }[ext] || 'application/octet-stream';
+                
+                res.set('Content-Type', contentType);
+                res.set('Cache-Control', 'public, max-age=86400');
+                res.sendFile(filePath);
+                console.log(`✅ Served old filesystem image: ${imageId}`);
+                return;
+            } else {
+                console.log(`❌ Old filesystem image not found: ${imageId}`);
+            }
+        }
+        
+        console.log(`❌ Image not found: ${imageId}`);
+        res.status(404).json({ error: 'Image not found' });
+        
+    } catch (error) {
+        console.error('Error serving image:', error);
+        res.status(500).json({ error: 'Failed to serve image' });
+    }
+});
 
 // Serve admin configuration
 app.get('/api/admin-config', (req, res) => {
@@ -94,17 +352,23 @@ async function startServer() {
 
 // Admin authentication middleware
 function requireAdminAuth(req, res, next) {
-    const adminPassword = process.env.ADMIN_PASSWORD || 'stellar2024';
-    const authHeader = req.headers['x-admin-auth'] || req.headers['authorization'];
+    const authHeader = req.headers['authorization'];
     
     if (!authHeader) {
         return res.status(401).json({ error: 'Admin authentication required' });
     }
     
-    // Simple password check - in production, use proper JWT or session management
-    if (authHeader !== adminPassword && authHeader !== `Bearer ${adminPassword}`) {
-        return res.status(403).json({ error: 'Invalid admin credentials' });
+    // Extract email from Bearer token
+    const token = authHeader.replace('Bearer ', '');
+    const email = token; // For now, the token is the email
+    
+    // Check if email is in allowed list
+    if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
+        return res.status(403).json({ error: 'Access denied. This email is not authorized to access the admin panel.' });
     }
+    
+    // Add user info to request for use in routes
+    req.user = { email: email };
     
     next();
 }
@@ -159,6 +423,16 @@ function normalizeTimeFormat(time) {
     
     // Return as-is if it's already in 12-hour format
     return time;
+}
+
+// Helper function to format date consistently
+function formatDateInCalgary(date) {
+    // Format date as YYYY-MM-DD using the date as provided
+    // No timezone conversion needed since dates are already in the correct timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // Get availability data for a date range
@@ -218,10 +492,7 @@ app.get('/api/availability', async (req, res) => {
 });
 
 // Create new booking with image uploads
-app.post('/api/bookings', (req, res, next) => {
-    // Skip JSON parsing for this route and use multipart
-    upload.array('images', 5)(req, res, next);
-}, async (req, res) => {
+app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
     try {
         const {
             booking_id,
@@ -433,9 +704,42 @@ app.post('/api/bookings', (req, res, next) => {
             console.log(`Created new customer ${customerId} for phone ${cleanedData.phone}`);
         }
 
-        // Process uploaded images
-        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        // Process uploaded images with improved error handling
+        const imagePaths = [];
+        if (req.files && req.files.length > 0) {
+            console.log(`Processing ${req.files.length} uploaded files for booking ${cleanedData.booking_id}`);
+            
+            for (const file of req.files) {
+                try {
+                    // Create a unique ID for the image
+                    const imageId = new ObjectId();
+                    
+                    // Store the image in MongoDB
+                    await db.collection('images').insertOne({
+                        _id: imageId,
+                        bookingId: cleanedData.booking_id,
+                        filename: file.originalname,
+                        contentType: file.mimetype,
+                        size: file.size,
+                        data: new Binary(file.buffer),
+                        uploadedAt: new Date()
+                    });
+
+                    // Store the URL path for serving
+                    const urlPath = `/uploads/${imageId}`;
+                    imagePaths.push(urlPath);
+                    
+                    console.log(`✅ Image saved to MongoDB: ${urlPath} (${(file.size / 1024).toFixed(2)}KB)`);
+                } catch (error) {
+                    console.error(`❌ Error storing image ${file.originalname}:`, error);
+                }
+            }
+        }
+        
         const imagesJson = JSON.stringify(imagePaths);
+        if (imagePaths.length > 0) {
+            console.log(`📸 Stored ${imagePaths.length} images for booking ${cleanedData.booking_id}`);
+        }
 
         // Insert new booking with customer_id and images
         const newBooking = {
@@ -478,7 +782,7 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         const { bookingId } = req.params;
         const { status } = req.body;
 
-        if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+        if (!status || !['pending', 'confirmed', 'pending-booking', 'cancelled', 'completed'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
@@ -539,18 +843,151 @@ app.get('/api/bookings/:bookingId', async (req, res) => {
     }
 });
 
-// Delete booking (admin only)
+// Delete booking and associated images (admin only)
 app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
     try {
         const { bookingId } = req.params;
 
-        const result = await db.collection('bookings').deleteOne({ booking_id: bookingId });
-
-        if (result.deletedCount === 0) {
+        // Get the booking first to check for images
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        res.json({ message: 'Booking deleted successfully' });
+        // Delete associated images from MongoDB
+        try {
+            if (booking.images) {
+                const imagePaths = JSON.parse(booking.images);
+                for (const imagePath of imagePaths) {
+                    const imageId = imagePath.split('/').pop(); // Extract ID from path
+                    await db.collection('images').deleteOne({ _id: new ObjectId(imageId) });
+                    console.log(`🗑️ Deleted image: ${imageId}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting images:', error);
+        }
+
+        // Delete the booking
+        const result = await db.collection('bookings').deleteOne({ booking_id: bookingId });
+        
+        res.json({ message: 'Booking and associated images deleted successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Send booking confirmation email to customer (admin only)
+app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { customerEmail, customerName } = req.body;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Send booking confirmation email with unique link
+        const emailContent = sendBookingConfirmationEmail(
+            customerEmail, 
+            bookingId, 
+            booking.service, 
+            booking.date, 
+            booking.time, 
+            customerName
+        );
+
+        console.log('📧 Quote confirmation email endpoint called successfully');
+        console.log('📧 Email content:', emailContent);
+        res.json({
+            message: 'Booking confirmation email content generated successfully',
+            emailContent: emailContent
+        });
+    } catch (error) {
+        console.error('Error sending booking email:', error);
+        res.status(500).json({ error: 'Failed to send booking email' });
+    }
+});
+
+// Send booking confirmation email after admin confirms booking
+app.post('/api/bookings/:bookingId/send-confirmation-email', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { customerEmail, customerName } = req.body;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Send booking confirmation email
+        const emailContent = sendBookingFinalConfirmationEmail(
+            customerEmail, 
+            bookingId, 
+            booking.service, 
+            booking.date, 
+            booking.time, 
+            customerName
+        );
+
+        console.log('📧 Final confirmation email endpoint called successfully');
+        console.log('📧 Email content:', emailContent);
+        res.json({
+            message: 'Final booking confirmation email content generated successfully',
+            emailContent: emailContent
+        });
+    } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        res.status(500).json({ error: 'Failed to send confirmation email' });
+    }
+});
+
+// Customer confirms booking (public endpoint)
+app.post('/api/bookings/:bookingId/confirm', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Check if booking is in confirmed status (Request Booking)
+        if (booking.status !== 'confirmed') {
+            return res.status(400).json({ error: 'Booking is not in confirmed status' });
+        }
+
+        // Update booking status to pending-booking (Booking Pending)
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    status: 'pending-booking', 
+                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                } 
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Update customer total spent if customer_id exists
+        if (booking.customer_id) {
+            try {
+                await updateCustomerTotalSpent(booking.customer_id);
+            } catch (error) {
+                console.error('Error updating customer total spent:', error);
+                // Don't fail the request, just log the error
+            }
+        }
+
+        res.json({ message: 'Booking confirmed successfully' });
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Database error' });
@@ -560,9 +997,9 @@ app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
 // Get comprehensive booking statistics
 app.get('/api/bookings/stats/overview', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const today = formatDateInCalgary(new Date());
+        const thirtyDaysAgo = formatDateInCalgary(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+        const sevenDaysAgo = formatDateInCalgary(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
         
         // Basic booking stats
         const bookingStats = await db.collection('bookings').aggregate([
@@ -575,6 +1012,9 @@ app.get('/api/bookings/stats/overview', async (req, res) => {
                     },
                     confirmed_bookings: {
                         $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0] }
+                    },
+                    pending_booking_bookings: {
+                        $sum: { $cond: [{ $eq: ['$status', 'pending-booking'] }, 1, 0] }
                     },
                     completed_bookings: {
                         $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
@@ -2091,6 +2531,93 @@ function sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount
     return emailContent;
 }
 
+// Email booking confirmation function with unique link
+function sendBookingConfirmationEmail(email, bookingId, service, date, time, name) {
+    // This is a placeholder for email functionality
+    // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
+    console.log(`Booking confirmation email would be sent to ${email} for booking ${bookingId}`);
+    console.log(`Service: ${service}, Date: ${date}, Time: ${time}, Name: ${name}`);
+    
+    // Create unique booking link
+    const bookingLink = `https://stellartreemanagement.ca/${bookingId}`;
+    
+    // Example email content:
+    const emailContent = {
+        from: 'stellartmanagement@outlook.com',
+        to: email,
+        subject: `Booking Request Confirmed - ${bookingId}`,
+        body: `
+            Dear ${name},
+            
+            Your booking request has been confirmed by Stellar Tree Management!
+            
+            Booking Details:
+            - Booking ID: ${bookingId}
+            - Service: ${service}
+            - Date: ${date}
+            - Time: ${time}
+            
+            To confirm your booking and view your booking status, please visit:
+            ${bookingLink}
+            
+            This link will allow you to:
+            - View your booking details
+            - Confirm your booking
+            - Track the progress of your service
+            
+            Please click the link above to confirm your booking within 24 hours.
+            
+            If you have any questions, please contact us at stellartmanagement@outlook.com
+            
+            Best regards,
+            Stellar Tree Management Team
+        `
+    };
+    
+    // Here you would integrate with your email service
+    // For now, we'll just log it
+    console.log('Booking confirmation email content:', emailContent);
+    return emailContent;
+}
+
+// Email final booking confirmation function
+function sendBookingFinalConfirmationEmail(email, bookingId, service, date, time, name) {
+    // This is a placeholder for email functionality
+    // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
+    console.log(`Final booking confirmation email would be sent to ${email} for booking ${bookingId}`);
+    console.log(`Service: ${service}, Date: ${date}, Time: ${time}, Name: ${name}`);
+    
+    // Example email content:
+    const emailContent = {
+        from: 'stellartmanagement@outlook.com',
+        to: email,
+        subject: `Booking Confirmed - ${bookingId}`,
+        body: `
+            Dear ${name},
+            
+            Your booking is now confirmed! Thank you for choosing Stellar Tree Management.
+            
+            Booking Details:
+            - Booking ID: ${bookingId}
+            - Service: ${service}
+            - Date: ${date}
+            - Time: ${time}
+            
+            We look forward to providing you with excellent service.
+            
+            If you have any questions or need to make changes, please contact us at stellartmanagement@outlook.com
+            
+            Best regards,
+            Stellar Tree Management Team
+        `
+    };
+    
+    // Here you would integrate with your email service
+    // For now, we'll just log it
+    console.log('Final booking confirmation email content:', emailContent);
+    return emailContent;
+}
+
 // Function to update customer total spent
 async function updateCustomerTotalSpent(customerId) {
     try {
@@ -2270,12 +2797,78 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serve booking status page for specific booking IDs
+app.get('/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+    
+    // Check if it's a valid booking ID format (you can customize this validation)
+    if (bookingId && bookingId.length > 0 && !bookingId.includes('.')) {
+        res.sendFile(path.join(__dirname, 'booking-status.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
+});
+
 // Add a catch-all route for client-side routing (add this near the end of your routes)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Utility function to clean up orphaned images (admin only)
+app.post('/api/cleanup-images', requireAdminAuth, async (req, res) => {
+    try {
+        // Get all images from MongoDB
+        const allImages = await db.collection('images').find().toArray();
+        
+        // Get all image paths from bookings
+        const bookings = await db.collection('bookings').find({ images: { $ne: null, $ne: '' } }).toArray();
+        const referencedImageIds = new Set();
+        
+        for (const booking of bookings) {
+            try {
+                const imagePaths = JSON.parse(booking.images || '[]');
+                for (const imagePath of imagePaths) {
+                    const imageId = imagePath.split('/').pop(); // Extract ID from path
+                    referencedImageIds.add(imageId);
+                }
+            } catch (error) {
+                console.error(`Error parsing images for booking ${booking.booking_id}:`, error);
+            }
+        }
+        
+        // Find orphaned images
+        const orphanedImages = allImages.filter(img => !referencedImageIds.has(img._id.toString()));
+        
+        // Delete orphaned images
+        let deletedCount = 0;
+        let deletedSize = 0;
+        
+        for (const image of orphanedImages) {
+            try {
+                await db.collection('images').deleteOne({ _id: image._id });
+                deletedCount++;
+                deletedSize += image.size || 0;
+                console.log(`🗑️ Deleted orphaned image: ${image._id}`);
+            } catch (error) {
+                console.error(`Error deleting image ${image._id}:`, error);
+            }
+        }
+        
+        res.json({
+            message: 'Image cleanup completed',
+            totalImages: allImages.length,
+            referencedImages: referencedImageIds.size,
+            orphanedImages: orphanedImages.length,
+            deletedImages: deletedCount,
+            deletedSize: `${(deletedSize / 1024 / 1024).toFixed(2)} MB`
+        });
+    } catch (error) {
+        console.error('Error cleaning up images:', error);
+        res.status(500).json({ error: 'Failed to cleanup images' });
+    }
+});
+
 // Start the server
 startServer();
 
-module.exports = app; 
+module.exports = app;

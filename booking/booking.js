@@ -714,7 +714,7 @@ class BookingSystem {
                 dayElement.classList.add('disabled');
             } else {
                 // Check if date has bookings
-                const dateString = currentDate.toISOString().split('T')[0];
+                const dateString = this.formatDateForServer(currentDate);
                 const dayBookings = this.availabilityData[dateString] || {};
                 
                 // Debug logging for availability data (only for dates with bookings)
@@ -866,7 +866,7 @@ class BookingSystem {
         const timeSlotsContainer = document.getElementById('timeSlots');
         timeSlotsContainer.innerHTML = '';
         
-        const dateString = this.selectedDate.toISOString().split('T')[0];
+        const dateString = this.formatDateForServer(this.selectedDate);
         const dayBookings = this.availabilityData[dateString] || {};
         
         // Check if it's weekend (automatically blocked)
@@ -941,7 +941,7 @@ class BookingSystem {
         }
         
         // If it's a weekend, check if it's been unblocked
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = this.formatDateForServer(date);
         const isUnblockedWeekend = this.blockedDates && this.blockedDates.some(blockedDate => 
             blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
         );
@@ -1024,8 +1024,8 @@ class BookingSystem {
             const startDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
             const endDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0);
             
-            const startDateStr = startDate.toISOString().split('T')[0];
-            const endDateStr = endDate.toISOString().split('T')[0];
+            const startDateStr = this.formatDateForServer(startDate);
+            const endDateStr = this.formatDateForServer(endDate);
             
             console.log(`Loading availability data for ${startDateStr} to ${endDateStr}`);
             
@@ -1057,7 +1057,7 @@ class BookingSystem {
     isTimeSlotAvailable(date) {
         if (!this.existingBookings) return true;
         
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = this.formatDateForServer(date);
         const dayBookings = this.availabilityData[dateString] || {};
         
         // Check if any time slot is available
@@ -1099,7 +1099,7 @@ class BookingSystem {
         const bookingData = {
             booking_id: this.generateBookingId(),
             service: this.selectedService,
-            date: this.selectedDate.toISOString().split('T')[0],
+            date: this.formatDateForServer(this.selectedDate),
             time: this.selectedTime,
             name: document.getElementById('name').value,
             email: document.getElementById('email').value,
@@ -1171,6 +1171,15 @@ class BookingSystem {
         const timestamp = Date.now().toString(36);
         const random = Math.random().toString(36).substr(2, 5);
         return `ST-${timestamp}-${random}`.toUpperCase();
+    }
+    
+    formatDateForServer(date) {
+        // Format date as YYYY-MM-DD using the date as selected by user
+        // No timezone conversion needed since user selects the date they want
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
     
     showSuccessModal(bookingId) {

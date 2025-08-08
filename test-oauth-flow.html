@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 OAuth Flow Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Server Endpoint</h3>
+        <button onclick="testServerEndpoint()">Test /api/auth/google/callback</button>
+        <div id="server-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: OAuth Flow</h3>
+        <button onclick="testOAuthFlow()">Test Google OAuth</button>
+        <div id="oauth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: URL Parameters</h3>
+        <div id="url-params"></div>
+    </div>
+
+    <script>
+        // Test server endpoint
+        async function testServerEndpoint() {
+            const resultDiv = document.getElementById('server-result');
+            resultDiv.innerHTML = '🔄 Testing...';
+            
+            try {
+                const response = await fetch('/api/auth/google/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code: 'test_code' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Server endpoint working! Response: ${JSON.stringify(data)}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Server endpoint error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+        
+        // Test OAuth flow
+        function testOAuthFlow() {
+            const resultDiv = document.getElementById('oauth-result');
+            resultDiv.innerHTML = '🔄 Starting OAuth test...';
+            
+            // Create OAuth URL
+            const params = new URLSearchParams({
+                client_id: '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com',
+                redirect_uri: 'http://localhost:3000/admin.html',
+                response_type: 'code',
+                scope: 'openid email profile',
+                access_type: 'offline',
+                prompt: 'consent'
+            });
+            
+            const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    ✅ OAuth URL created successfully!<br>
+                    <a href="${oauthUrl}" target="_blank">Click here to test OAuth flow</a>
+                </div>
+            `;
+        }
+        
+        // Check URL parameters
+        function checkUrlParams() {
+            const paramsDiv = document.getElementById('url-params');
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                paramsDiv.innerHTML = `
+                    <div class="success">
+                        ✅ OAuth callback detected!<br>
+                        Code: ${code.substring(0, 20)}...
+                    </div>
+                `;
+            } else {
+                paramsDiv.innerHTML = `
+                    <div class="error">
+                        ❌ No OAuth callback detected
+                    </div>
+                `;
+            }
+        }
+        
+        // Check URL parameters on load
+        checkUrlParams();
+    </script>
+</body>
+</html> 
