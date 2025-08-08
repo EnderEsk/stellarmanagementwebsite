@@ -10,7 +10,8 @@ const ADMIN_CONFIG = {
     ALLOWED_ADMIN_EMAILS: [
         'aiplanet100@gmail.com',
         'stellartreemanagement@outlook.com',
-        'stellartestmanagement@outlook.com'
+        'stellartestmanagement@outlook.com',
+        'stephanetmichaud@gmail.com'
     ],
     
     // Session timeout in minutes (0 = no timeout)
