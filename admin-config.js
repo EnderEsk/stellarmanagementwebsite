@@ -31,7 +31,7 @@ const ADMIN_CONFIG = {
     COMPANY_NAME: 'Stellar Tree Management',
     
     // OAuth redirect URIs
-    GOOGLE_REDIRECT_URI: window.location.origin + '/auth/google/callback',
+    GOOGLE_REDIRECT_URI: window.location.origin + '/admin.html',
     MICROSOFT_REDIRECT_URI: window.location.origin + '/auth/microsoft/callback'
 };
 

@@ -12,15 +12,37 @@ class SimpleGoogleOAuth {
             'endereeska@gmail.com'
         ];
         
-        // Google OAuth configuration
-        this.googleClientId = '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com';
-        this.googleRedirectUri = 'http://localhost:3000/admin.html';
+        // Google OAuth configuration (populated from server-provided config)
+        this.googleClientId = null;
+        this.googleRedirectUri = null;
         
         console.log('🚀 Initializing Simple Google OAuth...');
-        this.init();
+        // Expose an init promise so callers can await configuration readiness
+        this.initPromise = this.init();
     }
 
     async init() {
+        // Ensure admin config is loaded; fetch if not present
+        if (!window.ADMIN_CONFIG) {
+            try {
+                const response = await fetch('/api/admin-config');
+                if (response.ok) {
+                    window.ADMIN_CONFIG = await response.json();
+                }
+            } catch (e) {
+                console.warn('Failed to load admin config:', e);
+            }
+        }
+        
+        // Set OAuth configuration from server config
+        this.googleClientId = window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_CLIENT_ID ? window.ADMIN_CONFIG.GOOGLE_CLIENT_ID : '';
+        this.googleRedirectUri = window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_REDIRECT_URI ? window.ADMIN_CONFIG.GOOGLE_REDIRECT_URI : window.location.origin + '/admin.html';
+        
+        console.log('🔧 OAuth Config:', {
+            clientId: this.googleClientId ? 'Set' : 'Missing',
+            redirectUri: this.googleRedirectUri
+        });
+        
         // Check for existing session
         const sessionData = sessionStorage.getItem('adminOAuthSession');
         if (sessionData) {
@@ -50,6 +72,15 @@ class SimpleGoogleOAuth {
     async loginWithGoogle() {
         try {
             console.log('🔄 Starting Simple Google OAuth...');
+            // Ensure config is loaded
+            if (this.initPromise) {
+                try { await this.initPromise; } catch (_) {}
+            }
+            if (!this.googleClientId) {
+                console.error('❌ GOOGLE_CLIENT_ID is missing. Aborting OAuth start.');
+                this.showError('Google login is not configured. Missing client ID.');
+                return;
+            }
             
             // Create Google OAuth URL
             const googleOAuthUrl = this.createGoogleOAuthUrl();
@@ -64,21 +95,35 @@ class SimpleGoogleOAuth {
     }
 
     createGoogleOAuthUrl() {
+        if (!this.googleClientId) {
+            throw new Error('Missing GOOGLE_CLIENT_ID when creating OAuth URL');
+        }
+        const redirect = this.googleRedirectUri || (window.location.origin + '/admin.html');
         const params = new URLSearchParams({
             client_id: this.googleClientId,
-            redirect_uri: this.googleRedirectUri,
+            redirect_uri: redirect,
             response_type: 'code',
             scope: 'openid email profile',
             access_type: 'offline',
             prompt: 'consent'
         });
-        
-        return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+        console.log('🔗 Google OAuth URL being used:', url);
+        return url;
     }
 
     async handleOAuthCallback(code) {
         try {
             console.log('🔄 Handling OAuth callback...');
+            // Ensure initialization (and config load) has completed
+            if (!this.googleClientId && this.initPromise) {
+                await this.initPromise;
+            }
+            if (!this.googleClientId) {
+                console.error('❌ Missing GOOGLE_CLIENT_ID in client config');
+                console.log('ADMIN_CONFIG at runtime:', window.ADMIN_CONFIG);
+                throw new Error('Client not configured with Google Client ID');
+            }
             
             // Send code to your server for verification
             const response = await fetch('/api/auth/google/callback', {
@@ -86,7 +131,7 @@ class SimpleGoogleOAuth {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ code })
+                body: JSON.stringify({ code, redirectUri: this.googleRedirectUri })
             });
             
             console.log('📊 Response status:', response.status);
@@ -132,7 +177,8 @@ class SimpleGoogleOAuth {
             } else {
                 const errorData = await response.json();
                 console.error('❌ Server error:', errorData);
-                throw new Error(`Server verification failed: ${errorData.error || 'Unknown error'}`);
+                const combined = [errorData.error, errorData.details].filter(Boolean).join(' - ');
+                throw new Error(`Server verification failed: ${combined || 'Unknown error'}`);
             }
             
         } catch (error) {
@@ -263,12 +309,21 @@ class SimpleGoogleOAuth {
 }
 
 // Initialize simple Google OAuth when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Initializing Simple Google OAuth System...');
     
     window.simpleGoogleAuth = new SimpleGoogleOAuth();
     console.log('✅ Simple Google OAuth System initialized');
     
+    // Wait for initialization to finish so config is available
+    if (window.simpleGoogleAuth.initPromise) {
+        try {
+            await window.simpleGoogleAuth.initPromise;
+        } catch (e) {
+            console.warn('Initialization encountered an error:', e);
+        }
+    }
+
     // Check for OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');

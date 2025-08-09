@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -8,6 +9,8 @@ const { Binary, ObjectId } = require('mongodb');
 
 
 const app = express();
+// Respect X-Forwarded-* headers when behind reverse proxies / CDNs
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
 // Configure multer for memory storage
@@ -63,21 +66,32 @@ const ALLOWED_ADMIN_EMAILS = [
 const GOOGLE_CLIENT_ID = '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com';
 const GOOGLE_CLIENT_SECRET = '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';
 
-// Add CORS headers for OAuth
+// Add CORS headers for OAuth (dynamic origin)
 app.use('/api/auth/*', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    const origin = req.headers.origin || `${req.protocol}://${req.get('host')}`;
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
     
-    // Handle preflight requests
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
-    
     next();
 });
+
+// Helper to compute the correct public redirect URI
+function getEffectiveRedirectUri(req, providedRedirectUri) {
+    if (providedRedirectUri) return providedRedirectUri;
+    if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI;
+    const host = req.get('host');
+    const isLocal = host.includes('localhost') || host.startsWith('127.0.0.1');
+    const proto = req.protocol; // honors X-Forwarded-Proto due to trust proxy
+    const scheme = isLocal ? proto : 'https';
+    return `${scheme}://${host}/admin.html`;
+}
 
 // Test endpoint to check if server is running
 app.get('/api/test', (req, res) => {
@@ -176,9 +190,9 @@ app.post('/api/auth/microsoft/verify', async (req, res) => {
 // Google OAuth callback endpoint
 app.post('/api/auth/google/callback', async (req, res) => {
     console.log('🔄 Google OAuth callback received');
-    console.log('Request body:', req.body);
+    console.log('Request body received fields:', Object.keys(req.body || {}));
     
-    const { code } = req.body;
+    const { code, redirectUri } = req.body;
     
     if (!code) {
         console.log('❌ No authorization code provided');
@@ -189,28 +203,32 @@ app.post('/api/auth/google/callback', async (req, res) => {
     }
     
     try {
+        const effectiveRedirectUri = getEffectiveRedirectUri(req, redirectUri);
+        console.log('🔗 Using redirect_uri for token exchange:', effectiveRedirectUri);
+        console.log('🔗 Using client_id:', (process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID));
         // Exchange code for tokens
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: new URLSearchParams({
+                body: new URLSearchParams({
                 code: code,
-                client_id: '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com',
-                client_secret: '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',
-                redirect_uri: 'http://localhost:3000/admin.html',
+                client_id: process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET || GOOGLE_CLIENT_SECRET,
+                redirect_uri: effectiveRedirectUri,
                 grant_type: 'authorization_code'
             })
         });
         
         const tokenData = await tokenResponse.json();
-        
-        if (tokenData.error) {
-            console.log('❌ Token exchange failed:', tokenData.error);
+        if (!tokenResponse.ok || tokenData.error) {
+            console.log('❌ Token exchange failed:', tokenData);
             return res.status(400).json({
                 success: false,
-                error: 'Token exchange failed'
+                error: 'Token exchange failed',
+                details: tokenData.error_description || tokenData.error || 'Unknown error from Google',
+                googleResponse: tokenData
             });
         }
         
@@ -325,6 +343,7 @@ app.get('/uploads/:imageId', async (req, res) => {
 
 // Serve admin configuration
 app.get('/api/admin-config', (req, res) => {
+    const dynamicRedirectUri = getEffectiveRedirectUri(req);
     const adminConfig = {
         PASSWORD: process.env.ADMIN_PASSWORD || 'stellar2024',
         SESSION_TIMEOUT: process.env.NODE_ENV === 'production' 
@@ -333,10 +352,27 @@ app.get('/api/admin-config', (req, res) => {
         MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
         LOCKOUT_DURATION: parseInt(process.env.LOCKOUT_DURATION) || 15,
         ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@stellartreemanagement.com',
-        COMPANY_NAME: process.env.COMPANY_NAME || 'Stellar Tree Management'
+        COMPANY_NAME: process.env.COMPANY_NAME || 'Stellar Tree Management',
+        // Expose OAuth client config to the browser (no secrets)
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID,
+        GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || dynamicRedirectUri,
+        ALLOWED_ADMIN_EMAILS: ALLOWED_ADMIN_EMAILS
     };
     
     res.json(adminConfig);
+});
+
+// OAuth debug config endpoint for diagnostics
+app.get('/api/auth/google/debug-config', (req, res) => {
+    const dynamicRedirectUri = getEffectiveRedirectUri(req);
+    res.json({
+        clientId: process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID || null,
+        redirectFromEnv: process.env.GOOGLE_REDIRECT_URI || null,
+        dynamicRedirectUri,
+        nodeEnv: process.env.NODE_ENV || 'development',
+        hostHeader: req.get('host'),
+        protocol: req.protocol
+    });
 });
 
 // Initialize MongoDB connection and start server

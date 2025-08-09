@@ -23,9 +23,24 @@
     
     <div class="test-section">
         <h3>Test 2: OAuth Flow</h3>
+        <label><input id="use-this-page" type="checkbox"> Use this page as redirect_uri</label>
         <button onclick="testOAuthFlow()">Test Google OAuth</button>
         <div id="oauth-result"></div>
     </div>
+
+<div class="test-section">
+    <h3>Test 2b: OAuth Flow (with dynamic config)</h3>
+    <button onclick="testOAuthFlowDynamic()">Test with /api/admin-config</button>
+    <div id="oauth-result-dynamic"></div>
+    <button onclick="testDebugConfig()">Show /api/auth/google/debug-config</button>
+    <pre id="debug-config" style="white-space: pre-wrap; background:#f5f5f5; padding:10px; border-radius:6px;"></pre>
+    <div style="margin-top:10px">
+        <label>Code to POST to /api/auth/google/callback:</label>
+        <input id="code-input" style="width: 60%" placeholder="paste code here from OAuth redirect"/>
+        <button onclick="postCallback()">POST callback</button>
+        <pre id="callback-result" style="white-space: pre-wrap; background:#f5f5f5; padding:10px; border-radius:6px;"></pre>
+    </div>
+</div>
     
     <div class="test-section">
         <h3>Test 3: URL Parameters</h3>
@@ -63,29 +78,66 @@
         function testOAuthFlow() {
             const resultDiv = document.getElementById('oauth-result');
             resultDiv.innerHTML = '🔄 Starting OAuth test...';
-            
+            const useThisPage = document.getElementById('use-this-page').checked;
+            const redirect = useThisPage ? window.location.origin + window.location.pathname : ((window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_REDIRECT_URI) || (window.location.origin + '/admin.html'));
             // Create OAuth URL
             const params = new URLSearchParams({
-                client_id: '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com',
-                redirect_uri: 'http://localhost:3000/admin.html',
+                client_id: (window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_CLIENT_ID) || '',
+                redirect_uri: redirect,
                 response_type: 'code',
                 scope: 'openid email profile',
                 access_type: 'offline',
                 prompt: 'consent'
             });
-            
             const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-            
             resultDiv.innerHTML = `
                 <div class="success">
                     ✅ OAuth URL created successfully!<br>
-                    <a href="${oauthUrl}" target="_blank">Click here to test OAuth flow</a>
+                    <div>redirect_uri: ${redirect}</div>
+                    <a href="${oauthUrl}">Click here to test OAuth flow</a>
                 </div>
             `;
         }
+
+async function testOAuthFlowDynamic() {
+    const resultDiv = document.getElementById('oauth-result-dynamic');
+    resultDiv.innerHTML = '🔄 Loading /api/admin-config...';
+    const cfg = await fetch('/api/admin-config').then(r => r.json());
+    const params = new URLSearchParams({
+        client_id: cfg.GOOGLE_CLIENT_ID || '',
+        redirect_uri: cfg.GOOGLE_REDIRECT_URI || (window.location.origin + '/admin.html'),
+        response_type: 'code',
+        scope: 'openid email profile',
+        access_type: 'offline',
+        prompt: 'consent'
+    });
+    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    resultDiv.innerHTML = `<div class="success">✅ OAuth URL created from admin-config!<br><a href="${oauthUrl}" target="_blank">Open OAuth (dynamic)</a></div>`;
+}
+
+async function testDebugConfig() {
+    const pre = document.getElementById('debug-config');
+    pre.textContent = '🔄 Fetching /api/auth/google/debug-config...';
+    const data = await fetch('/api/auth/google/debug-config').then(r => r.json()).catch(e => ({ error: e.message }));
+    pre.textContent = JSON.stringify(data, null, 2);
+}
+
+async function postCallback() {
+    const code = document.getElementById('code-input').value.trim();
+    const out = document.getElementById('callback-result');
+    out.textContent = '🔄 Posting to /api/auth/google/callback...';
+    const cfg = await fetch('/api/admin-config').then(r => r.json());
+    const res = await fetch('/api/auth/google/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri: cfg.GOOGLE_REDIRECT_URI || (window.location.origin + '/admin.html') })
+    });
+    const data = await res.json();
+    out.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+}
         
         // Check URL parameters
-        function checkUrlParams() {
+        async function checkUrlParams() {
             const paramsDiv = document.getElementById('url-params');
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
@@ -97,6 +149,19 @@
                         Code: ${code.substring(0, 20)}...
                     </div>
                 `;
+                // Auto POST to callback with the redirect used (this page)
+                try {
+                    const cfg = await fetch('/api/admin-config').then(r => r.json());
+                    const res = await fetch('/api/auth/google/callback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code, redirectUri: window.location.origin + window.location.pathname })
+                    });
+                    const data = await res.json();
+                    document.getElementById('callback-result').textContent = JSON.stringify({ status: res.status, data }, null, 2);
+                } catch (e) {
+                    document.getElementById('callback-result').textContent = 'Callback post failed: ' + e.message;
+                }
             } else {
                 paramsDiv.innerHTML = `
                     <div class="error">

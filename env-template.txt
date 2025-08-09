@@ -3,5 +3,27 @@
 # Replace YOUR_CLUSTER_URL with your actual cluster URL
 MONGODB_URI=mongodb+srv://stellartree-user:YOUR_PASSWORD@YOUR_CLUSTER_URL/stellartmanagement?retryWrites=true&w=majority
 
-# Optional: Server port (defaults to 3000)
-PORT=3000 
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# Google OAuth Configuration
+# Get these from Google Cloud Console > APIs & Services > Credentials
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+
+# For production (stellartreemanagement.ca)
+GOOGLE_REDIRECT_URI=https://www.stellartreemanagement.ca/admin.html
+
+# For local development (uncomment for localhost)
+# GOOGLE_REDIRECT_URI=http://localhost:3000/admin.html
+
+# Admin Configuration
+ADMIN_EMAIL=admin@stellartreemanagement.com
+COMPANY_NAME=Stellar Tree Management
+SESSION_TIMEOUT=120
+MAX_LOGIN_ATTEMPTS=5
+LOCKOUT_DURATION=15
+
+# Allowed Admin Emails (comma-separated)
+ALLOWED_ADMIN_EMAILS=aiplanet100@gmail.com,stellartreemanagement@outlook.com,stellartestmanagement@outlook.com,stephanetmichaud@gmail.com,aiplanet1000@gmail.com,endereeska@gmail.com

@@ -11,8 +11,9 @@ Create a `.env` file in your project root:
 
 ```env
 # Google OAuth
-GOOGLE_CLIENT_ID=1081522229555-11ps6cogbbo9pmhfvkv23tndiuo6e639.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:3000/admin.html
 
 # Microsoft OAuth (when you get them)
 MICROSOFT_CLIENT_ID=your_microsoft_client_id_here
@@ -41,6 +42,7 @@ const ALLOWED_ADMIN_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || [
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/admin.html';
 ```
 
 ### 3. **Install dotenv**

@@ -55,6 +55,7 @@ async function loadAdminConfig() {
 document.addEventListener('DOMContentLoaded', async function() {
     // Load admin configuration first
     await loadAdminConfig();
+    console.log('ADMIN_CONFIG loaded:', window.ADMIN_CONFIG);
     
     // OAuth authentication is handled by simple-google-oauth.js
     // The SimpleGoogleOAuth class will automatically check for existing sessions
