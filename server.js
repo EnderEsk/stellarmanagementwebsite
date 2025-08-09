@@ -5,6 +5,8 @@ const multer = require('multer');
 const { connectToDatabase, getDatabase, closeConnection } = require('./database');
 const { Binary, ObjectId } = require('mongodb');
 
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -51,7 +53,11 @@ app.use('/api/customers/:customerId/recalculate-total', express.json());
 // OAuth Configuration
 const ALLOWED_ADMIN_EMAILS = [
     'aiplanet100@gmail.com',
-    'stellartreemanagement@outlook.com'
+    'stellartreemanagement@outlook.com',
+    'stellartestmanagement@outlook.com',
+    'stephanetmichaud@gmail.com',
+    'aiplanet1000@gmail.com',
+    'endereeska@gmail.com'
 ];
 
 const GOOGLE_CLIENT_ID = '1081522229555-uj7744efea2p487bj7oa5p1janijfepl.apps.googleusercontent.com';
@@ -2581,6 +2587,7 @@ function sendBookingConfirmationEmail(email, bookingId, service, date, time, nam
 }
 
 // Email final booking confirmation function
+// Email booking final confirmation function
 function sendBookingFinalConfirmationEmail(email, bookingId, service, date, time, name) {
     // This is a placeholder for email functionality
     // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES

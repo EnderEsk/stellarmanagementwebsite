@@ -7,7 +7,9 @@ class AppwriteAuthReal {
         this.userProfile = null;
         this.allowedEmails = [
             'aiplanet100@gmail.com',
-            'stellartreemanagement@outlook.com'
+            'stellartreemanagement@outlook.com',
+            'stephanetmichaud@gmail.com',
+            'aiplanet1000@gmail.com'
         ];
         
         // Initialize Appwrite client
