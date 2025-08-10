@@ -36,7 +36,15 @@ class SimpleGoogleOAuth {
         
         // Set OAuth configuration from server config
         this.googleClientId = window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_CLIENT_ID ? window.ADMIN_CONFIG.GOOGLE_CLIENT_ID : '';
-        this.googleRedirectUri = window.ADMIN_CONFIG && window.ADMIN_CONFIG.GOOGLE_REDIRECT_URI ? window.ADMIN_CONFIG.GOOGLE_REDIRECT_URI : window.location.origin + '/admin.html';
+        
+        // Always use the current origin for redirect URI to match what Google expects
+        this.googleRedirectUri = window.location.origin + '/admin.html';
+        
+        console.log('🔧 OAuth Config:', {
+            clientId: this.googleClientId ? 'Set' : 'Missing',
+            redirectUri: this.googleRedirectUri,
+            origin: window.location.origin
+        });
         
         console.log('🔧 OAuth Config:', {
             clientId: this.googleClientId ? 'Set' : 'Missing',

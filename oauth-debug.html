@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Debug - Stellar Tree Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .error { color: #d32f2f; }
+        .success { color: #388e3c; }
+        .warning { color: #f57c00; }
+        .info { color: #1976d2; }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1565c0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.error { background: #ffebee; border: 1px solid #ffcdd2; }
+        .status.success { background: #e8f5e8; border: 1px solid #c8e6c9; }
+        .status.warning { background: #fff3e0; border: 1px solid #ffcc02; }
+        .status.info { background: #e3f2fd; border: 1px solid #bbdefb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 OAuth Debug Tool</h1>
+        <p>Use this tool to debug your Google OAuth configuration issues.</p>
+        
+        <div class="section">
+            <h2>1. Server Configuration</h2>
+            <button onclick="checkServerConfig()">Check Server Config</button>
+            <div id="serverConfig"></div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Client Configuration</h2>
+            <button onclick="checkClientConfig()">Check Client Config</button>
+            <div id="clientConfig"></div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Test OAuth Flow</h2>
+            <button onclick="testOAuthFlow()">Test OAuth Flow</button>
+            <div id="oauthTest"></div>
+        </div>
+        
+        <div class="section">
+            <h2>4. Manual OAuth URL Test</h2>
+            <button onclick="generateOAuthUrl()">Generate OAuth URL</button>
+            <div id="oauthUrl"></div>
+        </div>
+        
+        <div class="section">
+            <h2>5. Environment Check</h2>
+            <button onclick="checkEnvironment()">Check Environment</button>
+            <div id="environment"></div>
+        </div>
+    </div>
+
+    <script>
+        async function checkServerConfig() {
+            const div = document.getElementById('serverConfig');
+            div.innerHTML = '<div class="status info">🔄 Checking server configuration...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/google/debug-config');
+                const data = await response.json();
+                
+                div.innerHTML = `
+                    <div class="status success">✅ Server configuration loaded</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="status error">❌ Failed to load server config: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function checkClientConfig() {
+            const div = document.getElementById('clientConfig');
+            
+            const config = {
+                clientId: window.ADMIN_CONFIG?.GOOGLE_CLIENT_ID || 'NOT SET',
+                redirectUri: window.ADMIN_CONFIG?.GOOGLE_REDIRECT_URI || 'NOT SET',
+                origin: window.location.origin,
+                fullUrl: window.location.href,
+                userAgent: navigator.userAgent
+            };
+            
+            div.innerHTML = `
+                <div class="status success">✅ Client configuration loaded</div>
+                <pre>${JSON.stringify(config, null, 2)}</pre>
+            `;
+        }
+        
+        async function testOAuthFlow() {
+            const div = document.getElementById('oauthTest');
+            div.innerHTML = '<div class="status info">🔄 Testing OAuth flow...</div>';
+            
+            try {
+                // Test the callback endpoint
+                const response = await fetch('/api/auth/google/callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        code: 'test_code_123',
+                        redirectUri: window.location.origin + '/admin.html'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    div.innerHTML = `
+                        <div class="status success">✅ OAuth callback endpoint is working</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="status warning">⚠️ OAuth callback endpoint returned error</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="status error">❌ OAuth test failed: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function generateOAuthUrl() {
+            const div = document.getElementById('oauthUrl');
+            
+            const clientId = window.ADMIN_CONFIG?.GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID';
+            const redirectUri = window.location.origin + '/admin.html';
+            
+            const params = new URLSearchParams({
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                response_type: 'code',
+                scope: 'openid email profile',
+                access_type: 'offline',
+                prompt: 'consent'
+            });
+            
+            const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+            
+            div.innerHTML = `
+                <div class="status info">🔗 Generated OAuth URL</div>
+                <p><strong>Redirect URI:</strong> ${redirectUri}</p>
+                <p><strong>Client ID:</strong> ${clientId}</p>
+                <p><strong>Full OAuth URL:</strong></p>
+                <pre>${oauthUrl}</pre>
+                <button onclick="window.open('${oauthUrl}', '_blank')">Open OAuth URL</button>
+            `;
+        }
+        
+        function checkEnvironment() {
+            const div = document.getElementById('environment');
+            
+            const env = {
+                protocol: window.location.protocol,
+                host: window.location.host,
+                hostname: window.location.hostname,
+                port: window.location.port,
+                origin: window.location.origin,
+                pathname: window.location.pathname,
+                search: window.location.search,
+                hash: window.location.hash,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine
+            };
+            
+            div.innerHTML = `
+                <div class="status success">✅ Environment information loaded</div>
+                <pre>${JSON.stringify(env, null, 2)}</pre>
+            `;
+        }
+        
+        // Auto-load client config when page loads
+        window.addEventListener('load', () => {
+            // Wait a bit for any scripts to load
+            setTimeout(checkClientConfig, 1000);
+        });
+    </script>
+</body>
+</html>

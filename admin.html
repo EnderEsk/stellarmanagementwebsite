@@ -734,8 +734,18 @@
                         }
                     }
                     
-                    // Clear cached data when loading bookings
-                    clearCachedData();
+                    // Clear cached data when loading bookings only if no modal is open
+                    try {
+                        const anyModalOpen = document.querySelectorAll('.modal.show').length > 0;
+                        if (!anyModalOpen) {
+                            clearCachedData();
+                        } else {
+                            console.log('Skipping cache clear while a modal is open');
+                        }
+                    } catch (e) {
+                        // Fallback to previous behavior on any unexpected DOM errors
+                        clearCachedData();
+                    }
                     
                     // Update UI components
                     updateStatistics();
@@ -2587,8 +2597,7 @@
                 modal.classList.remove('show');
                 document.body.classList.remove('modal-open');
                 
-                // Don't clear cached data when closing modals - keep it for the current booking
-                // The data will be cleared when switching to a different booking
+                // Preserve quote/invoice context when closing
             }
         }
 
@@ -3067,6 +3076,13 @@
                 }
             }
 
+            // Ensure we have current booking context
+            if (!currentQuoteData || !currentQuoteData.bookingId) {
+                showNotification('No booking selected. Please open the quote from a booking.', 'error');
+                console.error('generateQuote called without currentQuoteData or bookingId', currentQuoteData);
+                return;
+            }
+
             // Collect service items
             const serviceItems = [];
             const serviceItemElements = document.querySelectorAll('.service-item');
@@ -3116,6 +3132,13 @@
             const tax = taxEnabled ? subtotal * 0.05 : 0;
             const total = subtotal + tax;
 
+            // Guard against missing booking context
+            if (!currentQuoteData || !currentQuoteData.bookingId) {
+                showNotification('Cannot save quote: missing booking context. Please reopen the quote from the booking.', 'error');
+                console.error('saveQuote called without currentQuoteData or bookingId', currentQuoteData);
+                return;
+            }
+
             const quoteData = {
                 booking_id: currentQuoteData.bookingId,
                 client_name: clientName,
@@ -3132,8 +3155,8 @@
 
             try {
                 // If we have an existing quote ID, update it; otherwise create new
-                const method = currentQuoteData.quoteId ? 'PUT' : 'POST';
-                const url = currentQuoteData.quoteId ? `/api/quotes/${currentQuoteData.quoteId}` : '/api/quotes';
+                const method = currentQuoteData && currentQuoteData.quoteId ? 'PUT' : 'POST';
+                const url = currentQuoteData && currentQuoteData.quoteId ? `/api/quotes/${currentQuoteData.quoteId}` : '/api/quotes';
                 
                 const response = await fetch(url, {
                     method: method,
@@ -3147,8 +3170,11 @@
                     const result = await response.json();
                     showNotification('Quote saved successfully!', 'success');
                     
-                    // Store the quote ID for later use
-                    currentQuoteData.quoteId = result.quote_id;
+                    // Store the quote ID for later use (guard against race conditions)
+                    if (!currentQuoteData) {
+                        currentQuoteData = { bookingId: quoteData.booking_id };
+                    }
+                    currentQuoteData.quoteId = result.quote_id || currentQuoteData.quoteId;
                     
                     // Generate quote preview
                     generateQuotePreview(serviceItems, result.quote_id);
@@ -3719,6 +3745,13 @@
 
         // Create Invoice from Saved Quote
         function generateInvoice() {
+            // Ensure we have current invoice context
+            if (!currentInvoiceData || !currentInvoiceData.bookingId) {
+                showNotification('No booking selected. Please open the invoice from a saved quote.', 'error');
+                console.error('generateInvoice called without currentInvoiceData or bookingId', currentInvoiceData);
+                return;
+            }
+
             // Validate form
             const requiredFields = ['invoiceClientName', 'invoiceClientPhone', 'invoiceClientAddress', 'invoiceClientEmail', 'invoiceDate'];
             for (const fieldId of requiredFields) {
@@ -3774,6 +3807,13 @@
             const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
             const tax = taxEnabled ? subtotal * 0.05 : 0;
             const total = subtotal + tax;
+
+            // Guard against missing booking context
+            if (!currentInvoiceData || !currentInvoiceData.bookingId) {
+                showNotification('Cannot save invoice: missing booking context. Please reopen from a saved quote.', 'error');
+                console.error('saveInvoice called without currentInvoiceData or bookingId', currentInvoiceData);
+                return;
+            }
 
             const invoiceData = {
                 quote_id: currentInvoiceData.quoteId,

@@ -86,6 +86,14 @@ app.use('/api/auth/*', (req, res, next) => {
 function getEffectiveRedirectUri(req, providedRedirectUri) {
     if (providedRedirectUri) return providedRedirectUri;
     if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI;
+    
+    // Get the origin from the request headers
+    const origin = req.headers.origin;
+    if (origin) {
+        return `${origin}/admin.html`;
+    }
+    
+    // Fallback to host-based calculation
     const host = req.get('host');
     const isLocal = host.includes('localhost') || host.startsWith('127.0.0.1');
     const proto = req.protocol; // honors X-Forwarded-Proto due to trust proxy
@@ -96,6 +104,21 @@ function getEffectiveRedirectUri(req, providedRedirectUri) {
 // Test endpoint to check if server is running
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint for OAuth configuration
+app.get('/api/auth/google/debug-config', (req, res) => {
+    const origin = req.headers.origin || `${req.protocol}://${req.get('host')}`;
+    const effectiveRedirectUri = getEffectiveRedirectUri(req);
+    
+    res.json({
+        clientId: process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? '***SET***' : '***NOT SET***',
+        origin: origin,
+        effectiveRedirectUri: effectiveRedirectUri,
+        allowedEmails: ALLOWED_ADMIN_EMAILS,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // OAuth Authentication Endpoints
@@ -206,13 +229,16 @@ app.post('/api/auth/google/callback', async (req, res) => {
         const effectiveRedirectUri = getEffectiveRedirectUri(req, redirectUri);
         console.log('🔗 Using redirect_uri for token exchange:', effectiveRedirectUri);
         console.log('🔗 Using client_id:', (process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID));
+        console.log('🔗 Request origin:', req.headers.origin);
+        console.log('🔗 Request host:', req.get('host'));
+        
         // Exchange code for tokens
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-                body: new URLSearchParams({
+            body: new URLSearchParams({
                 code: code,
                 client_id: process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID,
                 client_secret: process.env.GOOGLE_CLIENT_SECRET || GOOGLE_CLIENT_SECRET,
