@@ -64,13 +64,26 @@
 
     <div class="admin-container" id="adminContent" style="display: none;">
         <div class="admin-header">
-            <h1>Admin Dashboard</h1>
-            <p>Manage bookings and view statistics for Stellar Tree Management</p>
-            <div class="admin-actions">
-                <div id="userInfo"></div>
-                <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+            <div class="admin-header-content">
+                <div class="admin-title-section">
+                    <h1>Admin Dashboard</h1>
+                    <p>Manage bookings and view statistics for Stellar Tree Management</p>
+                </div>
+                <div class="admin-user-section">
+                    <div class="admin-user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-role">Administrator</div>
+                            <div id="userEmail" class="user-email">Loading...</div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()" title="Sign Out">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="logout-text">Logout</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -5231,6 +5244,13 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile Quick Actions -->
+        <div class="mobile-quick-actions">
+            <button class="quick-action-btn refresh-action" onclick="manualRefreshBookings()" title="Refresh Data">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </div>
 

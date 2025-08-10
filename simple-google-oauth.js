@@ -242,6 +242,13 @@ class SimpleGoogleOAuth {
 
     updateUserInfo() {
         if (this.userProfile) {
+            // Update the user email in the new header structure
+            const userEmailElement = document.getElementById('userEmail');
+            if (userEmailElement) {
+                userEmailElement.textContent = this.userProfile.email;
+            }
+            
+            // Legacy support for old userInfo element if it exists
             const userInfoElement = document.getElementById('userInfo');
             if (userInfoElement) {
                 userInfoElement.innerHTML = `
