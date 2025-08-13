@@ -368,6 +368,104 @@
       transform: none;
     }
 
+    /* Image Upload Styles */
+    .image-upload-section {
+      margin-top: 1rem;
+    }
+
+    .image-upload-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 2rem;
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      background: var(--light-gray);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .image-upload-label:hover {
+      border-color: var(--accent-color);
+      background: rgba(140, 198, 63, 0.05);
+    }
+
+    .image-upload-label i {
+      font-size: 2rem;
+      color: var(--accent-color);
+    }
+
+    .image-upload-label span {
+      font-weight: 600;
+      color: var(--text-dark);
+      font-size: 1.1rem;
+    }
+
+    .image-upload-label small {
+      color: var(--secondary-color);
+      font-size: 0.9rem;
+    }
+
+    .image-upload-input {
+      display: none;
+    }
+
+    .image-preview-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .image-preview-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--border-color);
+      background: white;
+    }
+
+    .image-preview-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .remove-image {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(220, 53, 69, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-image:hover {
+      background: #dc3545;
+      transform: scale(1.1);
+    }
+
+    .file-name {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--secondary-color);
+      text-align: center;
+      word-break: break-word;
+      background: white;
+    }
+
     /* SERVICE HOURS SECTION */
     .service-hours {
       background: var(--primary-color);
@@ -815,6 +913,24 @@
           required
         ></textarea>
 
+        <!-- Image Upload Section -->
+        <div class="image-upload-section">
+          <label for="contact-images" class="image-upload-label">
+            <i class="fas fa-image"></i>
+            <span>Attach Images (Optional)</span>
+            <small>Upload photos of your trees or property for better estimates</small>
+          </label>
+          <input
+            type="file"
+            id="contact-images"
+            name="images"
+            multiple
+            accept="image/*"
+            class="image-upload-input"
+          />
+          <div id="image-preview-container" class="image-preview-container"></div>
+        </div>
+
         <button type="submit" class="btn-primary">
           <i class="fas fa-paper-plane"></i> Send
         </button>
@@ -960,6 +1076,109 @@
       }
     });
 
+    // Image Upload Functionality
+    let selectedImages = [];
+
+    function setupImageUpload() {
+      const imageInput = document.getElementById('contact-images');
+      const uploadLabel = document.querySelector('.image-upload-label');
+      const previewContainer = document.getElementById('image-preview-container');
+
+      if (!imageInput || !uploadLabel || !previewContainer) return;
+
+      // Click to upload
+      uploadLabel.addEventListener('click', () => {
+        imageInput.click();
+      });
+
+      // File selection
+      imageInput.addEventListener('change', (e) => {
+        handleImageSelection(e.target.files);
+      });
+
+      // Drag and drop
+      uploadLabel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadLabel.style.borderColor = 'var(--accent-color)';
+        uploadLabel.style.background = 'rgba(140, 198, 63, 0.1)';
+      });
+
+      uploadLabel.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadLabel.style.borderColor = 'var(--border-color)';
+        uploadLabel.style.background = 'var(--light-gray)';
+      });
+
+      uploadLabel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadLabel.style.borderColor = 'var(--border-color)';
+        uploadLabel.style.background = 'var(--light-gray)';
+        handleImageSelection(e.dataTransfer.files);
+      });
+    }
+
+    function handleImageSelection(files) {
+      const maxFiles = 5;
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (selectedImages.length + files.length > maxFiles) {
+        showNotification(`You can only upload up to ${maxFiles} images.`, 'error');
+        return;
+      }
+
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) {
+          showNotification(`${file.name} is not an image file.`, 'error');
+          return;
+        }
+
+        if (file.size > maxSize) {
+          showNotification(`${file.name} is too large. Maximum size is 5MB.`, 'error');
+          return;
+        }
+
+        if (selectedImages.some(img => img.name === file.name && img.size === file.size)) {
+          showNotification(`${file.name} is already selected.`, 'error');
+          return;
+        }
+
+        selectedImages.push(file);
+        createImagePreview(file);
+      });
+    }
+
+    function createImagePreview(file) {
+      const previewContainer = document.getElementById('image-preview-container');
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'image-preview-item';
+        previewItem.dataset.filename = file.name;
+
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="${file.name}">
+          <button type="button" class="remove-image" title="Remove image">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="file-name">${file.name}</div>
+        `;
+
+        previewItem.querySelector('.remove-image').addEventListener('click', () => {
+          removeImage(file.name);
+          previewItem.remove();
+        });
+
+        previewContainer.appendChild(previewItem);
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function removeImage(filename) {
+      selectedImages = selectedImages.filter(img => img.name !== filename);
+    }
+
     // EmailJS functionality
     (function () {
       emailjs.init("YOUR_PUBLIC_KEY");
@@ -981,6 +1200,9 @@
               btn.disabled = false;
             }, 3000);
             document.getElementById("contactForm").reset();
+            // Clear image previews
+            selectedImages = [];
+            document.getElementById('image-preview-container').innerHTML = '';
           }, 2000);
 
           document.addEventListener('DOMContentLoaded', function() {
@@ -1036,6 +1258,9 @@
         });
     })();
     document.addEventListener('DOMContentLoaded', function() {
+            // Setup image upload functionality
+            setupImageUpload();
+            
             const comingSoonIcons = document.querySelectorAll('.social-icon.coming-soon');
             
             comingSoonIcons.forEach(icon => {

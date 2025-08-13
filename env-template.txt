@@ -1,22 +1,26 @@
-# MongoDB Atlas Connection String
-# Replace YOUR_PASSWORD with your actual MongoDB password
-# Replace YOUR_CLUSTER_URL with your actual cluster URL
-MONGODB_URI=mongodb+srv://stellartree-user:YOUR_PASSWORD@YOUR_CLUSTER_URL/stellartmanagement?retryWrites=true&w=majority
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017/stellartmanagement
+MONGODB_DB_NAME=stellartmanagement
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+# Session Secret
+SESSION_SECRET=your_session_secret_here
+
+# Resend Email Configuration
+RESEND_API_KEY=re_DXBodpSa_ESPFR8dLF1eeiiqSLyoJtQaV
+RESEND_FROM_EMAIL=noreply@stellartreemanagement.ca
+RESEND_FROM_NAME=Stellar Tree Management
+
+# Domain Status: ⚠️ NEEDS VERIFICATION - stellartreemanagement.ca domain verification required
+# To send emails to any recipient, you must verify your domain in Resend dashboard
 
 # Server Configuration
 PORT=3000
-NODE_ENV=production
-
-# Google OAuth Configuration
-# Get these from Google Cloud Console > APIs & Services > Credentials
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-
-# For production (stellartreemanagement.ca)
-GOOGLE_REDIRECT_URI=https://www.stellartreemanagement.ca/admin.html
-
-# For local development (uncomment for localhost)
-# GOOGLE_REDIRECT_URI=http://localhost:3000/admin.html
+NODE_ENV=development
 
 # Admin Configuration
 ADMIN_EMAIL=admin@stellartreemanagement.com

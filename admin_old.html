@@ -7,27 +7,10 @@
     <link rel="icon" type="image/x-icon" href="images/logo.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <script src="simple-google-oauth.js"></script>
-
 </head>
-<body>
-    <nav>
-        <div class="nav-container">
-            <img src="images/logo.png" alt="Stellar Tree Management Logo" class="logo">
-            <ul class="nav-links">
-                <li><a href="./">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/projects">Projects</a></li>
-                <li><a href="/booking/">Book Quote</a></li>
-                <li><a href="/admin" class="active">Admin</a></li>
-            </ul>
-            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-    </nav>
+<body class="admin-body">
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal show">
@@ -62,183 +45,382 @@
         </div>
     </div>
 
-    <div class="admin-container" id="adminContent" style="display: none;">
-        <div class="admin-header">
-            <div class="admin-header-content">
-                <div class="admin-title-section">
-                    <h1>Admin Dashboard</h1>
-                    <p>Manage bookings and view statistics for Stellar Tree Management</p>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="Stellar Tree" class="sidebar-logo">
+                <span class="sidebar-title">Stellar Tree</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-details">
+                <span class="user-name">Administrator</span>
+                <span class="user-role">Admin</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link active" data-view="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="admin">
+                <i class="fas fa-user-shield"></i>
+                <span>Admin</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="subadmin">
+                <i class="fas fa-users"></i>
+                <span>Sub Admin</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="marketing">
+                <i class="fas fa-bullhorn"></i>
+                <span>Marketing</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="customers">
+                <i class="fas fa-address-book"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="services">
+                <i class="fas fa-tools"></i>
+                <span>Services</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="bookings">
+                <i class="fas fa-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="equipment">
+                <i class="fas fa-wrench"></i>
+                <span>Equipment</span>
+            </a>
+            <a href="#" class="sidebar-link" data-view="transactions">
+                <i class="fas fa-credit-card"></i>
+                <span>Transactions</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="adminContent" style="display: none;">
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Type in to Search..." class="search-input">
                 </div>
-                <div class="admin-user-section">
-                    <div class="admin-user-info">
-                        <div class="user-avatar">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <div class="user-details">
-                            <div class="user-role">Administrator</div>
-                            <div id="userEmail" class="user-email">Loading...</div>
+            </div>
+            <div class="top-bar-actions">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">4</span>
+                </button>
+                <div class="user-profile">
+                    <span class="user-greeting">Administrator</span>
+                    <div class="user-avatar-small">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div class="view-container active" id="dashboardView">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon quotes">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendingCount">2</h3>
+                        <p>Total Quotes</p>
+                        <div class="stat-meta">
+                            <span>Today - 0</span>
+                            <span>This month - 2</span>
                         </div>
                     </div>
-                    <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()" title="Sign Out">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span class="logout-text">Logout</span>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bookings">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="confirmedCount">2</h3>
+                        <p>Total Bookings</p>
+                        <div class="stat-meta">
+                            <span>Today - 0</span>
+                            <span>This month - 2</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendingBookingCount">4</h3>
+                        <p>Pending Jobs</p>
+                        <div class="stat-meta">
+                            <span>Today - 0</span>
+                            <span>This year - 4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marketing Stats -->
+            <div class="marketing-stats">
+                <div class="marketing-card email">
+                    <div class="marketing-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="marketing-content">
+                        <h4>50%</h4>
+                        <p>Email Inquiries</p>
+                    </div>
+                </div>
+                
+                <div class="marketing-card facebook">
+                    <div class="marketing-icon">
+                        <i class="fab fa-facebook"></i>
+                    </div>
+                    <div class="marketing-content">
+                        <h4>20%</h4>
+                        <p>Facebook Leads</p>
+                    </div>
+                </div>
+                
+                <div class="marketing-card linkedin">
+                    <div class="marketing-icon">
+                        <i class="fab fa-linkedin"></i>
+                    </div>
+                    <div class="marketing-content">
+                        <h4>10%</h4>
+                        <p>LinkedIn Referrals</p>
+                    </div>
+                </div>
+                
+                <div class="marketing-card google">
+                    <div class="marketing-icon">
+                        <i class="fab fa-google"></i>
+                    </div>
+                    <div class="marketing-content">
+                        <h4>20%</h4>
+                        <p>Google Ads</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings Table -->
+            <div class="bookings-table-section">
+                <div class="section-header">
+                    <h2>Recent Tree Service Bookings</h2>
+                    <div class="header-actions">
+                        <button class="refresh-btn" onclick="manualRefreshBookings()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <a href="#" class="view-all-btn">View All</a>
+                    </div>
+                </div>
+                
+                <div class="bookings-table-container">
+                    <table class="bookings-table">
+                        <thead>
+                            <tr>
+                                <th>CUSTOMER</th>
+                                <th>SERVICE TYPE</th>
+                                <th>STATUS</th>
+                                <th>DATE</th>
+                                <th>AMOUNT</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <!-- Bookings will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Management View -->
+        <div class="view-container" id="bookingsView">
+            <div class="page-header">
+                <h1>Bookings Management</h1>
+            </div>
+            
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <div class="filter-tab active" data-filter="all">
+                    <i class="fas fa-list"></i>
+                    All Active
+                </div>
+                <div class="filter-tab" data-filter="pending">
+                    <i class="fas fa-clock"></i>
+                    Request Quote
+                </div>
+                <div class="filter-tab" data-filter="confirmed">
+                    <i class="fas fa-check-circle"></i>
+                    Request Booking
+                </div>
+                <div class="filter-tab" data-filter="pending-booking">
+                    <i class="fas fa-calendar-plus"></i>
+                    Booking Pending
+                </div>
+                <div class="filter-tab" data-filter="completed">
+                    <i class="fas fa-check-double"></i>
+                    Confirmed Booking
+                </div>
+            </div>
+
+            <!-- Bookings Grid -->
+            <div class="bookings-grid" id="activeBookingsGrid">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading bookings...
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Views (placeholders for future implementation) -->
+        <div class="view-container" id="adminView">
+            <div class="page-header">
+                <h1>Admin Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Admin management features coming soon...</p>
+            </div>
+        </div>
+
+        <div class="view-container" id="subadminView">
+            <div class="page-header">
+                <h1>Sub Admin Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Sub admin management features coming soon...</p>
+            </div>
+        </div>
+
+        <div class="view-container" id="marketingView">
+            <div class="page-header">
+                <h1>Marketing</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Marketing analytics and tools coming soon...</p>
+            </div>
+        </div>
+
+        <div class="view-container" id="customersView">
+            <div class="page-header">
+                <h1>Customer Management</h1>
+            </div>
+            
+            <div class="customer-controls">
+                <div class="customer-search">
+                    <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
+                    <button class="search-btn" onclick="searchCustomers()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="customer-actions">
+                    <button class="action-btn primary" onclick="showAddCustomerModal()">
+                        <i class="fas fa-plus"></i> Add Customer
+                    </button>
+                    <button class="action-btn secondary" onclick="migrateCustomers()">
+                        <i class="fas fa-sync"></i> Migrate Existing
+                    </button>
+                    <button class="action-btn warning" onclick="recalculateCustomerTotals()">
+                        <i class="fas fa-calculator"></i> Recalculate Totals
+                    </button>
+                    <button class="action-btn info" onclick="refreshCustomerData()">
+                        <i class="fas fa-sync"></i> Refresh Data
                     </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card pending clickable" data-filter="pending" onclick="filterByStatCard('pending')">
-                <h3 id="pendingCount">0</h3>
-                <p>Request Quote</p>
-            </div>
-            <div class="stat-card confirmed clickable" data-filter="confirmed" onclick="filterByStatCard('confirmed')">
-                <h3 id="confirmedCount">0</h3>
-                <p>Request Booking</p>
-            </div>
-            <div class="stat-card pending-booking clickable" data-filter="pending-booking" onclick="filterByStatCard('pending-booking')">
-                <h3 id="pendingBookingCount">0</h3>
-                <p>Booking Pending</p>
-            </div>
-            <div class="stat-card completed clickable" data-filter="completed" onclick="filterByStatCard('completed')">
-                <h3 id="completedCount">0</h3>
-                <p>Confirmed Booking</p>
+            
+            <div class="customers-grid" id="customersGrid">
+                <div class="loading-state">Loading customers...</div>
             </div>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="bookings-container">
-            <!-- Active Bookings Section -->
-            <div class="active-bookings-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-calendar-check"></i> <span id="sectionTitle">Request Quote</span></h2>
-                            <button class="refresh-btn" onclick="manualRefreshBookings()">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-                </div>
+        <div class="view-container" id="servicesView">
+            <div class="page-header">
+                <h1>Services</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Service management features coming soon...</p>
+            </div>
+        </div>
 
-                <!-- Modern Filter Tabs -->
-                <div class="filter-tabs">
-                    <!-- Booking Status Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Booking Status</div>
-                        <div class="tab-row">
-                            <div class="filter-tab active" data-filter="all">
-                                <i class="fas fa-list"></i>
-                                All Active
-                            </div>
-                            <div class="filter-tab" data-filter="pending">
-                                <i class="fas fa-clock"></i>
-                                Request Quote
-                            </div>
-                            <div class="filter-tab" data-filter="confirmed">
-                                <i class="fas fa-check-circle"></i>
-                                Request Booking
-                            </div>
-                            <div class="filter-tab" data-filter="pending-booking">
-                                <i class="fas fa-calendar-plus"></i>
-                                Booking Pending
-                            </div>
-                            <div class="filter-tab" data-filter="completed">
-                                <i class="fas fa-check-double"></i>
-                                Confirmed Booking
-                            </div>
-                        </div>
-                    </div>
+        <div class="view-container" id="equipmentView">
+            <div class="page-header">
+                <h1>Equipment</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Equipment management features coming soon...</p>
+            </div>
+        </div>
 
-                    <!-- Management Views Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Management Views</div>
-                        <div class="tab-row">
-                            <div class="filter-tab" data-filter="all-bookings">
-                                <i class="fas fa-calendar-alt"></i>
-                                All Bookings
-                            </div>
-                            <div class="filter-tab" data-filter="calendar">
-                                <i class="fas fa-calendar-week"></i>
-                                Calendar View
-                            </div>
-                            <div class="filter-tab" data-filter="customers">
-                                <i class="fas fa-users"></i>
-                                Customer Management
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="view-container" id="transactionsView">
+            <div class="page-header">
+                <h1>Transactions</h1>
+            </div>
+            <div class="placeholder-content">
+                <p>Transaction management features coming soon...</p>
+            </div>
+        </div>
+    </div>
 
-                <!-- Bookings Grid -->
-                <div class="bookings-grid" id="activeBookingsGrid">
-                    <div class="empty-state">Loading bookings...</div>
-                </div>
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
-                <!-- Calendar View -->
-                <div class="calendar-view" id="calendarView" style="display: none;">
-                    <div class="calendar-controls">
-                        <button class="calendar-nav-btn" onclick="previousMonth()">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <h3 id="calendarMonth">July 2025</h3>
-                        <button class="calendar-nav-btn" onclick="nextMonth()">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- Calendar will be populated here -->
-                    </div>
-                    
-                    <div class="calendar-legend">
-                        <div class="legend-item">
-                            <span class="legend-indicator available"></span>
-                            <span>Available</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator booked"></span>
-                            <span>Booked</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator blocked"></span>
-                            <span>Blocked</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator weekend"></span>
-                            <span>Weekend</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customer Management View -->
-                <div class="customer-view" id="customerView" style="display: none;">
-                    <div class="customer-controls">
-                        <div class="customer-search">
-                            <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
-                            <button class="search-btn" onclick="searchCustomers()">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                        <div class="customer-actions">
-                            <button class="action-btn confirm" onclick="showAddCustomerModal()">
-                                <i class="fas fa-plus"></i> Add Customer
-                            </button>
-                            <button class="action-btn complete" onclick="migrateCustomers()">
-                                <i class="fas fa-sync"></i> Migrate Existing
-                            </button>
-                            <button class="action-btn warning" onclick="recalculateCustomerTotals()">
-                                <i class="fas fa-calculator"></i> Recalculate Totals
-                            </button>
-                            <button class="action-btn info" onclick="refreshCustomerData()">
-                                <i class="fas fa-sync"></i> Refresh Data
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="customers-grid" id="customersGrid">
-                        <div class="empty-state">Loading customers...</div>
-                    </div>
+    <!-- Booking Details Popup Modal -->
+    <div id="bookingDetailsPopupModal" class="popup-modal">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 id="popupBookingId">Booking Details</h3>
+                <button class="popup-close" onclick="closeBookingDetailsPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="popup-body" id="popupBookingDetails">
+                <!-- Booking details will be populated here -->
+            </div>
+            <div class="popup-footer">
+                <div class="popup-actions" id="popupBookingActions">
+                    <!-- Action buttons will be populated here -->
                 </div>
             </div>
+        </div>
+    </div>
 
+    <!-- Other existing content continues here -->
+    <div style="display: none;">
+        <!-- Legacy sections for functionality preservation -->
+        <div class="legacy-section">
             <!-- History Section -->
             <div class="history-section">
                 <div class="section-header">
@@ -250,7 +432,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Calendar View -->
+            <div class="calendar-view" id="calendarView" style="display: none;">
+                <div class="calendar-controls">
+                    <button class="calendar-nav-btn" onclick="previousMonth()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h3 id="calendarMonth">July 2025</h3>
+                    <button class="calendar-nav-btn" onclick="nextMonth()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be populated here -->
+                </div>
+                
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-indicator available"></span>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator booked"></span>
+                        <span>Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator blocked"></span>
+                        <span>Blocked</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator weekend"></span>
+                        <span>Weekend</span>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+
+
+
+
+
+
     </div>
 
     <!-- Image Modal -->
@@ -495,13 +720,12 @@
         </div>
     </div>
 
+    <!-- Admin Panel JavaScript -->
+    <script src="admin.js"></script>
+    
     <script>
-        let allBookings = [];
-        let currentFilter = 'all';
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let blockedDates = [];
-        let selectedDate = null;
+        // All main admin functionality is now in admin.js
+        // This script section contains only essential legacy compatibility
         
         // Customer Management Variables
         let allCustomers = [];
@@ -553,7 +777,6 @@
         document.addEventListener('DOMContentLoaded', async function() {
             // Load admin configuration first
             await loadAdminConfig();
-            console.log('ADMIN_CONFIG loaded:', window.ADMIN_CONFIG);
             
             // OAuth authentication is handled by simple-google-oauth.js
             // The SimpleGoogleOAuth class will automatically check for existing sessions
@@ -747,18 +970,8 @@
                         }
                     }
                     
-                    // Clear cached data when loading bookings only if no modal is open
-                    try {
-                        const anyModalOpen = document.querySelectorAll('.modal.show').length > 0;
-                        if (!anyModalOpen) {
-                            clearCachedData();
-                        } else {
-                            console.log('Skipping cache clear while a modal is open');
-                        }
-                    } catch (e) {
-                        // Fallback to previous behavior on any unexpected DOM errors
-                        clearCachedData();
-                    }
+                    // Clear cached data when loading bookings
+                    clearCachedData();
                     
                     // Update UI components
                     updateStatistics();
@@ -823,55 +1036,6 @@
             document.getElementById('confirmedCount').textContent = stats.confirmed;
             document.getElementById('pendingBookingCount').textContent = stats.pendingBooking;
             document.getElementById('completedCount').textContent = stats.completed;
-        }
-
-        // Filter by stat card click
-        function filterByStatCard(filter) {
-            // Find the corresponding filter tab and trigger its click
-            const filterTab = document.querySelector(`.filter-tab[data-filter="${filter}"]`);
-            if (filterTab) {
-                // Remove active class from all tabs and stat cards
-                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-                document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
-                
-                // Add active class to the clicked filter tab and corresponding stat card
-                filterTab.classList.add('active');
-                document.querySelector(`.stat-card[data-filter="${filter}"]`).classList.add('active');
-                
-                // Update current filter
-                currentFilter = filter;
-                
-                // Update section title
-                updateSectionTitle();
-                
-                // Hide calendar view if it's showing
-                document.getElementById('calendarView').style.display = 'none';
-                document.getElementById('customerManagementView').style.display = 'none';
-                
-                // Show bookings grid
-                document.getElementById('activeBookingsGrid').style.display = 'grid';
-                
-                // Render filtered bookings
-                renderActiveBookings();
-                
-                // Scroll to bookings section smoothly
-                document.querySelector('.active-bookings-section').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        }
-
-        // Update stat card active states when filter changes
-        function updateStatCardActiveStates() {
-            // Remove active class from all stat cards
-            document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
-            
-            // Add active class to current filter's stat card
-            const activeStatCard = document.querySelector(`.stat-card[data-filter="${currentFilter}"]`);
-            if (activeStatCard) {
-                activeStatCard.classList.add('active');
-            }
         }
 
         // Render active bookings (pending and confirmed)
@@ -1328,9 +1492,6 @@
                 // Update filter
                 currentFilter = e.target.dataset.filter;
                 updateSectionTitle();
-                
-                // Update stat card active states
-                updateStatCardActiveStates();
                 
                 // Show/hide appropriate view
                 if (currentFilter === 'calendar') {
@@ -2610,7 +2771,8 @@
                 modal.classList.remove('show');
                 document.body.classList.remove('modal-open');
                 
-                // Preserve quote/invoice context when closing
+                // Don't clear cached data when closing modals - keep it for the current booking
+                // The data will be cleared when switching to a different booking
             }
         }
 
@@ -3089,13 +3251,6 @@
                 }
             }
 
-            // Ensure we have current booking context
-            if (!currentQuoteData || !currentQuoteData.bookingId) {
-                showNotification('No booking selected. Please open the quote from a booking.', 'error');
-                console.error('generateQuote called without currentQuoteData or bookingId', currentQuoteData);
-                return;
-            }
-
             // Collect service items
             const serviceItems = [];
             const serviceItemElements = document.querySelectorAll('.service-item');
@@ -3145,13 +3300,6 @@
             const tax = taxEnabled ? subtotal * 0.05 : 0;
             const total = subtotal + tax;
 
-            // Guard against missing booking context
-            if (!currentQuoteData || !currentQuoteData.bookingId) {
-                showNotification('Cannot save quote: missing booking context. Please reopen the quote from the booking.', 'error');
-                console.error('saveQuote called without currentQuoteData or bookingId', currentQuoteData);
-                return;
-            }
-
             const quoteData = {
                 booking_id: currentQuoteData.bookingId,
                 client_name: clientName,
@@ -3168,8 +3316,8 @@
 
             try {
                 // If we have an existing quote ID, update it; otherwise create new
-                const method = currentQuoteData && currentQuoteData.quoteId ? 'PUT' : 'POST';
-                const url = currentQuoteData && currentQuoteData.quoteId ? `/api/quotes/${currentQuoteData.quoteId}` : '/api/quotes';
+                const method = currentQuoteData.quoteId ? 'PUT' : 'POST';
+                const url = currentQuoteData.quoteId ? `/api/quotes/${currentQuoteData.quoteId}` : '/api/quotes';
                 
                 const response = await fetch(url, {
                     method: method,
@@ -3183,11 +3331,8 @@
                     const result = await response.json();
                     showNotification('Quote saved successfully!', 'success');
                     
-                    // Store the quote ID for later use (guard against race conditions)
-                    if (!currentQuoteData) {
-                        currentQuoteData = { bookingId: quoteData.booking_id };
-                    }
-                    currentQuoteData.quoteId = result.quote_id || currentQuoteData.quoteId;
+                    // Store the quote ID for later use
+                    currentQuoteData.quoteId = result.quote_id;
                     
                     // Generate quote preview
                     generateQuotePreview(serviceItems, result.quote_id);
@@ -3232,16 +3377,15 @@
                                 <div class="company-contact">
                                     <div class="contact-item">
                                         <i class="fas fa-map-marker-alt"></i>
-                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
+                                        <span>123 Business Street, Toronto, ON M5V 3A8</span>
                                     </div>
                                     <div class="contact-item">
                                         <i class="fas fa-phone"></i>
-                                        <span>(250) 551-1021</span>
+                                        <span>(555) 123-4567</span>
                                     </div>
                                     <div class="contact-item">
                                         <i class="fas fa-envelope"></i>
-                                        <span>
-stellartmanagement@outlook.com</span>
+                                        <span>info@stellartreemanagement.com</span>
                                     </div>
                                 </div>
                             </div>
@@ -3617,7 +3761,6 @@ stellartmanagement@outlook.com</span>
             }
 
             try {
-                // First, get the quote data from the server
                 const response = await fetch(`/api/quotes/${currentQuoteData.quoteId}/email`, {
                     method: 'POST',
                     headers: {
@@ -3627,119 +3770,16 @@ stellartmanagement@outlook.com</span>
 
                 if (response.ok) {
                     const result = await response.json();
-                    
-                    // Generate email content locally
-                    const emailContent = generateQuoteEmailContent(currentQuoteData);
-                    
-                    // Show email preview and options
-                    showEmailOptions('Quote Email', emailContent, currentQuoteData.customerEmail);
-                    
+                    showNotification('Quote email sent successfully!', 'success');
+                    console.log('Email content:', result.emailContent);
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || 'Failed to get quote data', 'error');
+                    showNotification(error.error || 'Failed to send quote email', 'error');
                 }
             } catch (error) {
-                console.error('Error getting quote data:', error);
-                showNotification('Network error getting quote data', 'error');
+                console.error('Error sending quote email:', error);
+                showNotification('Network error sending quote email', 'error');
             }
-        }
-
-        // Generate Quote Email Content
-        function generateQuoteEmailContent(quoteData) {
-            const serviceItems = quoteData.serviceItems || [];
-            const serviceItemsList = serviceItems.map(item => 
-                `<li>${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}</li>`
-            ).join('');
-            
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Quote - ${quoteData.quoteId}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        .header { background-color: #2c5530; color: white; padding: 20px; text-align: center; }
-                        .content { padding: 20px; background-color: #f9f9f9; }
-                        .service-items { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
-                        .total { background-color: #2c5530; color: white; padding: 20px; text-align: center; font-size: 18px; font-weight: bold; }
-                        .footer { text-align: center; padding: 20px; color: #666; }
-                        ul { list-style: none; padding: 0; }
-                        li { padding: 8px 0; border-bottom: 1px solid #eee; }
-                        li:last-child { border-bottom: none; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>Stellar Tree Management</h1>
-                            <h2>Quote</h2>
-                        </div>
-                        
-                        <div class="content">
-                            <p>Dear ${quoteData.customerName || 'Valued Customer'},</p>
-                            
-                            <p>Thank you for your interest in Stellar Tree Management services!</p>
-                            
-                            <p>Please find your quote details below:</p>
-                            
-                            <div class="service-items">
-                                <h3>Quote Details</h3>
-                                <p><strong>Quote ID:</strong> ${quoteData.quoteId}</p>
-                                <p><strong>Date:</strong> ${quoteData.quoteDate || new Date().toLocaleDateString()}</p>
-                                
-                                <h4>Service Items:</h4>
-                                <ul>
-                                    ${serviceItemsList}
-                                </ul>
-                            </div>
-                            
-                            <div class="total">
-                                Total Amount: $${quoteData.totalAmount ? quoteData.totalAmount.toFixed(2) : '0.00'}
-                            </div>
-                            
-                            <p>Please review this quote and contact us if you have any questions.</p>
-                            
-                            <p>Best regards,<br>
-                            Stellar Tree Management Team</p>
-                        </div>
-                        
-                        <div class="footer">
-                            <p>Email: stellartmanagement@outlook.com<br>
-                            Website: www.stellartreemanagement.ca</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            const textContent = `
-                Dear ${quoteData.customerName || 'Valued Customer'},
-                
-                Thank you for your interest in Stellar Tree Management services!
-                
-                Please find your quote details below:
-                
-                Quote ID: ${quoteData.quoteId}
-                Date: ${quoteData.quoteDate || new Date().toLocaleDateString()}
-                
-                Service Items:
-                ${serviceItems.map(item => 
-                    `- ${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`
-                ).join('\n')}
-                
-                Total Amount: $${quoteData.totalAmount ? quoteData.totalAmount.toFixed(2) : '0.00'}
-                
-                Please review this quote and contact us if you have any questions.
-                
-                Best regards,
-                Stellar Tree Management Team
-                Email: stellartmanagement@outlook.com
-            `;
-            
-            return { html: htmlContent, text: textContent };
         }
 
         // Invoice Functions
@@ -3863,13 +3903,6 @@ stellartmanagement@outlook.com</span>
 
         // Create Invoice from Saved Quote
         function generateInvoice() {
-            // Ensure we have current invoice context
-            if (!currentInvoiceData || !currentInvoiceData.bookingId) {
-                showNotification('No booking selected. Please open the invoice from a saved quote.', 'error');
-                console.error('generateInvoice called without currentInvoiceData or bookingId', currentInvoiceData);
-                return;
-            }
-
             // Validate form
             const requiredFields = ['invoiceClientName', 'invoiceClientPhone', 'invoiceClientAddress', 'invoiceClientEmail', 'invoiceDate'];
             for (const fieldId of requiredFields) {
@@ -3925,13 +3958,6 @@ stellartmanagement@outlook.com</span>
             const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
             const tax = taxEnabled ? subtotal * 0.05 : 0;
             const total = subtotal + tax;
-
-            // Guard against missing booking context
-            if (!currentInvoiceData || !currentInvoiceData.bookingId) {
-                showNotification('Cannot save invoice: missing booking context. Please reopen from a saved quote.', 'error');
-                console.error('saveInvoice called without currentInvoiceData or bookingId', currentInvoiceData);
-                return;
-            }
 
             const invoiceData = {
                 quote_id: currentInvoiceData.quoteId,
@@ -5057,12 +5083,6 @@ stellartmanagement@outlook.com</span>
                 });
                 e.target.classList.add('active');
                 
-                // Update current filter
-                currentFilter = filter;
-                
-                // Update stat card active states
-                updateStatCardActiveStates();
-                
                 // Update section title smoothly
                 const sectionTitle = document.getElementById('sectionTitle');
                 let newTitle = '';
@@ -5131,87 +5151,6 @@ stellartmanagement@outlook.com</span>
                 }, 250);
             }
         });
-
-        // Show Email Options Modal
-        function showEmailOptions(title, emailContent, customerEmail) {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px;">
-                    <div class="modal-header">
-                        <h2>${title}</h2>
-                        <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="email-options">
-                            <div class="option-section">
-                                <h3>📧 Send via Email Client</h3>
-                                <p>This will open your default email client with the quote content pre-filled.</p>
-                                <button class="btn-primary" onclick="sendViaEmailClient('${customerEmail}', 'Quote - ${currentQuoteData.quoteId}', '${emailContent.html.replace(/'/g, "\\'")}', '${emailContent.text.replace(/'/g, "\\'")}')">
-                                     Open Email Client
-                                </button>
-                            </div>
-                            
-                            <div class="option-section">
-                                <h3>📋 Copy to Clipboard</h3>
-                                <p>Copy the email content to paste into your email client manually.</p>
-                                <button class="btn-secondary" onclick="copyEmailContent('${emailContent.html.replace(/'/g, "\\'")}', '${emailContent.text.replace(/'/g, "\\'")}')">
-                                     Copy HTML Content
-                                </button>
-                                <button class="btn-secondary" onclick="copyEmailContent('${emailContent.text.replace(/'/g, "\\'")}', '${emailContent.text.replace(/'/g, "\\'")}')">
-                                     Copy Text Content
-                                </button>
-                            </div>
-                            
-                            <div class="option-section">
-                                <h3>👀 Preview Email</h3>
-                                <p>See how the email will look to your customers.</p>
-                                <button class="btn-info" onclick="previewEmail('${emailContent.html.replace(/'/g, "\\'")}')">
-                                    👀 Preview Email
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-
-        // Send via Email Client
-        function sendViaEmailClient(to, subject, htmlBody, textBody) {
-            const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(textBody)}`;
-            window.open(mailtoLink);
-            
-            // Close the modal
-            const modal = document.querySelector('.modal');
-            if (modal) modal.remove();
-            
-            showNotification('Email client opened! The quote content is pre-filled.', 'success');
-        }
-
-        // Copy Email Content
-        function copyEmailContent(content, type) {
-            navigator.clipboard.writeText(content).then(() => {
-                showNotification(`${type} content copied to clipboard!`, 'success');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = content;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showNotification(`${type} content copied to clipboard!`, 'success');
-            });
-        }
-
-        // Preview Email
-        function previewEmail(htmlContent) {
-            const previewWindow = window.open('', '_blank', 'width=800,height=600');
-            previewWindow.document.write(htmlContent);
-            previewWindow.document.close();
-        }
     </script>
 
     <!-- Quote Generation Modal -->
@@ -5430,13 +5369,6 @@ stellartmanagement@outlook.com</span>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Mobile Quick Actions -->
-        <div class="mobile-quick-actions">
-            <button class="quick-action-btn refresh-action" onclick="manualRefreshBookings()" title="Refresh Data">
-                <i class="fas fa-sync-alt"></i>
-            </button>
         </div>
     </div>
 

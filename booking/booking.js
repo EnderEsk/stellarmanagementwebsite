@@ -46,6 +46,18 @@ class BookingSystem {
             btn.addEventListener('click', () => this.prevStep());
         });
         
+        // Service selection - auto-advance to next step
+        document.querySelectorAll('input[name="service"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                // Auto-advance to next step after a short delay for better UX
+                setTimeout(() => {
+                    if (this.validateServiceSelection()) {
+                        this.nextStep();
+                    }
+                }, 300); // 300ms delay for smooth transition
+            });
+        });
+        
         // Calendar navigation
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
@@ -726,7 +738,8 @@ class BookingSystem {
                 const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
                 
                 // Check if date is blocked (from availability data or blocked dates)
-                const isBlocked = (this.availabilityData[dateString] && this.availabilityData[dateString].blocked) || 
+                // Only block a date if it's explicitly blocked, not if other dates are blocked
+                const isBlocked = (this.availabilityData[dateString] && this.availabilityData[dateString].blocked === true) || 
                                  (this.blockedDates && this.blockedDates.some(blockedDate => 
                                      blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
                                  ));
@@ -873,7 +886,8 @@ class BookingSystem {
         const isWeekend = this.selectedDate.getDay() === 0 || this.selectedDate.getDay() === 6;
         
         // Check if date is blocked (from availability data or blocked dates)
-        const isBlocked = (this.availabilityData[dateString] && this.availabilityData[dateString].blocked) || 
+        // Only block a date if it's explicitly blocked, not if other dates are blocked
+        const isBlocked = (this.availabilityData[dateString] && this.availabilityData[dateString].blocked === true) || 
                          (this.blockedDates && this.blockedDates.some(blockedDate => 
                              blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
                          ));
@@ -929,6 +943,13 @@ class BookingSystem {
         // Add selection
         element.classList.add('selected');
         this.selectedTime = time;
+        
+        // Auto-advance to next step after a short delay for better UX
+        setTimeout(() => {
+            if (this.validateDateAndTimeSelection()) {
+                this.nextStep();
+            }
+        }, 300); // 300ms delay for smooth transition
     }
     
     isWorkingDay(date) {

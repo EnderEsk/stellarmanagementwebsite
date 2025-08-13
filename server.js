@@ -657,7 +657,9 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         }
 
         // Additional validation: Check if this is a weekend and weekends are blocked
-        const bookingDate = new Date(cleanedData.date);
+        // Parse date string as local date to avoid timezone issues
+        const [year, month, day] = cleanedData.date.split('-').map(Number);
+        const bookingDate = new Date(year, month - 1, day); // month is 0-indexed
         const dayOfWeek = bookingDate.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
         
@@ -679,7 +681,8 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         // Validate booking date is not in the past
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const bookingDateOnly = new Date(cleanedData.date);
+        // Use the same parsed date to avoid timezone issues
+        const bookingDateOnly = new Date(year, month - 1, day);
         bookingDateOnly.setHours(0, 0, 0, 0);
         
         if (bookingDateOnly < today) {
@@ -829,8 +832,59 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
 
         const result = await db.collection('bookings').insertOne(newBooking);
 
-        // Send confirmation email (placeholder for now)
-        sendConfirmationEmail(cleanedData.email, cleanedData.booking_id, cleanedData.service, cleanedData.date, cleanedData.time, cleanedData.name);
+        // Send automatic quote request confirmation email to customer
+        try {
+            const EmailService = require('./email-service');
+            const emailService = new EmailService();
+            
+            const emailResult = await emailService.sendQuoteRequestConfirmationEmail(
+                cleanedData.email,
+                cleanedData.booking_id,
+                cleanedData.service,
+                cleanedData.date,
+                cleanedData.time,
+                cleanedData.name,
+                cleanedData.address,
+                cleanedData.notes
+            );
+            
+            if (emailResult.success) {
+                console.log(`📧 Quote request confirmation email sent successfully to ${cleanedData.email}`);
+            } else {
+                console.error(`❌ Failed to send quote request confirmation email:`, emailResult.error);
+            }
+        } catch (emailError) {
+            console.error('❌ Error sending quote request confirmation email:', emailError);
+            // Don't fail the booking creation if email fails
+        }
+
+        // Send notification email to Stellar Tree Management about new booking
+        try {
+            const EmailService = require('./email-service');
+            const emailService = new EmailService();
+            
+            const adminNotificationResult = await emailService.sendNewBookingNotificationEmail(
+                process.env.ADMIN_EMAIL || 'stellartmanagement@outlook.com',
+                cleanedData.booking_id,
+                cleanedData.service,
+                cleanedData.date,
+                cleanedData.time,
+                cleanedData.name,
+                cleanedData.email,
+                cleanedData.phone,
+                cleanedData.address,
+                cleanedData.notes
+            );
+            
+            if (adminNotificationResult.success) {
+                console.log(`📧 New booking notification email sent successfully to admin`);
+            } else {
+                console.error(`❌ Failed to send new booking notification email:`, adminNotificationResult.error);
+            }
+        } catch (adminEmailError) {
+            console.error('❌ Error sending new booking notification email:', adminEmailError);
+            // Don't fail the booking creation if admin email fails
+        }
 
         res.status(201).json({
             message: 'Booking created successfully',
@@ -958,8 +1012,12 @@ app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async 
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        // Send booking confirmation email with unique link
-        const emailContent = sendBookingConfirmationEmail(
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Send booking confirmation email using MailerSend
+        const result = await emailService.sendBookingConfirmationEmail(
             customerEmail, 
             bookingId, 
             booking.service, 
@@ -968,12 +1026,19 @@ app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async 
             customerName
         );
 
-        console.log('📧 Quote confirmation email endpoint called successfully');
-        console.log('📧 Email content:', emailContent);
-        res.json({
-            message: 'Booking confirmation email content generated successfully',
-            emailContent: emailContent
-        });
+        if (result.success) {
+            console.log('📧 Booking confirmation email sent successfully via MailerSend');
+            res.json({
+                message: 'Booking confirmation email sent successfully via MailerSend',
+                messageId: result.messageId
+            });
+        } else {
+            console.error('📧 Failed to send booking confirmation email:', result.error);
+            res.status(500).json({
+                error: 'Failed to send booking confirmation email',
+                details: result.error
+            });
+        }
     } catch (error) {
         console.error('Error sending booking email:', error);
         res.status(500).json({ error: 'Failed to send booking email' });
@@ -1696,8 +1761,12 @@ app.post('/api/quotes/:quoteId/email', async (req, res) => {
             serviceItems = [];
         }
         
-        // Send email
-        const emailContent = sendQuoteEmail(
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Send email using MailerSend
+        const result = await emailService.sendQuoteEmail(
             quote.client_email,
             quote.quote_id,
             quote.client_name,
@@ -1706,10 +1775,17 @@ app.post('/api/quotes/:quoteId/email', async (req, res) => {
             serviceItems
         );
         
-        res.json({
-            message: 'Quote email sent successfully',
-            emailContent: emailContent
-        });
+        if (result.success) {
+            res.json({
+                message: 'Quote email sent successfully via MailerSend',
+                messageId: result.messageId
+            });
+        } else {
+            res.status(500).json({
+                error: 'Failed to send quote email',
+                details: result.error
+            });
+        }
     } catch (error) {
         console.error('Error sending quote email:', error);
         res.status(500).json({ error: 'Failed to send quote email' });
@@ -1988,8 +2064,12 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
             serviceItems = [];
         }
         
-        // Send email
-        const emailContent = sendInvoiceEmail(
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Send email using MailerSend
+        const result = await emailService.sendInvoiceEmail(
             invoice.client_email,
             invoice.invoice_id,
             invoice.client_name,
@@ -1998,10 +2078,17 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
             serviceItems
         );
         
-        res.json({
-            message: 'Invoice email sent successfully',
-            emailContent: emailContent
-        });
+        if (result.success) {
+            res.json({
+                message: 'Invoice email sent successfully via MailerSend',
+                messageId: result.messageId
+            });
+        } else {
+            res.status(500).json({
+                error: 'Failed to send invoice email',
+                details: result.error
+            });
+        }
     } catch (error) {
         console.error('Error sending invoice email:', error);
         res.status(500).json({ error: 'Failed to send invoice email' });
@@ -2477,39 +2564,7 @@ app.post('/api/customers/migrate', async (req, res) => {
     }
 });
 
-// Email confirmation function (placeholder)
-function sendConfirmationEmail(email, bookingId, service, date, time, name) {
-    // This is a placeholder for email functionality
-    // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
-    console.log(`Confirmation email would be sent to ${email} for booking ${bookingId}`);
-    console.log(`Service: ${service}, Date: ${date}, Time: ${time}, Name: ${name}`);
-    
-    // Example email content:
-    const emailContent = {
-        to: email,
-        subject: `Booking Confirmation - ${bookingId}`,
-        body: `
-            Dear ${name},
-            
-            Thank you for booking with Stellar Tree Management!
-            
-            Booking Details:
-            - Booking ID: ${bookingId}
-            - Service: ${service}
-            - Date: ${date}
-            - Time: ${time}
-            
-            We will contact you within 24 hours to confirm your appointment.
-            
-            Best regards,
-            Stellar Tree Management Team
-        `
-    };
-    
-    // Here you would integrate with your email service
-    // For now, we'll just log it
-    console.log('Email content:', emailContent);
-}
+// Email confirmation function (placeholder) - REMOVED: Now using EmailService
 
 // Email quote function (placeholder)
 function sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems) {
