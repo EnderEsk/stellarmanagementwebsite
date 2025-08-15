@@ -7,7 +7,7 @@ function generateImprovedQuoteConfirmationTemplate(bookingId, service, estimated
     
     // Generate the booking status URL
     const baseUrl = process.env.BASE_URL || 'https://stellartreemanagement.ca';
-    const bookingStatusUrl = `${baseUrl}/booking-status.html?booking_id=${bookingId}`;
+    const bookingStatusUrl = `${baseUrl}/booking-status.html?id=${bookingId}`;
     
     const htmlContent = `
         <!DOCTYPE html>

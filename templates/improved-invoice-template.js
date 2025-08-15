@@ -561,7 +561,7 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                         <p>
                             View your booking status and track progress at any time:
                         </p>
-                        <a href="https://stellartreemanagement.ca/booking-status.html?booking_id=${bookingId}" class="status-link">
+                        <a href="https://stellartreemanagement.ca/booking-status.html?id=${bookingId}" class="status-link">
                             View Booking Status
                         </a>
                     </div>
@@ -621,8 +621,8 @@ We accept the following payment methods:
 Payment is due within 30 days of invoice date. Please contact us if you have any questions about payment arrangements.
 
 📱 Track Your Booking:
-View your booking status and track progress at any time:
-https://stellartreemanagement.ca/booking-status.html?booking_id=${bookingId}
+            View your booking status and track progress at any time:
+            https://stellartreemanagement.ca/booking-status.html?id=${bookingId}
 
 Thank you for your business! If you have any questions about this invoice or need to make payment arrangements, please don't hesitate to contact us.
 
