@@ -304,13 +304,7 @@
             font-weight: 500;
         }
 
-        .stat-card.pending h3 { color: #fd7e14; }
-
-        .stat-card.quote-ready h3 { color: #17a2b8; }
-        .stat-card.quote-sent h3 { color: #fd7e14; }
-        .stat-card.quote-accepted h3 { color: #6f42c1; }
-        .stat-card.invoice-ready h3 { color: #e83e8c; }
-        .stat-card.invoice-sent h3 { color: #fd7e14; }
+        .stat-card.pending h3 { color: var(--admin-warning); }
         .stat-card.confirmed h3 { color: var(--admin-success); }
         .stat-card.completed h3 { color: var(--admin-info); }
         .stat-card.cancelled h3 { color: var(--admin-danger); }
@@ -639,45 +633,9 @@
         }
 
         .status-badge.status-pending {
-            color: #fd7e14;
-            background: rgba(253, 126, 20, 0.1);
-            border-color: rgba(253, 126, 20, 0.3);
-        }
-
-        .status-badge.status-pending-site-visit {
-            color: #fd7e14;
-            background: rgba(253, 126, 20, 0.1);
-            border-color: rgba(253, 126, 20, 0.3);
-        }
-
-        .status-badge.status-quote-ready {
-            color: #17a2b8;
-            background: rgba(23, 162, 184, 0.1);
-            border-color: rgba(23, 162, 184, 0.3);
-        }
-
-        .status-badge.status-quote-sent {
-            color: #fd7e14;
-            background: rgba(253, 126, 20, 0.1);
-            border-color: rgba(253, 126, 20, 0.3);
-        }
-
-        .status-badge.status-quote-accepted {
-            color: #6f42c1;
-            background: rgba(111, 66, 193, 0.1);
-            border-color: rgba(111, 66, 193, 0.3);
-        }
-
-        .status-badge.status-invoice-ready {
-            color: #e83e8c;
-            background: rgba(232, 62, 140, 0.1);
-            border-color: rgba(232, 62, 140, 0.3);
-        }
-
-        .status-badge.status-invoice-sent {
-            color: #fd7e14;
-            background: rgba(253, 126, 20, 0.1);
-            border-color: rgba(253, 126, 20, 0.3);
+            color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+            border-color: rgba(255, 193, 7, 0.3);
         }
 
         .status-badge.status-confirmed {
@@ -731,11 +689,6 @@
             color: #212529;
             font-weight: 500;
             font-size: 0.9rem;
-        }
-
-        .job-details .essential-value {
-            color: #6f42c1;
-            font-weight: 600;
         }
 
         .booking-actions {

@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Your Job - Stellar Tree Management</title>
+    <link rel="icon" type="image/x-icon" href="images/logo.ico">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Job Scheduling Page Styles */
+        :root {
+            --primary-color: #2a2a2a;
+            --accent-color: #8cc63f;
+            --secondary-color: #5a5a5a;
+            --bg-color: #f8f9fa;
+            --text-color: #2a2a2a;
+            --light-gray: #f8fafc;
+            --border-color: #e5e7eb;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-color) 0%, #ffffff 100%);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .scheduling-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .scheduling-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .scheduling-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .scheduling-header p {
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .booking-summary {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .booking-id {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .summary-content h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-content p {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .calendar-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: var(--light-gray);
+            border: 1px solid var(--border-color);
+            color: var(--primary-color);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .current-month {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .calendar-grid {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+
+        /* Ensure calendar days are perfectly square and centered */
+        .calendar-day > * {
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Fix the day number positioning */
+        .calendar-day:not(.other-month):not(.disabled) {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ensure consistent grid column sizing */
+        .calendar-weekdays,
+        .calendar-days {
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+
+        /* Ensure perfect alignment between weekdays and days */
+        .calendar-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .calendar-weekdays,
+        .calendar-days {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        /* Force equal column widths */
+        .calendar-weekdays > *,
+        .calendar-days > * {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Make weekday headers match day cell dimensions exactly */
+        .calendar-weekdays span {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            background: var(--light-gray);
+            border-radius: 6px;
+            min-height: 60px;
+            max-height: 70px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: var(--text-color);
+            background: var(--light-gray);
+            border: 1px solid var(--border-color);
+            position: relative;
+            font-size: 1rem;
+            min-height: 60px;
+            max-height: 70px;
+            user-select: none;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .calendar-day:hover:not(.disabled):not(.blocked):not(.booked) {
+            background: rgba(140, 198, 63, 0.1);
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(140, 198, 63, 0.2);
+        }
+
+        .calendar-day.today {
+            background: rgba(140, 198, 63, 0.2);
+            border-color: var(--accent-color);
+            font-weight: 700;
+            color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(140, 198, 63, 0.3);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(140, 198, 63, 0.4);
+            transform: scale(1.05);
+        }
+
+        .calendar-day.selected:hover {
+            background: #7ab32e;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.02);
+            border-color: #ddd;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.5;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .calendar-day.booked {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+            border-color: #dc3545;
+            position: relative;
+            opacity: 0.9;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.booked::after {
+            content: '🔴';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+
+        .calendar-day.blocked {
+            background: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
+            border-color: #6c757d;
+            position: relative;
+            opacity: 0.9;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.blocked::after {
+            content: '🚫';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+
+        .calendar-day.partially-booked {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #ffc107;
+            color: #856404;
+            position: relative;
+        }
+
+        .calendar-day.partially-booked::after {
+            content: '🟡';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+
+        .calendar-day.available {
+            background: rgba(40, 167, 69, 0.15);
+            border-color: #28a745;
+            color: #155724;
+            position: relative;
+        }
+
+        .calendar-day.available::after {
+            content: '🟢';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+
+        /* Calendar day focus states for accessibility */
+        .calendar-day:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        /* Calendar day loading state */
+        .calendar-day.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .calendar-day.loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Calendar Legend */
+        .calendar-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+        }
+
+        .legend-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+        }
+
+        .legend-indicator.available {
+            background: rgba(40, 167, 69, 0.3);
+            border-color: #28a745;
+        }
+
+        .legend-indicator.partially-booked {
+            background: rgba(255, 193, 7, 0.3);
+            border-color: #ffc107;
+        }
+
+        .legend-indicator.booked {
+            background: rgba(220, 53, 69, 0.3);
+            border-color: #dc3545;
+        }
+
+        .legend-indicator.blocked {
+            background: rgba(108, 117, 125, 0.3);
+            border-color: #6c757d;
+        }
+
+        /* Calendar Info Section */
+        .calendar-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .info-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .info-header i {
+            color: var(--accent-color);
+        }
+
+        .info-content {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+
+        .info-content .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .info-content .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-content .info-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .info-content .info-value {
+            color: var(--secondary-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        .time-selection {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .time-selection.show {
+            display: block;
+        }
+
+        .selected-date-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #7ab32e 100%);
+            color: white;
+            border-radius: 12px;
+        }
+
+        .selected-date-display h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .selected-date-display p {
+            margin: 0;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .time-slot {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            background: var(--light-gray);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .time-slot:hover {
+            background: rgba(140, 198, 63, 0.1);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .time-slot.unavailable {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            cursor: not-allowed;
+        }
+
+        .time-slot.unavailable:hover {
+            background: rgba(220, 53, 69, 0.1);
+            transform: none;
+        }
+
+        .time-slot-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .time-slot-text {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .time-slot-status {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .booking-form {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .booking-form.show {
+            display: block;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .form-header p {
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            min-height: 48px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7ab32e;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--primary-color);
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--danger-color);
+        }
+
+        .success-message {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            margin-bottom: 1rem;
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+        }
+
+        .success-description {
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .success-details {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .success-details h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .detail-value {
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .scheduling-container {
+                padding: 1rem;
+            }
+
+            .scheduling-header h1 {
+                font-size: 2rem;
+            }
+
+            .calendar-section {
+                padding: 1.5rem;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .calendar-nav {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .current-month {
+                min-width: auto;
+                text-align: center;
+                width: 100%;
+                order: -1;
+            }
+
+            .calendar-grid {
+                max-width: 100%;
+            }
+
+            .calendar-weekdays,
+            .calendar-days {
+                gap: 0.2rem;
+            }
+
+            .calendar-day {
+                min-height: 50px;
+                max-height: 60px;
+                font-size: 0.9rem;
+                text-align: center;
+            }
+
+            .calendar-weekdays span {
+                font-size: 0.8rem;
+                min-height: 50px;
+                max-height: 60px;
+                text-align: center;
+            }
+
+            .calendar-legend {
+                gap: 1rem;
+                padding: 0.75rem;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .legend-item {
+                font-size: 0.8rem;
+            }
+
+            .time-slots {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .time-slot {
+                padding: 1.25rem 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .booking-summary {
+                padding: 1.5rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .scheduling-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .calendar-section {
+                padding: 1rem;
+            }
+
+            .calendar-weekdays,
+            .calendar-days {
+                gap: 0.15rem;
+            }
+
+            .calendar-day {
+                min-height: 45px;
+                max-height: 55px;
+                font-size: 0.85rem;
+                text-align: center;
+            }
+
+            .calendar-weekdays span {
+                font-size: 0.75rem;
+                min-height: 45px;
+                max-height: 55px;
+                text-align: center;
+            }
+
+            .nav-btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            .time-slot {
+                padding: 1rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Extra small screens */
+            .calendar-day {
+                min-height: 40px;
+                max-height: 50px;
+                font-size: 0.8rem;
+            }
+
+            .calendar-weekdays span {
+                min-height: 40px;
+                max-height: 50px;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Extra small mobile devices */
+        @media (max-width: 360px) {
+            .calendar-section {
+                padding: 0.75rem;
+            }
+
+            .calendar-weekdays,
+            .calendar-days {
+                gap: 0.1rem;
+            }
+
+            .calendar-day {
+                min-height: 35px;
+                max-height: 45px;
+                font-size: 0.75rem;
+            }
+
+            .calendar-weekdays span {
+                min-height: 35px;
+                max-height: 45px;
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scheduling-container">
+        <!-- Header -->
+        <div class="scheduling-header">
+            <h1>📅 Schedule Your Job</h1>
+            <p>Choose your preferred date and time for your tree service</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading your booking details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p id="error-message">An error occurred while loading your booking details.</p>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content" style="display: none;">
+            <!-- Booking Summary -->
+            <div class="booking-summary">
+                <div class="summary-header">
+                    <div class="booking-id" id="booking-id">Loading...</div>
+                    <span class="status-badge" id="status-badge">Quote Accepted</span>
+                </div>
+                <div class="summary-grid" id="summary-grid">
+                    <!-- Summary items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h2 class="calendar-title">Select Your Preferred Date</h2>
+                    <div class="calendar-nav">
+                        <button class="nav-btn" onclick="previousMonth()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month" id="current-month">Loading...</div>
+                        <button class="nav-btn" onclick="nextMonth()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="nav-btn" onclick="refreshAvailabilityData()" style="margin-left: 1rem; background: var(--accent-color); color: white;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="nav-btn" onclick="clearCalendarSelection()" style="margin-left: 0.5rem; background: var(--light-gray); color: var(--secondary-color);">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button class="nav-btn" onclick="testAvailabilityLogic()" style="margin-left: 0.5rem; background: var(--info-color); color: white;">
+                            <i class="fas fa-bug"></i> Debug
+                        </button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Calendar will be populated here -->
+                </div>
+                
+                <!-- Calendar Legend -->
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <div class="legend-indicator available"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator partially-booked"></div>
+                        <span>Partially Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator booked"></div>
+                        <span>Fully Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator blocked"></div>
+                        <span>Blocked</span>
+                    </div>
+                </div>
+
+                <!-- Calendar Info Section -->
+                <div class="calendar-info" id="calendar-info" style="display: none;">
+                    <div class="info-header">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Date Information</span>
+                    </div>
+                    <div class="info-content" id="calendar-info-content">
+                        <!-- Date information will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Selection -->
+            <div class="time-selection" id="time-selection">
+                <div class="selected-date-display">
+                    <h3 id="selected-date-title">Selected Date</h3>
+                    <p id="selected-date-subtitle">Choose a time slot below</p>
+                </div>
+                <div class="time-slots" id="time-slots">
+                    <!-- Time slots will be populated here -->
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="booking-form" id="booking-form">
+                <div class="form-header">
+                    <h3>Confirm Your Job Booking</h3>
+                    <p>Please review and confirm your booking details</p>
+                </div>
+                <form id="job-booking-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="job-date">Job Date</label>
+                            <input type="text" id="job-date" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="job-time">Job Time</label>
+                            <input type="text" id="job-time" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-name">Your Name</label>
+                            <input type="text" id="customer-name" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-email">Your Email</label>
+                            <input type="text" id="customer-email" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-phone">Your Phone</label>
+                            <input type="text" id="customer-phone" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-address">Service Address</label>
+                            <input type="text" id="service-address" readonly>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="additional-notes">Additional Notes (Optional)</label>
+                            <textarea id="additional-notes" placeholder="Any additional information or special requests..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">
+                            <i class="fas fa-arrow-left"></i> Go Back
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-booking">
+                            <i class="fas fa-check"></i> Confirm Job Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Success Message -->
+            <div class="success-message" id="success-message">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 class="success-title">Job Scheduled Successfully! 🎉</h2>
+                <p class="success-description">
+                    Your tree service has been scheduled and is now pending confirmation from our team. 
+                    We'll review your booking and contact you shortly to confirm the appointment.
+                </p>
+                <div class="success-details" id="success-details">
+                    <!-- Success details will be populated here -->
+                </div>
+                <div class="form-actions">
+                    <a href="#" class="btn btn-primary" onclick="goToMainBooking()">
+                        <i class="fas fa-eye"></i> Back to Your Booking
+                    </a>
+                    <button class="btn btn-secondary" onclick="contactUs()">
+                        <i class="fas fa-phone"></i> Contact Us
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDate = new Date();
+        let selectedDate = null;
+        let selectedTime = null;
+        let bookingData = null;
+        let availabilityData = {};
+        let blockedDatesData = {}; // Store blocked dates from database
+
+        // Business configuration - match the main booking system
+        const businessHours = {
+            maxBookingsPerTimeSlot: 1,
+            timeSlots: ['8:00 AM', '1:00 PM', '4:00 PM']
+        };
+
+        // Load booking details when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Job Scheduling Page Loaded');
+            loadBookingDetails();
+        });
+
+        // Get booking ID from URL
+        function getBookingIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('booking_id');
+        }
+
+        // Load booking details
+        async function loadBookingDetails() {
+            const bookingId = getBookingIdFromUrl();
+            
+            if (!bookingId) {
+                showError('No booking ID provided. Please check the URL and try again.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Booking not found. Please check the booking ID and try again.');
+                    } else {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+                }
+
+                const booking = await response.json();
+                console.log('Booking data received:', booking);
+                
+                // Check if booking status allows scheduling
+                if (booking.status !== 'quote-accepted') {
+                    showError('This booking is not ready for scheduling. Please contact us for assistance.');
+                    return;
+                }
+
+                bookingData = booking;
+                displayBookingSummary(booking);
+                await loadBlockedDates(); // Load blocked dates first
+                await loadAvailabilityData();
+                initializeCalendar();
+                
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading booking:', error);
+                showError(error.message || 'Failed to load booking details. Please try again later.');
+            }
+        }
+
+        // Display booking summary
+        function displayBookingSummary(booking) {
+            document.getElementById('booking-id').textContent = booking.booking_id;
+            
+            const summaryGrid = document.getElementById('summary-grid');
+            summaryGrid.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Service</h4>
+                        <p>${booking.service}</p>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Estimated Cost</h4>
+                        <p>$${booking.estimated_cost || 'TBD'}</p>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Customer</h4>
+                        <p>${booking.name}</p>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Address</h4>
+                        <p>${booking.address || 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load blocked dates from the database
+        async function loadBlockedDates() {
+            try {
+                console.log('🔒 Loading blocked dates from database...');
+                const response = await fetch('/api/blocked-dates');
+                
+                if (response.ok) {
+                    const blockedDates = await response.json();
+                    console.log('✅ Blocked dates loaded:', blockedDates);
+                    
+                    // Convert array to object for easy lookup
+                    blockedDates.forEach(blockedDate => {
+                        blockedDatesData[blockedDate.date] = blockedDate.reason;
+                    });
+                    
+                    console.log('🔒 Processed blocked dates:', blockedDatesData);
+                } else {
+                    console.log('⚠️ Failed to load blocked dates, using empty data');
+                    blockedDatesData = {};
+                }
+            } catch (error) {
+                console.error('❌ Error loading blocked dates:', error);
+                blockedDatesData = {};
+            }
+        }
+
+        // Load availability data - use the same endpoint as the main booking system
+        // Database structure includes:
+        // - availability data with time slots (e.g., '8:00 AM': 1 for 1 booking)
+        // - separate "blocked dates" collection with:
+        //   - date: "2025-08-16"
+        //   - reason: "unblocked_weekend" or "blocked_date"
+        async function loadAvailabilityData() {
+            try {
+                const startDate = new Date();
+                const endDate = new Date();
+                endDate.setMonth(endDate.getMonth() + 3); // 3 months ahead
+                
+                console.log('📅 Loading availability data from:', startDate.toISOString().split('T')[0], 'to', endDate.toISOString().split('T')[0]);
+                
+                // Try the correct availability endpoint first
+                let response = await fetch(`/api/availability?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
+                
+                // If that fails, try the alternative endpoint
+                if (!response.ok) {
+                    console.log('📡 First availability endpoint failed, trying alternative...');
+                    response = await fetch(`/api/bookings/availability?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
+                }
+                
+                console.log('📡 Availability API response status:', response.status);
+                
+                if (response.ok) {
+                    availabilityData = await response.json();
+                    console.log('✅ Availability data loaded successfully:', availabilityData);
+                    
+                    // Log some sample data for debugging
+                    const sampleDates = Object.keys(availabilityData).slice(0, 5);
+                    sampleDates.forEach(date => {
+                        console.log(`📊 ${date}:`, availabilityData[date]);
+                    });
+                    
+                    // If no real data, add sample data for testing
+                    if (Object.keys(availabilityData).length === 0) {
+                        console.log('🧪 No real data found, adding sample data for testing...');
+                        addSampleAvailabilityData();
+                    }
+                    
+                    // Re-render calendar with new data
+                    if (document.getElementById('calendar-grid')) {
+                        renderCalendar();
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load availability data:', response.status, errorText);
+                    console.log('⚠️ No availability data loaded - calendar will show default availability');
+                    
+                    // Start with empty availability data
+                    availabilityData = {};
+                    
+                    // For testing purposes, add some sample data
+                    console.log('🧪 Adding sample data for testing...');
+                    addSampleAvailabilityData();
+                    
+                    // Re-render calendar with sample data
+                    if (document.getElementById('calendar-grid')) {
+                        renderCalendar();
+                    }
+                    
+                    // Show warning notification
+                    showNotification('Using sample data - real availability data unavailable', 'warning');
+                }
+            } catch (error) {
+                console.error('❌ Error loading availability data:', error);
+                console.log('⚠️ No availability data loaded - calendar will show default availability');
+                
+                // Start with empty availability data
+                availabilityData = {};
+                
+                // For testing purposes, add some sample data
+                console.log('🧪 Adding sample data for testing...');
+                addSampleAvailabilityData();
+                
+                // Re-render calendar with sample data
+                if (document.getElementById('calendar-grid')) {
+                    renderCalendar();
+                }
+                
+                // Show error notification
+                showNotification('Failed to load availability data - using sample data', 'error');
+            }
+        }
+
+        // Add sample availability data for testing
+        function addSampleAvailabilityData() {
+            const today = new Date();
+            let blockedCount = 0;
+            let unblockedWeekendCount = 0;
+            let bookedCount = 0;
+            let partiallyBookedCount = 0;
+            let availableCount = 0;
+            
+            // Add some sample data for the next 30 days
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dateString = date.toISOString().split('T')[0];
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                // Force some specific patterns for testing
+                if (i === 0) {
+                    // First day - explicitly blocked
+                    availabilityData[dateString] = { blocked: true };
+                    blockedCount++;
+                } else if (i === 1 && isWeekend) {
+                    // Second day if it's a weekend - explicitly unblocked
+                    availabilityData[dateString] = {
+                        unblocked: true,
+                        '8:00 AM': 0,
+                        '1:00 PM': 0,
+                        '4:00 PM': 0
+                    };
+                    unblockedWeekendCount++;
+                } else if (i === 2) {
+                    // Third day - fully booked
+                    availabilityData[dateString] = {
+                        '8:00 AM': 1,
+                        '1:00 PM': 1,
+                        '4:00 PM': 1
+                    };
+                    bookedCount++;
+                } else if (i === 3) {
+                    // Fourth day - partially booked
+                    availabilityData[dateString] = {
+                        '8:00 AM': 1,
+                        '1:00 PM': 0,
+                        '4:00 PM': 1
+                    };
+                    partiallyBookedCount++;
+                } else if (i === 4) {
+                    // Fifth day - available (weekday only)
+                    if (!isWeekend) {
+                        availabilityData[dateString] = {
+                            '8:00 AM': 0,
+                            '1:00 PM': 0,
+                            '4:00 PM': 0
+                        };
+                        availableCount++;
+                    }
+                } else {
+                    // Random assignment for remaining days
+                    const random = Math.random();
+                    if (random < 0.15 && !isWeekend) {
+                        // 15% chance of weekday being explicitly blocked
+                        availabilityData[dateString] = { blocked: true };
+                        blockedCount++;
+                    } else if (random < 0.25 && isWeekend) {
+                        // 10% chance of weekend being explicitly unblocked
+                        availabilityData[dateString] = {
+                            unblocked: true,
+                            '8:00 AM': 0,
+                            '1:00 PM': 0,
+                            '4:00 PM': 0
+                        };
+                        unblockedWeekendCount++;
+                    } else if (random < 0.45 && !isWeekend) {
+                        // 20% chance of weekday being fully booked
+                        availabilityData[dateString] = {
+                            '8:00 AM': 1,
+                            '1:00 PM': 1,
+                            '4:00 PM': 1
+                        };
+                        bookedCount++;
+                    } else if (random < 0.65 && !isWeekend) {
+                        // 20% chance of weekday being partially booked
+                        availabilityData[dateString] = {
+                            '8:00 AM': 1,
+                            '1:00 PM': 0,
+                            '4:00 PM': 1
+                        };
+                        partiallyBookedCount++;
+                    } else if (!isWeekend) {
+                        // Remaining weekdays are available
+                        availabilityData[dateString] = {
+                            '8:00 AM': 0,
+                            '1:00 PM': 0,
+                            '4:00 PM': 0
+                        };
+                        availableCount++;
+                    }
+                    // Weekends without explicit unblocked status will be blocked by default
+                }
+            }
+        }
+
+        // Initialize calendar
+        function initializeCalendar() {
+            updateCalendarDisplay();
+            
+            // Hide calendar info initially
+            document.getElementById('calendar-info').style.display = 'none';
+        }
+
+        // Update calendar display
+        async function updateCalendarDisplay() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('current-month').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            // Load new availability data for the new month
+            await loadAvailabilityData();
+            
+            // Re-render calendar with new data
+            renderCalendar();
+        }
+
+        // Render calendar - using the exact same logic as the main booking system
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            // Add weekday headers
+            const weekdayContainer = document.createElement('div');
+            weekdayContainer.className = 'calendar-weekdays';
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('span');
+                header.textContent = day;
+                weekdayContainer.appendChild(header);
+            });
+            grid.appendChild(weekdayContainer);
+            
+            // Add calendar days container
+            const daysContainer = document.createElement('div');
+            daysContainer.className = 'calendar-days';
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // Render calendar days
+            for (let i = 0; i < 42; i++) {
+                const currentDateObj = new Date(startDate);
+                currentDateObj.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                // Check if this date is in current month
+                if (currentDateObj.getMonth() !== currentDate.getMonth()) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                // Get today's date for comparison
+                const today = new Date();
+                
+                // Check if date is in the past - use the same logic as main booking system
+                if (isSameDay(currentDateObj, today)) {
+                    // Today is available
+                    dayElement.classList.add('today');
+                } else if (currentDateObj < today && !isSameDay(currentDateObj, today)) {
+                    // Past dates are disabled
+                    dayElement.classList.add('disabled');
+                    dayElement.textContent = currentDateObj.getDate();
+                } else {
+                    // Check availability using the same logic as main booking system
+                    const dateString = currentDateObj.toISOString().split('T')[0];
+                    const dayBookings = availabilityData[dateString] || {};
+                    
+                    // Check blocked dates from database
+                    const blockedDateReason = blockedDatesData[dateString];
+                    const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
+                    const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
+                    const isWeekend = currentDateObj.getDay() === 0 || currentDateObj.getDay() === 6; // Sunday or Saturday
+                    
+                    // Check if the date has availability data (time slots) - this means it's available
+                    const hasAvailabilityData = dayBookings['8:00 AM'] !== undefined || 
+                                             dayBookings['1:00 PM'] !== undefined || 
+                                             dayBookings['4:00 PM'] !== undefined;
+                    
+                    // Date is blocked if: explicitly blocked OR (weekend AND not explicitly unblocked)
+                    const isBlocked = isExplicitlyBlocked || (isWeekend && !isExplicitlyUnblocked);
+                    
+                    if (isBlocked) {
+                        if (isExplicitlyBlocked) {
+                            dayElement.classList.add('blocked');
+                            dayElement.textContent = currentDateObj.getDate();
+                            dayElement.title = 'This day is explicitly blocked';
+                        } else if (isWeekend && !isExplicitlyUnblocked) {
+                            dayElement.classList.add('blocked');
+                            dayElement.textContent = currentDateObj.getDate();
+                            dayElement.title = 'Weekend - blocked by default';
+                        }
+                    } else {
+                        // Check booking status for this day
+                        const timeSlots = businessHours.timeSlots;
+                        let totalBookings = 0;
+                        let bookedTimeSlots = [];
+                        
+                        // Count bookings for each time slot
+                        timeSlots.forEach(time => {
+                            const bookingCount = dayBookings[time] || 0;
+                            totalBookings += bookingCount;
+                            if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
+                                bookedTimeSlots.push(time);
+                            }
+                        });
+                        
+                        // Determine day status
+                        if (bookedTimeSlots.length === timeSlots.length) {
+                            // All time slots are booked
+                            dayElement.classList.add('booked');
+                            dayElement.textContent = currentDateObj.getDate();
+                            dayElement.title = 'All time slots are booked';
+                        } else if (bookedTimeSlots.length > 0) {
+                            // Some time slots are booked
+                            dayElement.classList.add('partially-booked');
+                            dayElement.textContent = currentDateObj.getDate();
+                            dayElement.title = `Some time slots booked: ${bookedTimeSlots.join(', ')}`;
+                            
+                            // Add click handler for partially booked days
+                            dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                        } else {
+                            // All time slots are available
+                            dayElement.classList.add('available');
+                            dayElement.textContent = currentDateObj.getDate();
+                            dayElement.title = 'Available for booking';
+                            
+                            // Add click handler
+                            dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                        }
+                    }
+                }
+                
+                daysContainer.appendChild(dayElement);
+            }
+            
+            grid.appendChild(daysContainer);
+        }
+
+        // Helper function to check if two dates are the same day
+        function isSameDay(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getDate() === date2.getDate();
+        }
+
+        // Debug function to test availability logic
+        function debugAvailabilityLogic(date) {
+            const dateString = date.toISOString().split('T')[0];
+            const dayBookings = availabilityData[dateString] || {};
+            const blockedDateReason = blockedDatesData[dateString];
+            const dayOfWeek = date.getDay();
+            const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
+            const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
+            
+            console.log(`🔍 Debug for ${dateString} (${dayName}):`);
+            console.log(`  - Day of week: ${dayOfWeek}`);
+            console.log(`  - Is weekend: ${isWeekend}`);
+            console.log(`  - Blocked date reason: ${blockedDateReason || 'none'}`);
+            console.log(`  - Day bookings:`, dayBookings);
+            console.log(`  - Time slots:`, businessHours.timeSlots);
+            
+            if (isExplicitlyBlocked) {
+                console.log(`  - Status: BLOCKED (explicitly blocked by admin)`);
+            } else if (isWeekend && !isExplicitlyUnblocked) {
+                console.log(`  - Status: BLOCKED (weekend - blocked by default)`);
+            } else if (isWeekend && isExplicitlyUnblocked) {
+                console.log(`  - Status: AVAILABLE (weekend - explicitly unblocked by admin)`);
+            } else {
+                // Check booking status
+                const timeSlots = businessHours.timeSlots;
+                let totalBookings = 0;
+                let bookedTimeSlots = [];
+                
+                timeSlots.forEach(time => {
+                    const bookingCount = dayBookings[time] || 0;
+                    totalBookings += bookingCount;
+                    console.log(`    - ${time}: ${bookingCount}/${businessHours.maxBookingsPerTimeSlot} bookings`);
+                    if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
+                        bookedTimeSlots.push(time);
+                    }
+                });
+                
+                if (bookedTimeSlots.length === timeSlots.length) {
+                    console.log(`  - Status: BOOKED (all slots full)`);
+                } else if (bookedTimeSlots.length > 0) {
+                    console.log(`  - Status: PARTIALLY BOOKED (${bookedTimeSlots.length}/${timeSlots.length} slots full)`);
+                } else {
+                    console.log(`  - Status: AVAILABLE (all slots open)`);
+                }
+            }
+        }
+
+        // Test function to debug availability logic
+        function testAvailabilityLogic() {
+            // Test a few sample dates
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const testDate = new Date(today);
+                testDate.setDate(today.getDate() + i);
+                debugAvailabilityLogic(testDate);
+            }
+        }
+
+
+
+        // Select date
+        function selectDate(date) {
+            selectedDate = date;
+            selectedTime = null;
+            
+            // Update calendar display - remove all selected classes first
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            // Find the correct day element and highlight it
+            const dateString = date.toISOString().split('T')[0];
+            const dayElements = document.querySelectorAll('.calendar-days .calendar-day');
+            
+            dayElements.forEach((day, index) => {
+                // Calculate the actual date for this day element
+                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                const currentDateObj = new Date(startDate);
+                currentDateObj.setDate(startDate.getDate() + index);
+                
+                if (currentDateObj.toISOString().split('T')[0] === dateString) {
+                    day.classList.add('selected');
+                }
+            });
+            
+            // Show calendar info section
+            showCalendarInfo(date);
+            
+            // Show time selection
+            showTimeSelection(date);
+        }
+
+        // Show calendar info section
+        function showCalendarInfo(date) {
+            const dateString = date.toISOString().split('T')[0];
+            const dayBookings = availabilityData[dateString] || {};
+            const blockedDateReason = blockedDatesData[dateString];
+            const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
+            const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            const hasAvailabilityData = dayBookings['8:00 AM'] !== undefined || 
+                                      dayBookings['1:00 PM'] !== undefined || 
+                                      dayBookings['4:00 PM'] !== undefined;
+            
+            const infoContainer = document.getElementById('calendar-info');
+            const infoContent = document.getElementById('calendar-info-content');
+            
+            let infoHTML = '';
+            
+            if (isExplicitlyBlocked) {
+                infoHTML = `
+                    <div class="info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" style="color: #6c757d;">Explicitly Blocked</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Reason:</span>
+                        <span class="info-value">This day is blocked by admin and unavailable for booking</span>
+                    </div>
+                `;
+            } else if (isWeekend && !isExplicitlyUnblocked) {
+                infoHTML = `
+                    <div class="info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" style="color: #6c757d;">Weekend Blocked</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Reason:</span>
+                        <span class="info-value">Weekend - blocked by default (contact admin to unblock)</span>
+                    </div>
+                `;
+            } else if (isWeekend && isExplicitlyUnblocked) {
+                infoHTML = `
+                    <div class="info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" style="color: #28a745;">Weekend Available</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Reason:</span>
+                        <span class="info-value">Weekend - explicitly unblocked by admin (${blockedDateReason})</span>
+                    </div>
+                `;
+            } else {
+                // Check booking status for this day
+                const timeSlots = businessHours.timeSlots;
+                let totalBookings = 0;
+                let bookedTimeSlots = [];
+                let availableTimeSlots = [];
+                
+                // Count bookings for each time slot
+                timeSlots.forEach(time => {
+                    const bookingCount = dayBookings[time] || 0;
+                    totalBookings += bookingCount;
+                    if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
+                        bookedTimeSlots.push(time);
+                    } else {
+                        availableTimeSlots.push(time);
+                    }
+                });
+                
+                if (bookedTimeSlots.length === timeSlots.length) {
+                    // All time slots are booked
+                    infoHTML = `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #dc3545;">Fully Booked</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Total Bookings:</span>
+                            <span class="info-value">${totalBookings}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Available Slots:</span>
+                            <span class="info-value">None</span>
+                        </div>
+                    `;
+                } else if (bookedTimeSlots.length > 0) {
+                    // Some time slots are booked
+                    infoHTML = `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #ffc107;">Partially Booked</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Total Bookings:</span>
+                            <span class="info-value">${totalBookings}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Booked Slots:</span>
+                            <span class="info-value">${bookedTimeSlots.join(', ')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Available Slots:</span>
+                            <span class="info-value">${availableTimeSlots.join(', ')}</span>
+                        </div>
+                    `;
+                } else {
+                    // All time slots are available
+                    infoHTML = `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #28a745;">Available</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Available Slots:</span>
+                            <span class="info-value">${timeSlots.join(', ')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Max Bookings per Slot:</span>
+                            <span class="info-value">${businessHours.maxBookingsPerTimeSlot}</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            infoContent.innerHTML = infoHTML;
+            infoContainer.style.display = 'block';
+        }
+
+        // Show time selection
+        function showTimeSelection(date) {
+            const dateString = date.toISOString().split('T')[0];
+            const formattedDate = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('selected-date-title').textContent = formattedDate;
+            document.getElementById('selected-date-subtitle').textContent = 'Choose a time slot below';
+            
+            // Populate time slots
+            const timeSlotsContainer = document.getElementById('time-slots');
+            timeSlotsContainer.innerHTML = '';
+            
+            businessHours.timeSlots.forEach(timeSlot => {
+                const slotElement = document.createElement('div');
+                slotElement.className = 'time-slot';
+                
+                // Check availability for this time slot
+                const isAvailable = checkTimeSlotAvailability(dateString, timeSlot);
+                
+                if (isAvailable) {
+                    slotElement.addEventListener('click', () => selectTimeSlot(timeSlot));
+                } else {
+                    slotElement.classList.add('unavailable');
+                }
+                
+                slotElement.innerHTML = `
+                    <div class="time-slot-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="time-slot-text">${timeSlot}</div>
+                    <div class="time-slot-status">
+                        ${isAvailable ? 'Available' : 'Booked'}
+                    </div>
+                `;
+                
+                timeSlotsContainer.appendChild(slotElement);
+            });
+            
+            // Show time selection section
+            document.getElementById('time-selection').classList.add('show');
+            
+            // Hide booking form if it was shown
+            document.getElementById('booking-form').classList.remove('show');
+        }
+
+        // Check time slot availability
+        function checkTimeSlotAvailability(dateString, timeSlot) {
+            if (availabilityData[dateString]) {
+                const currentBookings = availabilityData[dateString][timeSlot] || 0;
+                return currentBookings < businessHours.maxBookingsPerTimeSlot;
+            }
+            return true; // Default to available if no data
+        }
+
+        // Select time slot
+        function selectTimeSlot(time) {
+            selectedTime = time;
+            
+            // Update time slot display
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            event.target.closest('.time-slot').classList.add('selected');
+            
+            // Show booking form
+            showBookingForm();
+        }
+
+        // Show booking form
+        function showBookingForm() {
+            // Populate form fields
+            document.getElementById('job-date').value = selectedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('job-time').value = selectedTime;
+            document.getElementById('customer-name').value = bookingData.name;
+            document.getElementById('customer-email').value = bookingData.email;
+            document.getElementById('customer-phone').value = bookingData.phone || 'N/A';
+            document.getElementById('service-address').value = bookingData.address || 'N/A';
+            
+            // Show form
+            document.getElementById('booking-form').classList.add('show');
+            
+            // Scroll to form
+            document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Go back to time selection
+        function goBack() {
+            document.getElementById('booking-form').classList.remove('show');
+            document.getElementById('time-selection').classList.add('show');
+            
+            // Clear calendar info
+            document.getElementById('calendar-info').style.display = 'none';
+        }
+
+        // Clear calendar selection
+        function clearCalendarSelection() {
+            selectedDate = null;
+            selectedTime = null;
+            
+            // Remove selected class from all calendar days
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            // Hide calendar info
+            document.getElementById('calendar-info').style.display = 'none';
+            
+            // Hide time selection
+            document.getElementById('time-selection').classList.remove('show');
+            
+            // Hide booking form
+            document.getElementById('booking-form').classList.remove('show');
+        }
+
+        // Handle form submission
+        document.getElementById('job-booking-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submit-booking');
+            const originalText = submitButton.innerHTML;
+            
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            submitButton.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/bookings/${bookingData.booking_id}/book-job`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        jobDate: selectedDate.toISOString().split('T')[0],
+                        jobTime: selectedTime,
+                        additionalNotes: document.getElementById('additional-notes').value
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showSuccessMessage(result);
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to submit job booking');
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error submitting job booking:', error);
+                showError('Network error submitting job booking');
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Show success message
+        function showSuccessMessage(result) {
+            // Hide all sections
+            document.getElementById('time-selection').classList.remove('show');
+            document.getElementById('booking-form').classList.remove('show');
+            
+            // Populate success details
+            const successDetails = document.getElementById('success-details');
+            successDetails.innerHTML = `
+                <h4>Booking Details</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Booking ID:</span>
+                    <span class="detail-value">${bookingData.booking_id}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Service:</span>
+                    <span class="detail-value">${bookingData.service}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job Date:</span>
+                    <span class="detail-value">${selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job Time:</span>
+                    <span class="detail-value">${selectedTime}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">Pending Confirmation</span>
+                </div>
+            `;
+            
+            // Show success message
+            document.getElementById('success-message').classList.add('show');
+            
+            // Scroll to success message
+            document.getElementById('success-message').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Navigation functions
+        async function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            await updateCalendarDisplay();
+        }
+
+        async function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            await updateCalendarDisplay();
+        }
+
+        // Refresh availability data
+        async function refreshAvailabilityData() {
+            console.log('🔄 Refreshing availability data...');
+            
+            // Show loading state on refresh button
+            const refreshBtn = document.querySelector('.nav-btn[onclick="refreshAvailabilityData()"]');
+            const originalContent = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+            
+            try {
+                await loadAvailabilityData();
+                console.log('✅ Availability data refreshed successfully');
+                
+                // Show success feedback
+                showNotification('Calendar updated with latest availability!', 'success');
+            } catch (error) {
+                console.error('❌ Error refreshing availability data:', error);
+                showNotification('Failed to refresh calendar data. Please try again.', 'error');
+            } finally {
+                // Restore button state
+                refreshBtn.innerHTML = originalContent;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            // Set icon based on type
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            else if (type === 'error') icon = 'exclamation-circle';
+            else if (type === 'warning') icon = 'exclamation-triangle';
+            
+            notification.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Set background color based on type
+            let bgColor = 'var(--info-color)';
+            if (type === 'success') bgColor = 'var(--success-color)';
+            else if (type === 'error') bgColor = 'var(--danger-color)';
+            else if (type === 'warning') bgColor = 'var(--warning-color)';
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 500;
+                max-width: 300px;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations for notifications
+        const notificationStyles = document.createElement('style');
+        notificationStyles.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(notificationStyles);
+
+        // Go back to main booking page
+        function goToMainBooking() {
+            const bookingId = getBookingIdFromUrl();
+            if (bookingId) {
+                // Store the booking ID in localStorage so booking-status.html can access it
+                localStorage.setItem('currentBookingId', bookingId);
+                // Redirect to the main booking status page
+                window.location.href = 'booking-status.html';
+            } else {
+                // Fallback to home page if no booking ID
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Contact us
+        function contactUs() {
+            window.location.href = 'mailto:stellartmanagement@outlook.com?subject=Job%20Scheduling%20Inquiry';
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+    </script>
+</body>
+</html>

@@ -516,7 +516,7 @@ app.get('/api/availability', async (req, res) => {
         const bookings = await db.collection('bookings')
             .find({
                 date: { $gte: start_date, $lte: end_date },
-                status: { $in: ['pending', 'confirmed'] }
+                status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
             })
             .sort({ date: 1, time: 1 })
             .toArray();
@@ -641,7 +641,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         const existingTimeSlotBooking = await db.collection('bookings').findOne({
             date: cleanedData.date,
             time: cleanedData.time,
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
         });
 
         if (existingTimeSlotBooking) {
@@ -709,7 +709,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
                 { email: cleanedData.email }
             ],
             date: cleanedData.date,
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
         });
 
         if (sameDateBooking) {
@@ -731,7 +731,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
                 { phone: cleanedData.phone },
                 { email: cleanedData.email }
             ],
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
         }).toArray();
 
         if (activeBookings.length >= 3) {
@@ -904,16 +904,26 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         const { bookingId } = req.params;
         const { status } = req.body;
 
-        if (!status || !['pending', 'confirmed', 'pending-booking', 'cancelled', 'completed'].includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
+        console.log(`🔄 Updating booking ${bookingId} status to: ${status}`);
+        console.log(`🔍 Request body:`, req.body);
+        console.log(`🔍 Request headers:`, req.headers);
+        console.log(`🔍 Content-Type:`, req.headers['content-type']);
+        console.log(`🔍 Authorization:`, req.headers.authorization ? 'Present' : 'Missing');
+
+        if (!status || !['pending', 'pending-site-visit', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking', 'invoice-ready', 'invoice-sent', 'cancelled', 'completed'].includes(status)) {
+            console.log(`❌ Invalid status: ${status}`);
+            return res.status(500).json({ error: 'Invalid status' });
         }
 
         // First, get the customer_id for this booking
         const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
         
         if (!booking) {
+            console.log(`❌ Booking not found: ${bookingId}`);
             return res.status(404).json({ error: 'Booking not found' });
         }
+
+        console.log(`✅ Found booking: ${bookingId}, current status: ${booking.status}`);
 
         // Update the booking status
         const result = await db.collection('bookings').updateOne(
@@ -927,8 +937,11 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         );
 
         if (result.matchedCount === 0) {
+            console.log(`❌ No booking updated: ${bookingId}`);
             return res.status(404).json({ error: 'Booking not found' });
         }
+
+        console.log(`✅ Successfully updated booking ${bookingId} status to ${status}`);
 
         // If booking is completed, update customer total spent
         if (status === 'completed' && booking.customer_id) {
@@ -1000,6 +1013,302 @@ app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
     }
 });
 
+// Send invoice to customer (admin only)
+app.post('/api/bookings/:bookingId/send-invoice', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Get the actual invoice data for this booking
+        const invoices = await db.collection('invoices').find({ booking_id: bookingId }).toArray();
+        let invoiceData = null;
+        let totalAmount = 'TBD';
+        let serviceItems = [];
+        
+        if (invoices.length > 0) {
+            // Get the most recent invoice
+            invoiceData = invoices[invoices.length - 1];
+            totalAmount = `$${parseFloat(invoiceData.total_amount).toFixed(2)}`;
+            
+            try {
+                serviceItems = JSON.parse(invoiceData.service_items);
+            } catch (e) {
+                serviceItems = [];
+            }
+        }
+        
+        // Send invoice email to customer
+        const result = await emailService.sendInvoiceEmail(
+            booking.email, 
+            bookingId, 
+            booking.service, 
+            totalAmount,
+            booking.work_description || booking.notes || 'Tree service as requested',
+            booking.name,
+            booking.address || '',
+            booking.notes || '',
+            serviceItems
+        );
+
+        if (result.success) {
+            // Update booking status to 'invoice-sent'
+            await db.collection('bookings').updateOne(
+                { booking_id: bookingId },
+                { 
+                    $set: { 
+                        status: 'invoice-sent',
+                        updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                    } 
+                }
+            );
+
+            console.log('📧 Invoice sent to customer successfully');
+            res.json({
+                message: 'Invoice sent to customer successfully',
+                messageId: result.messageId
+            });
+        } else {
+            console.error('📧 Failed to send invoice to customer:', result.error);
+            res.status(500).json({
+                error: 'Failed to send invoice to customer',
+                details: result.error
+            });
+        }
+    } catch (error) {
+        console.error('Error sending invoice to customer:', error);
+        res.status(500).json({ error: 'Failed to send invoice to customer' });
+    }
+});
+
+// Create invoice from booking (admin only)
+app.post('/api/bookings/:bookingId/create-invoice', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const {
+            client_name,
+            client_phone,
+            client_address,
+            client_email,
+            invoice_date,
+            service_items,
+            subtotal,
+            tax_amount,
+            total_amount,
+            tax_enabled
+        } = req.body;
+
+        if (!client_name || !client_phone || !client_address || !client_email || !invoice_date || !service_items) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Get the booking to verify it exists and get customer info
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        const invoice_id = generateUniqueId('INV');
+        const serviceItemsJson = JSON.stringify(service_items);
+
+        // Get or create customer_id
+        let customerId = null;
+        if (booking.customer_id) {
+            customerId = booking.customer_id;
+        } else {
+            // Create a new customer if booking doesn't have customer_id
+            customerId = generateUniqueId('CUST');
+            const newCustomer = {
+                customer_id: customerId,
+                name: client_name,
+                email: client_email,
+                phone: client_phone,
+                address: client_address,
+                total_bookings: 0,
+                total_spent: 0,
+                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            };
+            
+            await db.collection('customers').insertOne(newCustomer);
+            
+            // Update the booking with the customer_id
+            await db.collection('bookings').updateOne(
+                { booking_id: bookingId },
+                { $set: { customer_id: customerId } }
+            );
+        }
+
+        const newInvoice = {
+            invoice_id: invoice_id,
+            customer_id: customerId,
+            quote_id: null, // No quote associated when creating directly from booking
+            booking_id: bookingId,
+            client_name: client_name,
+            client_phone: client_phone,
+            client_address: client_address,
+            client_email: client_email,
+            invoice_date: invoice_date,
+            service_items: serviceItemsJson,
+            subtotal: subtotal,
+            tax_amount: tax_amount,
+            total_amount: total_amount,
+            tax_enabled: tax_enabled ? 1 : 0,
+            payment_status: 'pending',
+            created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        const result = await db.collection('invoices').insertOne(newInvoice);
+
+        // Update customer total spent when invoice is created
+        if (customerId) {
+            try {
+                await updateCustomerTotalSpent(customerId);
+            } catch (error) {
+                console.error('Error updating customer total spent:', error);
+                // Don't fail the request, just log the error
+            }
+        }
+
+        // Update booking status to 'invoice-ready'
+        await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    status: 'invoice-ready',
+                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                } 
+            }
+        );
+
+        res.json({
+            message: 'Invoice created successfully',
+            invoice_id: invoice_id,
+            id: result.insertedId
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Send quote to customer (admin only)
+app.post('/api/bookings/:bookingId/send-quote', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Send quote sent email to customer
+        const result = await emailService.sendQuoteSentEmail(
+            booking.email, 
+            bookingId, 
+            booking.service, 
+            booking.estimated_cost || 'TBD',
+            booking.work_description || booking.notes || 'Tree service as requested',
+            booking.name,
+            booking.address || '',
+            booking.notes || ''
+        );
+
+        if (result.success) {
+            // Update booking status to 'quote-sent'
+            await db.collection('bookings').updateOne(
+                { booking_id: bookingId },
+                { 
+                    $set: { 
+                        status: 'quote-sent',
+                        updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                    } 
+                }
+            );
+
+            console.log('📧 Quote sent to customer successfully');
+            res.json({
+                message: 'Quote sent to customer successfully',
+                messageId: result.messageId
+            });
+        } else {
+            console.error('📧 Failed to send quote to customer:', result.error);
+            res.status(500).json({
+                error: 'Failed to send quote to customer',
+                details: result.error
+            });
+        }
+    } catch (error) {
+        console.error('Error sending quote to customer:', error);
+        res.status(500).json({ error: 'Failed to send quote to customer' });
+    }
+});
+
+// Send quote confirmation email to customer (admin only)
+app.post('/api/bookings/:bookingId/send-quote-confirmation-email', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { customerEmail, customerName, estimatedCost, workDescription } = req.body;
+
+        if (!customerEmail || !customerName || !estimatedCost || !workDescription) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Import and use EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        // Send quote confirmation email with booking link
+        const result = await emailService.sendQuoteConfirmationEmail(
+            customerEmail, 
+            bookingId, 
+            booking.service, 
+            estimatedCost,
+            workDescription,
+            customerName,
+            booking.address || '',
+            booking.notes || ''
+        );
+
+        if (result.success) {
+            console.log('📧 Quote confirmation email sent successfully');
+            res.json({
+                message: 'Quote confirmation email sent successfully',
+                messageId: result.messageId
+            });
+        } else {
+            console.error('📧 Failed to send quote confirmation email:', result.error);
+            res.status(500).json({
+                error: 'Failed to send quote confirmation email',
+                details: result.error
+            });
+        }
+    } catch (error) {
+        console.error('Error sending quote confirmation email:', error);
+        res.status(500).json({ error: 'Failed to send quote confirmation email' });
+    }
+});
+
 // Send booking confirmation email to customer (admin only)
 app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async (req, res) => {
     try {
@@ -1023,7 +1332,9 @@ app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async 
             booking.service, 
             booking.date, 
             booking.time, 
-            customerName
+            customerName,
+            booking.address || '',
+            booking.notes || ''
         );
 
         if (result.success) {
@@ -1045,6 +1356,210 @@ app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async 
     }
 });
 
+// Test endpoint for debugging
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'Server is working!', timestamp: new Date().toISOString() });
+});
+
+// Mark invoice as paid (admin only)
+app.patch('/api/bookings/:bookingId/mark-paid', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Update the booking status to 'completed'
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    status: 'completed',
+                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                } 
+            }
+        );
+
+        if (result.modifiedCount > 0) {
+            console.log(`✅ Invoice marked as paid for ${bookingId}`);
+            res.json({ 
+                message: 'Invoice marked as paid successfully',
+                status: 'completed'
+            });
+        } else {
+            res.status(500).json({ error: 'Failed to update booking' });
+        }
+    } catch (error) {
+        console.error('Error marking invoice as paid:', error);
+        res.status(500).json({ error: 'Failed to mark invoice as paid' });
+    }
+});
+
+// Customer accepts quote (no auth required)
+app.post('/api/bookings/:bookingId/accept-quote', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        
+        console.log(`📝 Customer accepting quote for booking: ${bookingId}`);
+        console.log(`🔍 Request method: ${req.method}`);
+        console.log(`🔍 Request URL: ${req.url}`);
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            console.log(`❌ Booking not found: ${bookingId}`);
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        console.log(`✅ Found booking: ${bookingId}, current status: ${booking.status}`);
+
+        // Update the booking status to 'quote-accepted'
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    status: 'quote-accepted',
+                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                } 
+            }
+        );
+
+        if (result.modifiedCount > 0) {
+            console.log(`✅ Quote accepted by customer for ${bookingId}`);
+            
+            // Send quote acceptance email to customer
+            try {
+                const EmailService = require('./email-service');
+                const emailService = new EmailService();
+                
+                const emailResult = await emailService.sendQuoteAcceptanceEmail(
+                    booking.email,
+                    booking.booking_id,
+                    booking.service,
+                    booking.estimated_cost || 'TBD',
+                    booking.work_description || 'Tree service as requested',
+                    booking.name,
+                    booking.address || '',
+                    booking.notes || ''
+                );
+                
+                if (emailResult.success) {
+                    console.log(`📧 Quote acceptance email sent successfully to ${booking.email}`);
+                } else {
+                    console.log(`⚠️ Quote acceptance email failed to send: ${emailResult.error}`);
+                }
+            } catch (emailError) {
+                console.error('❌ Error sending quote acceptance email:', emailError);
+            }
+            
+            res.json({ 
+                message: 'Quote accepted successfully',
+                status: 'quote-accepted'
+            });
+        } else {
+            console.log(`❌ Failed to update booking: ${bookingId}`);
+            res.status(500).json({ error: 'Failed to update booking' });
+        }
+    } catch (error) {
+        console.error('❌ Error accepting quote:', error);
+        res.status(500).json({ error: 'Failed to accept quote' });
+    }
+});
+
+// Handle job booking from customer
+app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { jobDate, jobTime } = req.body;
+
+        if (!jobDate || !jobTime) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Update booking with job details and change status to 'pending-booking'
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    job_date: jobDate,
+                    job_time: jobTime,
+                    status: 'pending-booking'
+                }
+            }
+        );
+
+        if (result.modifiedCount > 0) {
+            console.log(`📅 Job booking submitted for ${bookingId}: ${jobDate} at ${jobTime}`);
+            res.json({ 
+                message: 'Job booking submitted successfully',
+                jobDate: jobDate,
+                jobTime: jobTime
+            });
+        } else {
+            res.status(500).json({ error: 'Failed to update booking' });
+        }
+    } catch (error) {
+        console.error('Error booking job:', error);
+        res.status(500).json({ error: 'Failed to book job' });
+    }
+});
+
+// Send quote ready email to customer
+app.post('/api/bookings/:bookingId/send-quote-ready-email', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { customerEmail, customerName, workDescription, estimatedCost } = req.body;
+
+        if (!customerEmail || !customerName || !workDescription || !estimatedCost) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Get booking details
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Send quote ready email
+        const result = await emailService.sendQuoteReadyEmail(
+            customerEmail,
+            bookingId,
+            booking.service,
+            booking.date,
+            booking.time,
+            customerName,
+            booking.address || '',
+            booking.notes || '',
+            estimatedCost,
+            workDescription
+        );
+
+        if (result.success) {
+            res.json({ 
+                message: 'Quote ready email sent successfully',
+                messageId: result.messageId
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'Failed to send quote ready email',
+                details: result.error
+            });
+        }
+    } catch (error) {
+        console.error('Error sending quote ready email:', error);
+        res.status(500).json({ error: 'Failed to send quote ready email' });
+    }
+});
+
 // Send booking confirmation email after admin confirms booking
 app.post('/api/bookings/:bookingId/send-confirmation-email', requireAdminAuth, async (req, res) => {
     try {
@@ -1058,20 +1573,22 @@ app.post('/api/bookings/:bookingId/send-confirmation-email', requireAdminAuth, a
         }
 
         // Send booking confirmation email
-        const emailContent = sendBookingFinalConfirmationEmail(
+        const emailResult = await emailService.sendBookingFinalConfirmationEmail(
             customerEmail, 
             bookingId, 
             booking.service, 
             booking.date, 
             booking.time, 
-            customerName
+            customerName,
+            booking.address || '',
+            booking.notes || ''
         );
 
-        console.log('📧 Final confirmation email endpoint called successfully');
-        console.log('📧 Email content:', emailContent);
+        console.log('📧 Final confirmation email sent successfully');
+        console.log('📧 Email result:', emailResult);
         res.json({
-            message: 'Final booking confirmation email content generated successfully',
-            emailContent: emailContent
+            message: 'Final booking confirmation email sent successfully',
+            emailResult: emailResult
         });
     } catch (error) {
         console.error('Error sending confirmation email:', error);
@@ -1363,7 +1880,7 @@ app.patch('/api/bookings/:bookingId/move', async (req, res) => {
         // Check if the new date is available (any time slot)
         const existingBookings = await db.collection('bookings').countDocuments({
             date: newDate,
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'pending-site-visit', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
         });
         
         // Check if all time slots are taken (3 slots per day)
@@ -1741,6 +2258,100 @@ app.get('/api/quotes/booking/:bookingId', async (req, res) => {
     }
 });
 
+// Get quote details by booking ID (for client-facing quote preview)
+app.get('/api/bookings/:bookingId/quote', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        
+        // First try to get an existing quote
+        const quotes = await db.collection('quotes').aggregate([
+            {
+                $match: { booking_id: bookingId }
+            },
+            {
+                $sort: { created_at: -1 }
+            }
+        ]).toArray();
+        
+        if (quotes.length > 0) {
+            const quote = quotes[0];
+            
+            // Parse service_items JSON
+            let serviceItems = [];
+            try {
+                serviceItems = JSON.parse(quote.service_items);
+            } catch (e) {
+                serviceItems = [];
+            }
+            
+            // Calculate totals
+            const subtotal = serviceItems.reduce((sum, item) => sum + (item.total || 0), 0);
+            const tax = quote.tax_enabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
+            
+            // Map to frontend-expected format
+            const quoteData = {
+                quote_number: quote.quote_id,
+                quote_date: quote.quote_date,
+                client_name: quote.client_name,
+                client_phone: quote.client_phone,
+                client_email: quote.client_email,
+                client_address: quote.client_address,
+                bill_name: quote.client_name,
+                bill_address: quote.client_address,
+                services: serviceItems.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    unit_price: item.price,
+                    total: item.total
+                })),
+                subtotal: subtotal,
+                tax: tax,
+                total: total,
+                tax_enabled: quote.tax_enabled
+            };
+            
+            res.json(quoteData);
+        } else {
+            // No quote found, get booking data and create a basic quote structure
+            const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+            
+            if (!booking) {
+                return res.status(404).json({ error: 'Booking not found' });
+            }
+            
+            // Create basic quote structure from booking
+            const quoteData = {
+                quote_number: 'QT-' + Date.now(),
+                quote_date: new Date().toISOString().split('T')[0],
+                client_name: booking.name,
+                client_phone: booking.phone,
+                client_email: booking.email,
+                client_address: booking.address,
+                bill_name: booking.name,
+                bill_address: booking.address,
+                services: [
+                    {
+                        description: booking.service || 'Tree Service',
+                        quantity: 1,
+                        unit_price: 0,
+                        total: 0
+                    }
+                ],
+                subtotal: 0,
+                tax: 0,
+                total: 0,
+                tax_enabled: false
+            };
+            
+            res.json(quoteData);
+        }
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Send quote email
 app.post('/api/quotes/:quoteId/email', async (req, res) => {
     try {
@@ -1890,6 +2501,63 @@ app.post('/api/invoices', async (req, res) => {
 app.get('/api/invoices', async (req, res) => {
     try {
         const invoices = await db.collection('invoices').aggregate([
+            {
+                $lookup: {
+                    from: 'bookings',
+                    localField: 'booking_id',
+                    foreignField: 'booking_id',
+                    as: 'booking'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'quotes',
+                    localField: 'quote_id',
+                    foreignField: 'quote_id',
+                    as: 'quote'
+                }
+            },
+            {
+                $addFields: {
+                    booking_service: { $arrayElemAt: ['$booking.service', 0] },
+                    booking_date: { $arrayElemAt: ['$booking.date', 0] },
+                    booking_time: { $arrayElemAt: ['$booking.time', 0] },
+                    original_quote_id: { $arrayElemAt: ['$quote.quote_id', 0] }
+                }
+            },
+            {
+                $unset: ['booking', 'quote']
+            },
+            {
+                $sort: { created_at: -1 }
+            }
+        ]).toArray();
+        
+        // Parse service_items JSON for each invoice
+        invoices.forEach(invoice => {
+            try {
+                invoice.service_items = JSON.parse(invoice.service_items);
+            } catch (e) {
+                invoice.service_items = [];
+            }
+        });
+        
+        res.json(invoices);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get invoices by booking ID
+app.get('/api/invoices/booking/:bookingId', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        
+        const invoices = await db.collection('invoices').aggregate([
+            {
+                $match: { booking_id: bookingId }
+            },
             {
                 $lookup: {
                     from: 'bookings',
@@ -2654,93 +3322,9 @@ function sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount
     return emailContent;
 }
 
-// Email booking confirmation function with unique link
-function sendBookingConfirmationEmail(email, bookingId, service, date, time, name) {
-    // This is a placeholder for email functionality
-    // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
-    console.log(`Booking confirmation email would be sent to ${email} for booking ${bookingId}`);
-    console.log(`Service: ${service}, Date: ${date}, Time: ${time}, Name: ${name}`);
-    
-    // Create unique booking link
-    const bookingLink = `https://stellartreemanagement.ca/${bookingId}`;
-    
-    // Example email content:
-    const emailContent = {
-        from: 'stellartmanagement@outlook.com',
-        to: email,
-        subject: `Booking Request Confirmed - ${bookingId}`,
-        body: `
-            Dear ${name},
-            
-            Your booking request has been confirmed by Stellar Tree Management!
-            
-            Booking Details:
-            - Booking ID: ${bookingId}
-            - Service: ${service}
-            - Date: ${date}
-            - Time: ${time}
-            
-            To confirm your booking and view your booking status, please visit:
-            ${bookingLink}
-            
-            This link will allow you to:
-            - View your booking details
-            - Confirm your booking
-            - Track the progress of your service
-            
-            Please click the link above to confirm your booking within 24 hours.
-            
-            If you have any questions, please contact us at stellartmanagement@outlook.com
-            
-            Best regards,
-            Stellar Tree Management Team
-        `
-    };
-    
-    // Here you would integrate with your email service
-    // For now, we'll just log it
-    console.log('Booking confirmation email content:', emailContent);
-    return emailContent;
-}
 
-// Email final booking confirmation function
-// Email booking final confirmation function
-function sendBookingFinalConfirmationEmail(email, bookingId, service, date, time, name) {
-    // This is a placeholder for email functionality
-    // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
-    console.log(`Final booking confirmation email would be sent to ${email} for booking ${bookingId}`);
-    console.log(`Service: ${service}, Date: ${date}, Time: ${time}, Name: ${name}`);
-    
-    // Example email content:
-    const emailContent = {
-        from: 'stellartmanagement@outlook.com',
-        to: email,
-        subject: `Booking Confirmed - ${bookingId}`,
-        body: `
-            Dear ${name},
-            
-            Your booking is now confirmed! Thank you for choosing Stellar Tree Management.
-            
-            Booking Details:
-            - Booking ID: ${bookingId}
-            - Service: ${service}
-            - Date: ${date}
-            - Time: ${time}
-            
-            We look forward to providing you with excellent service.
-            
-            If you have any questions or need to make changes, please contact us at stellartmanagement@outlook.com
-            
-            Best regards,
-            Stellar Tree Management Team
-        `
-    };
-    
-    // Here you would integrate with your email service
-    // For now, we'll just log it
-    console.log('Final booking confirmation email content:', emailContent);
-    return emailContent;
-}
+
+
 
 // Function to update customer total spent
 async function updateCustomerTotalSpent(customerId) {
@@ -2886,11 +3470,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-});
-
 // Graceful shutdown
 process.on('SIGINT', async () => {
     console.log('Shutting down server...');
@@ -2921,21 +3500,38 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serve test page
+app.get('/test-booking-status.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-booking-status.html'));
+});
+
 // Serve booking status page for specific booking IDs
-app.get('/:bookingId', (req, res) => {
+app.get('/booking-status/:bookingId', (req, res) => {
     const bookingId = req.params.bookingId;
     
     // Check if it's a valid booking ID format (you can customize this validation)
     if (bookingId && bookingId.length > 0 && !bookingId.includes('.')) {
         res.sendFile(path.join(__dirname, 'booking-status.html'));
     } else {
-        res.sendFile(path.join(__dirname, 'index.html'));
+        res.status(404).sendFile(path.join(__dirname, 'index.html'));
     }
 });
 
-// Add a catch-all route for client-side routing (add this near the end of your routes)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Handle legacy booking status URLs (for backward compatibility)
+app.get('/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+    
+    // Check if it's a valid booking ID format and not a file extension
+    if (bookingId && bookingId.length > 0 && !bookingId.includes('.') && !bookingId.includes('/')) {
+        // Check if this looks like a booking ID (e.g., starts with ST-)
+        if (bookingId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(bookingId)) {
+            res.sendFile(path.join(__dirname, 'booking-status.html'));
+        } else {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        }
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
 });
 
 // Utility function to clean up orphaned images (admin only)
@@ -2990,6 +3586,16 @@ app.post('/api/cleanup-images', requireAdminAuth, async (req, res) => {
         console.error('Error cleaning up images:', error);
         res.status(500).json({ error: 'Failed to cleanup images' });
     }
+});
+
+// 404 handler for API routes (add this after the catch-all route)
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
+// Add a catch-all route for client-side routing (add this at the very end)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start the server

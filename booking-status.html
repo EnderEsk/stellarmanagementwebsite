@@ -103,10 +103,34 @@
             border: 1px solid rgba(40, 167, 69, 0.3);
         }
 
+        .status-badge.pending-site-visit {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .status-badge.quote-ready {
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+            border: 1px solid rgba(23, 162, 184, 0.3);
+        }
+
         .status-badge.completed {
             background: rgba(23, 162, 184, 0.1);
             color: var(--info-color);
             border: 1px solid rgba(23, 162, 184, 0.3);
+        }
+
+        .status-badge.invoice-ready {
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+            border: 1px solid rgba(23, 162, 184, 0.3);
+        }
+
+        .status-badge.invoice-sent {
+            background: rgba(108, 117, 125, 0.1);
+            color: var(--secondary-color);
+            border: 1px solid rgba(108, 117, 125, 0.3);
         }
 
         .status-badge.pending-booking {
@@ -119,6 +143,53 @@
             background: rgba(220, 53, 69, 0.1);
             color: var(--danger-color);
             border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .invoice-details {
+            background: rgba(23, 162, 184, 0.05);
+            border: 2px solid rgba(23, 162, 184, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .invoice-sent-details {
+            background: rgba(108, 117, 125, 0.05);
+            border: 2px solid rgba(108, 117, 125, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .invoice-actions {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(23, 162, 184, 0.1);
+        }
+
+        .job-completion-notice {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .job-completion-notice h3 {
+            margin: 0 0 0.75rem 0;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .job-completion-notice p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.95;
+            line-height: 1.5;
         }
 
         .booking-details {
@@ -153,6 +224,7 @@
 
         .timeline {
             margin: 2rem 0;
+            position: relative;
         }
 
         .timeline-item {
@@ -162,14 +234,19 @@
             position: relative;
         }
 
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
         .timeline-item:not(:last-child)::after {
             content: '';
             position: absolute;
             left: 1.5rem;
             top: 3rem;
             bottom: -1.5rem;
-            width: 2px;
+            width: 1px;
             background: var(--border-color);
+            transform: translateX(-50%);
         }
 
         .timeline-dot {
@@ -183,6 +260,15 @@
             font-size: 1.2rem;
             color: white;
             flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-dot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .timeline-dot.pending {
@@ -191,6 +277,14 @@
 
         .timeline-dot.confirmed {
             background: var(--success-color);
+        }
+
+        .timeline-dot.site-visit {
+            background: #ffc107;
+        }
+
+        .timeline-dot.quote-ready {
+            background: #17a2b8;
         }
 
         .timeline-dot.completed {
@@ -205,6 +299,22 @@
             background: var(--danger-color);
         }
 
+        .timeline-dot.invoice-ready {
+            background: #17a2b8;
+        }
+
+        .timeline-dot.invoice-sent {
+            background: #6c757d;
+        }
+
+        .timeline-dot.quote-sent {
+            background: #17a2b8;
+        }
+
+        .timeline-dot.quote-accepted {
+            background: #28a745;
+        }
+
         .timeline-content h4 {
             font-size: 1.1rem;
             font-weight: 600;
@@ -216,6 +326,14 @@
             font-size: 0.9rem;
             color: var(--secondary-color);
             margin: 0;
+        }
+
+        .timeline-content {
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover .timeline-content {
+            transform: translateX(5px);
         }
 
         .action-buttons {
@@ -289,6 +407,46 @@
             margin: 0.5rem 0;
         }
 
+        .invoice-details {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            text-align: center;
+            border: 2px solid var(--accent-color);
+        }
+
+        .invoice-details h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .invoice-info {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .invoice-info p {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            margin: 0.75rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .invoice-info p:last-child {
+            border-bottom: none;
+        }
+
+        .invoice-info strong {
+            color: var(--primary-color);
+        }
+
         .contact-info a {
             color: var(--accent-color);
             text-decoration: none;
@@ -309,6 +467,364 @@
             text-align: center;
             padding: 3rem;
             color: var(--danger-color);
+        }
+
+        .invoice-actions p {
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .quote-details {
+            text-align: center;
+            padding: 2rem;
+            background: var(--light-gray);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .quote-preview-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .quote-preview-container h3 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .quote-preview-container h3 i {
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        .quote-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--light-gray);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .quote-preview-header:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .quote-preview-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .quote-preview-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .quote-preview-content.expanded {
+            max-height: 2000px;
+        }
+
+        .quote-preview-header::after {
+            content: 'Click to expand';
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        .quote-preview-header.expanded::after {
+            content: 'Click to collapse';
+        }
+
+        .quote-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Professional Quote Document Styling - Exact Match to Admin Panel */
+        .quote-document {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            font-size: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quote-header {
+            background: white;
+            color: #333;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #8cc63f;
+        }
+
+        .company-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .company-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .company-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.3px;
+        }
+
+        .company-contact {
+            margin-top: 10px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .contact-item i {
+            width: 12px;
+            color: #8cc63f;
+            text-align: center;
+        }
+
+        .document-info {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .document-type {
+            font-size: 22px;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            letter-spacing: 1.2px;
+        }
+
+        .document-number {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        .document-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .client-billing-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 24px;
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            margin: 24px;
+        }
+
+        .section-heading {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #8cc63f;
+            padding-bottom: 6px;
+        }
+
+        .data-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: flex-start;
+            min-height: 16px;
+        }
+
+        .data-row .label {
+            font-weight: 600;
+            min-width: 70px;
+            color: #555;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .data-row .value {
+            flex: 1;
+            color: #333;
+            font-size: 11px;
+            word-wrap: break-word;
+        }
+
+        .services-section {
+            padding: 24px;
+        }
+
+        .services-table {
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 40px 1fr 60px 90px 90px;
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .header-item {
+            padding: 12px 10px;
+            text-align: left;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-item:last-child {
+            border-right: none;
+        }
+
+        .table-body {
+            background: white;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 60px 90px 90px;
+            border-bottom: 1px solid #e1e8ed;
+            font-size: 11px;
+            min-height: 40px;
+        }
+
+        .table-row:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-cell {
+            padding: 12px 10px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid #e1e8ed;
+        }
+
+        .table-cell:last-child {
+            border-right: none;
+        }
+
+        .table-cell.description {
+            font-weight: 500;
+        }
+
+        .table-cell.quantity {
+            justify-content: center;
+        }
+
+        .table-cell.price, .table-cell.total {
+            justify-content: flex-end;
+            font-weight: 600;
+        }
+
+        .totals-section {
+            padding: 0 24px 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-container {
+            width: 240px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            align-items: center;
+            min-height: 20px;
+        }
+
+        .total-row.grand-total {
+            border-top: 2px solid #8cc63f;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .total-label {
+            font-weight: 600;
+        }
+
+        .total-value {
+            font-weight: 600;
+        }
+
+        .terms-section {
+            padding: 24px;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .terms-content p {
+            margin: 0;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.3;
         }
 
         /* Mobile Responsive */
@@ -374,6 +890,150 @@
             .timeline-content p {
                 font-size: 0.85rem;
             }
+
+            /* Quote Preview Mobile Styles */
+            .quote-preview-container {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+
+            .quote-document {
+                font-size: 10px;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .quote-header {
+                padding: 16px;
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .company-brand {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .company-logo {
+                width: 40px;
+                height: 40px;
+            }
+
+            .company-name {
+                font-size: 18px;
+            }
+
+            .company-contact {
+                margin-top: 8px;
+            }
+
+            .contact-item {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .document-info {
+                text-align: left;
+                align-items: flex-start;
+            }
+
+            .document-type {
+                font-size: 20px;
+            }
+
+            .document-number {
+                font-size: 14px;
+            }
+
+            .document-date {
+                font-size: 11px;
+            }
+
+            .client-billing-section {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 16px;
+                margin: 16px;
+            }
+
+            .section-heading {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .data-row {
+                margin-bottom: 6px;
+                min-height: 14px;
+            }
+
+            .data-row .label {
+                min-width: 60px;
+                font-size: 10px;
+            }
+
+            .data-row .value {
+                font-size: 10px;
+            }
+
+            .services-section {
+                padding: 16px;
+            }
+
+            .services-table {
+                margin-top: 8px;
+            }
+
+            .table-header,
+            .table-row {
+                grid-template-columns: 35px 1fr 50px 70px 70px;
+                min-width: 400px;
+            }
+
+            .header-item,
+            .table-cell {
+                padding: 8px 6px;
+                font-size: 10px;
+            }
+
+            .totals-section {
+                padding: 0 16px 16px;
+            }
+
+            .totals-container {
+                width: 200px;
+                padding: 12px;
+            }
+
+            .total-row {
+                margin-bottom: 6px;
+                font-size: 11px;
+                min-height: 18px;
+            }
+
+            .total-row.grand-total {
+                font-size: 14px;
+                padding-top: 8px;
+                margin-top: 8px;
+            }
+
+            .terms-section {
+                padding: 16px;
+            }
+
+            .terms-content p {
+                font-size: 9px;
+            }
+
+            .quote-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .quote-actions .btn {
+                width: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -412,6 +1072,8 @@
                 font-size: 0.8rem;
             }
         }
+
+
     </style>
 </head>
 <body>
@@ -460,6 +1122,10 @@
                         <p id="phone"></p>
                     </div>
                     <div class="detail-item">
+                        <h3>Email</h3>
+                        <p id="email"></p>
+                    </div>
+                    <div class="detail-item">
                         <h3>Address</h3>
                         <p id="address"></p>
                     </div>
@@ -472,8 +1138,44 @@
                             <i class="fas fa-clock"></i>
                         </div>
                         <div class="timeline-content">
-                            <h4>Request Quote</h4>
+                            <h4>Request Received</h4>
                             <p>Your service request has been received and is being reviewed.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="site-visit-timeline" style="display: none;">
+                        <div class="timeline-dot site-visit">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Site Visit Scheduled</h4>
+                            <p>Our team will conduct an on-site assessment to provide an accurate estimate.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="quote-ready-timeline" style="display: none;">
+                        <div class="timeline-dot quote-ready">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Quote Ready</h4>
+                            <p>Your detailed quote has been prepared based on the site visit assessment.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="quote-sent-timeline" style="display: none;">
+                        <div class="timeline-dot quote-sent">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Quote Sent</h4>
+                            <p>Your detailed quote has been sent. Please review and accept if you're satisfied.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="quote-accepted-timeline" style="display: none;">
+                        <div class="timeline-dot quote-accepted">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Quote Accepted</h4>
+                            <p>Thank you for accepting our quote! We'll contact you soon to schedule your job.</p>
                         </div>
                     </div>
                     <div class="timeline-item" id="confirmed-timeline" style="display: none;">
@@ -482,7 +1184,7 @@
                         </div>
                         <div class="timeline-content">
                             <h4>Request Booking</h4>
-                            <p>Your quote has been confirmed. Please confirm your booking below.</p>
+                            <p>Your estimate has been confirmed. Please confirm your booking below.</p>
                         </div>
                     </div>
                     <div class="timeline-item" id="pending-booking-timeline" style="display: none;">
@@ -490,7 +1192,7 @@
                             <i class="fas fa-calendar-plus"></i>
                         </div>
                         <div class="timeline-content">
-                            <h4>Booking Pending</h4>
+                            <h4>Job Booked</h4>
                             <p>Your booking request has been submitted and is being reviewed by our team.</p>
                         </div>
                     </div>
@@ -499,8 +1201,284 @@
                             <i class="fas fa-check-double"></i>
                         </div>
                         <div class="timeline-content">
-                            <h4>Confirmed Booking</h4>
-                            <p>Your booking has been confirmed and is scheduled.</p>
+                            <h4>Work Completed</h4>
+                            <p>Your tree service work has been completed successfully.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="invoice-ready-timeline" style="display: none;">
+                        <div class="timeline-dot invoice-ready">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Invoice Ready</h4>
+                            <p>Your job is complete and ready for invoicing.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="invoice-sent-timeline" style="display: none;">
+                        <div class="timeline-dot invoice-sent">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Invoice Sent</h4>
+                            <p>Your invoice has been sent and is awaiting payment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quote Preview Section -->
+                <div id="quote-preview-section" style="display: none;">
+                    <div class="quote-preview-container">
+                        <div class="quote-preview-header" onclick="toggleQuotePreview()">
+                            <h3><i class="fas fa-file-invoice-dollar"></i> Quote Preview</h3>
+                            <i class="fas fa-chevron-down toggle-icon" id="quote-toggle-icon"></i>
+                        </div>
+                        <div class="quote-preview-content" id="quote-preview-content">
+                            <div class="quote-document">
+                                <!-- Header Section -->
+                                <div class="quote-header">
+                                    <div class="company-brand">
+                                        <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                                        <div>
+                                            <h1 class="company-name">Stellar Tree Management</h1>
+                                            <div class="company-contact">
+                                                <div class="contact-item">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    <span>1932 9a Ave NE, Calgary, Alberta</span>
+                                                </div>
+                                                <div class="contact-item">
+                                                    <i class="fas fa-phone"></i>
+                                                    <span>(250) 551-1021</span>
+                                                </div>
+                                                <div class="contact-item">
+                                                    <i class="fas fa-envelope"></i>
+                                                    <span>stellartmanagement@outlook.com</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="document-info">
+                                        <div class="document-type">QUOTE</div>
+                                        <div class="document-number">#<span id="quote-number"></span></div>
+                                        <div class="document-date"><span id="quote-date"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Client & Bill To Section -->
+                                <div class="client-billing-section">
+                                    <div>
+                                        <h3 class="section-heading">Client Information</h3>
+                                        <div class="data-row">
+                                            <span class="label">Name:</span>
+                                            <span class="value" id="quote-client-name"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Phone:</span>
+                                            <span class="value" id="quote-client-phone"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Email:</span>
+                                            <span class="value" id="quote-client-email"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Address:</span>
+                                            <span class="value" id="quote-client-address"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="section-heading">Bill To</h3>
+                                        <div class="data-row">
+                                            <span class="label">Name:</span>
+                                            <span class="value" id="quote-bill-name"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Address:</span>
+                                            <span class="value" id="quote-bill-address"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Services Table -->
+                                <div class="services-section">
+                                    <h3 class="section-heading">Services</h3>
+                                    <div class="services-table">
+                                        <div class="table-header">
+                                            <div class="header-item">#</div>
+                                            <div class="header-item description">Description</div>
+                                            <div class="header-item quantity">Qty</div>
+                                            <div class="header-item price">Unit Price</div>
+                                            <div class="header-item total">Total</div>
+                                        </div>
+                                        <div class="table-body" id="quote-services-body">
+                                            <!-- Services will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Totals Section -->
+                                <div class="totals-section">
+                                    <div class="totals-container">
+                                        <div class="total-row">
+                                            <span class="total-label">Subtotal:</span>
+                                            <span class="total-value" id="quote-subtotal"></span>
+                                        </div>
+                                        <div class="total-row" id="quote-tax-row" style="display: none;">
+                                            <span class="total-label">Tax (5%):</span>
+                                            <span class="total-value" id="quote-tax"></span>
+                                        </div>
+                                        <div class="total-row grand-total">
+                                            <span class="total-label">Total:</span>
+                                            <span class="total-value" id="quote-total"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms Section -->
+                                <div class="terms-section">
+                                    <h3 class="section-heading">Terms & Conditions</h3>
+                                    <div class="terms-content">
+                                        <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept cash, check, and major credit cards.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="quote-actions">
+                                <button class="btn btn-primary" onclick="downloadQuote()">
+                                    <i class="fas fa-download"></i> Download Quote
+                                </button>
+                                <button class="btn btn-secondary" onclick="printQuote()">
+                                    <i class="fas fa-print"></i> Print Quote
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Preview Section -->
+                <div id="invoice-preview-section" style="display: none;">
+                    <div class="quote-preview-container">
+                        <div class="quote-preview-header" onclick="toggleInvoicePreview()">
+                            <h3><i class="fas fa-file-invoice"></i> Invoice Preview</h3>
+                            <i class="fas fa-chevron-down toggle-icon" id="invoice-toggle-icon"></i>
+                        </div>
+                        <div class="quote-preview-content" id="invoice-preview-content">
+                            <div class="quote-document">
+                                <!-- Header Section -->
+                                <div class="quote-header">
+                                    <div class="company-brand">
+                                        <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                                        <div>
+                                            <h1 class="company-name">Stellar Tree Management</h1>
+                                            <div class="company-contact">
+                                                <div class="contact-item">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    <span>1932 9a Ave NE, Calgary, Alberta</span>
+                                                </div>
+                                                <div class="contact-item">
+                                                    <i class="fas fa-phone"></i>
+                                                    <span>(250) 551-1021</span>
+                                                </div>
+                                                <div class="contact-item">
+                                                    <i class="fas fa-envelope"></i>
+                                                    <span>stellartmanagement@outlook.com</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="document-info">
+                                        <div class="document-type">INVOICE</div>
+                                        <div class="document-number">#<span id="invoice-number"></span></div>
+                                        <div class="document-date"><span id="invoice-date"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Client & Bill To Section -->
+                                <div class="client-billing-section">
+                                    <div>
+                                        <h3 class="section-heading">Client Information</h3>
+                                        <div class="data-row">
+                                            <span class="label">Name:</span>
+                                            <span class="value" id="invoice-client-name"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Phone:</span>
+                                            <span class="value" id="invoice-client-phone"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Email:</span>
+                                            <span class="value" id="invoice-client-email"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Address:</span>
+                                            <span class="value" id="invoice-client-address"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="section-heading">Bill To</h3>
+                                        <div class="data-row">
+                                            <span class="label">Name:</span>
+                                            <span class="value" id="invoice-bill-name"></span>
+                                        </div>
+                                        <div class="data-row">
+                                            <span class="label">Address:</span>
+                                            <span class="value" id="invoice-bill-address"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Services Table -->
+                                <div class="services-section">
+                                    <h3 class="section-heading">Services</h3>
+                                    <div class="services-table">
+                                        <div class="table-header">
+                                            <div class="header-item">#</div>
+                                            <div class="header-item description">Description</div>
+                                            <div class="header-item quantity">Qty</div>
+                                            <div class="header-item price">Unit Price</div>
+                                            <div class="header-item total">Total</div>
+                                        </div>
+                                        <div class="table-body" id="invoice-services-body">
+                                            <!-- Services will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Totals Section -->
+                                <div class="totals-section">
+                                    <div class="totals-container">
+                                        <div class="total-row">
+                                            <span class="total-label">Subtotal:</span>
+                                            <span class="total-value" id="invoice-subtotal"></span>
+                                        </div>
+                                        <div class="total-row" id="invoice-tax-row" style="display: none;">
+                                            <span class="total-label">Tax (5%):</span>
+                                            <span class="total-value" id="invoice-tax"></span>
+                                        </div>
+                                        <div class="total-row grand-total">
+                                            <span class="total-label">Total:</span>
+                                            <span class="total-value" id="invoice-total"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms Section -->
+                                <div class="terms-section">
+                                    <div class="terms-content">
+                                        <p><strong>Payment Terms:</strong> Payment is due within 30 days of invoice date.</p>
+                                        <p><strong>Payment Methods:</strong> We accept credit cards, bank transfers, and cash payments.</p>
+                                        <p><strong>Contact:</strong> For payment arrangements or questions, please contact us at stellartmanagement@outlook.com</p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="quote-actions">
+                                    <button class="btn btn-primary" onclick="downloadInvoice()">
+                                        <i class="fas fa-download"></i> Download Invoice
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="printInvoice()">
+                                        <i class="fas fa-print"></i> Print Invoice
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -513,9 +1491,12 @@
             <div class="contact-info">
                 <h3>Need Help?</h3>
                 <p>If you have any questions about your booking, please contact us:</p>
-                <p><i class="fas fa-phone"></i> <a href="tel:+1234567890">+1 (234) 567-890</a></p>
+                <p><i class="fas fa-phone"></i> <a href="tel:+2505511021">+1 (234) 567-890</a></p>
                 <p><i class="fas fa-envelope"></i> <a href="mailto:stellartmanagement@outlook.com">stellartmanagement@outlook.com</a></p>
             </div>
+            
+            <!-- Debug section for testing -->
+
         </div>
     </div>
 
@@ -523,36 +1504,83 @@
         // Get booking ID from URL
         function getBookingIdFromUrl() {
             const path = window.location.pathname;
-            const bookingId = path.split('/').pop();
-            return bookingId;
+            
+            // Handle both /booking-status/:id and /:id patterns
+            if (path.startsWith('/booking-status/')) {
+                return path.split('/').pop();
+            } else if (path !== '/' && path !== '/index.html') {
+                // Extract booking ID from path like /ST-ABC123
+                const segments = path.split('/').filter(segment => segment.length > 0);
+                if (segments.length > 0) {
+                    const potentialId = segments[segments.length - 1];
+                    // Check if it looks like a booking ID
+                    if (potentialId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(potentialId)) {
+                        return potentialId;
+                    }
+                }
+            }
+            
+            // Try to get from query parameters as fallback
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryParamId = urlParams.get('id');
+            if (queryParamId) {
+                return queryParamId;
+            }
+            
+            // Try to get from localStorage as final fallback (for local file navigation)
+            const localStorageId = localStorage.getItem('currentBookingId');
+            if (localStorageId) {
+                return localStorageId;
+            }
+            
+            return null;
         }
 
         // Load booking details
         async function loadBookingDetails() {
             const bookingId = getBookingIdFromUrl();
             
+            console.log('Extracted booking ID:', bookingId);
+            console.log('Current URL:', window.location.href);
+            console.log('Current pathname:', window.location.pathname);
+            
             if (!bookingId) {
-                showError('No booking ID provided');
+                showError('No booking ID provided. Please check the URL and try again.');
                 return;
             }
 
             try {
+                console.log('Fetching booking details for ID:', bookingId);
                 const response = await fetch(`/api/bookings/${bookingId}`);
                 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
                 if (!response.ok) {
-                    throw new Error('Booking not found');
+                    if (response.status === 404) {
+                        throw new Error('Booking not found. Please check the booking ID and try again.');
+                    } else {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
                 }
 
                 const booking = await response.json();
+                console.log('Booking data received:', booking);
                 displayBookingDetails(booking);
             } catch (error) {
                 console.error('Error loading booking:', error);
-                showError('Failed to load booking details');
+                showError(error.message || 'Failed to load booking details. Please try again later.');
             }
         }
 
         // Display booking details
         function displayBookingDetails(booking) {
+            console.log('📋 Displaying booking details:', booking);
+            console.log('🎯 Current status:', booking.status);
+            
+            // Store current booking data globally for other functions to access
+            window.currentBookingData = booking;
+            
             // Hide loading, show content
             document.getElementById('loading').style.display = 'none';
             document.getElementById('booking-content').style.display = 'block';
@@ -569,37 +1597,106 @@
             document.getElementById('time').textContent = booking.time;
             document.getElementById('customer').textContent = booking.name;
             document.getElementById('phone').textContent = booking.phone || 'N/A';
+            document.getElementById('email').textContent = booking.email || 'N/A';
             document.getElementById('address').textContent = booking.address || 'N/A';
 
             // Update status badge
             const statusBadge = document.getElementById('status-badge');
             statusBadge.textContent = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
             statusBadge.className = `status-badge ${booking.status}`;
+            console.log('🏷️ Status badge updated:', statusBadge.textContent, statusBadge.className);
 
             // Update timeline based on status
+            console.log('🔄 Calling updateTimeline with status:', booking.status);
             updateTimeline(booking.status);
 
             // Update action buttons
             updateActionButtons(booking);
+            
+            // Show appropriate preview sections
+            showQuotePreview();
+            showInvoicePreview();
+            
+            console.log('✅ Booking details display complete');
         }
 
         // Update timeline based on booking status
         function updateTimeline(status) {
+            console.log('🔄 Updating timeline for status:', status);
+            
             const confirmedTimeline = document.getElementById('confirmed-timeline');
             const pendingBookingTimeline = document.getElementById('pending-booking-timeline');
             const completedTimeline = document.getElementById('completed-timeline');
+            const siteVisitTimeline = document.getElementById('site-visit-timeline');
+            const invoiceReadyTimeline = document.getElementById('invoice-ready-timeline');
+            const invoiceSentTimeline = document.getElementById('invoice-sent-timeline');
+            const quoteSentTimeline = document.getElementById('quote-sent-timeline');
+            const quoteAcceptedTimeline = document.getElementById('quote-accepted-timeline');
+            const quoteReadyTimeline = document.getElementById('quote-ready-timeline');
 
-            if (status === 'confirmed' || status === 'pending-booking' || status === 'completed') {
+            // Reset all timeline items to hidden first
+            [confirmedTimeline, pendingBookingTimeline, completedTimeline, siteVisitTimeline, 
+             invoiceReadyTimeline, invoiceSentTimeline, quoteSentTimeline, quoteAcceptedTimeline, quoteReadyTimeline]
+                .forEach(item => item.style.display = 'none');
+
+            console.log('📋 Timeline items reset to hidden');
+
+            // Show timeline items based on status progression
+            if (status === 'pending-site-visit' || status === 'quote-ready' || status === 'quote-sent' || 
+                status === 'quote-accepted' || status === 'confirmed' || status === 'pending-booking' || 
+                status === 'completed' || status === 'invoice-ready' || status === 'invoice-sent') {
+                siteVisitTimeline.style.display = 'flex';
+                console.log('✅ Site Visit timeline shown');
+            }
+
+            if (status === 'quote-ready' || status === 'quote-sent' || status === 'quote-accepted' || 
+                status === 'confirmed' || status === 'pending-booking' || status === 'completed' || 
+                status === 'invoice-ready' || status === 'invoice-sent') {
+                quoteReadyTimeline.style.display = 'flex';
+                console.log('✅ Quote Ready timeline shown');
+            }
+
+            if (status === 'quote-sent' || status === 'quote-accepted' || status === 'confirmed' || 
+                status === 'pending-booking' || status === 'completed' || status === 'invoice-ready' || 
+                status === 'invoice-sent') {
+                quoteSentTimeline.style.display = 'flex';
+                console.log('✅ Quote Sent timeline shown');
+            }
+
+            if (status === 'quote-accepted' || status === 'confirmed' || status === 'pending-booking' || 
+                status === 'completed' || status === 'invoice-ready' || status === 'invoice-sent') {
+                quoteAcceptedTimeline.style.display = 'flex';
+                console.log('✅ Quote Accepted timeline shown');
+            }
+
+            if (status === 'confirmed' || status === 'pending-booking' || status === 'completed' || 
+                status === 'invoice-ready' || status === 'invoice-sent') {
                 confirmedTimeline.style.display = 'flex';
+                console.log('✅ Confirmed timeline shown');
             }
 
-            if (status === 'pending-booking' || status === 'completed') {
+            if (status === 'pending-booking' || status === 'completed' || status === 'invoice-ready' || 
+                status === 'invoice-sent') {
                 pendingBookingTimeline.style.display = 'flex';
+                console.log('✅ Pending Booking timeline shown');
             }
 
-            if (status === 'completed') {
+            if (status === 'completed' || status === 'invoice-ready' || status === 'invoice-sent') {
                 completedTimeline.style.display = 'flex';
+                console.log('✅ Completed timeline shown');
             }
+
+            if (status === 'invoice-ready' || status === 'invoice-sent') {
+                invoiceReadyTimeline.style.display = 'flex';
+                console.log('✅ Invoice Ready timeline shown');
+            }
+
+            if (status === 'invoice-sent') {
+                invoiceSentTimeline.style.display = 'flex';
+                console.log('✅ Invoice Sent timeline shown');
+            }
+
+            console.log('🎯 Timeline update complete for status:', status);
         }
 
         // Update action buttons based on booking status
@@ -609,8 +1706,57 @@
 
             if (booking.status === 'pending') {
                 buttons = `
-                    <p>Your quote request is being reviewed. We'll contact you soon!</p>
+                    <p>Your service request is being reviewed. We'll contact you soon!</p>
                 `;
+            } else if (booking.status === 'pending-site-visit') {
+                buttons = `
+                    <p>Your service request has been approved for a site visit. Our team will contact you to schedule the assessment.</p>
+                `;
+            } else if (booking.status === 'quote-ready') {
+                buttons = `
+                    <p>Your quote is ready! Our team will review and send it to you shortly.</p>
+                `;
+            } else if (booking.status === 'quote-sent') {
+                buttons = `
+                    <div class="quote-details">
+                        <h3>📋 Your Quote is Ready!</h3>
+                        <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">
+                            Please review the detailed quote information below. If you're satisfied with the service and pricing, click "Accept Quote" to proceed.
+                        </p>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="acceptQuote('${booking.booking_id}')">
+                                <i class="fas fa-thumbs-up"></i> Accept Quote
+                            </button>
+                            <button class="btn btn-secondary" onclick="contactUs()">
+                                <i class="fas fa-phone"></i> Contact Us
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Automatically fetch and show quote preview
+                setTimeout(() => fetchQuoteDetails(booking.booking_id), 500);
+            } else if (booking.status === 'quote-accepted') {
+                buttons = `
+                    <div class="quote-accepted-details">
+                        <h3>✅ Quote Accepted!</h3>
+                        <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">
+                            Thank you for accepting our quote! Now it's time to schedule your job. 
+                            Click the button below to choose your preferred date and time.
+                        </p>
+                        <div class="action-buttons">
+                            <a href="schedule-job.html?booking_id=${booking.booking_id}" class="btn btn-primary">
+                                <i class="fas fa-calendar"></i> Schedule My Job
+                            </a>
+                            <button class="btn btn-secondary" onclick="contactUs()">
+                                <i class="fas fa-phone"></i> Contact Us
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Show quote preview for accepted quotes as well
+                setTimeout(() => fetchQuoteDetails(booking.booking_id), 500);
             } else if (booking.status === 'confirmed') {
                 buttons = `
                     <button class="btn btn-primary" onclick="confirmBooking('${booking.booking_id}')">
@@ -626,7 +1772,65 @@
                 `;
             } else if (booking.status === 'completed') {
                 buttons = `
-                    <p>Your booking has been confirmed. Thank you for choosing Stellar Tree Management!</p>
+                    <p>Your tree service work has been completed successfully. Thank you for choosing Stellar Tree Management!</p>
+                `;
+            } else if (booking.status === 'invoice-ready') {
+                // Clear quote preview for invoice stages
+                clearQuotePreview();
+                
+                buttons = `
+                    <div class="job-completion-notice">
+                        <h3>🎉 Job Completed Successfully!</h3>
+                        <p>Your tree service work has been finished. Thank you for choosing Stellar Tree Management!</p>
+                    </div>
+                    <div class="invoice-details">
+                        <h3>📋 Your Invoice is Ready!</h3>
+                        <div class="invoice-info">
+                            <p><strong>Work Description:</strong> ${booking.work_description || 'Tree service as requested'}</p>
+                            <p><strong>Invoice Amount:</strong> $${booking.estimated_cost || '0.00'}</p>
+                            <p><strong>Status:</strong> <span style="color: var(--success-color); font-weight: bold;">✅ Job Completed - Invoice Ready</span></p>
+                        </div>
+                        <div class="invoice-actions">
+                            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--secondary-color);">
+                                The invoice is now ready for payment. Please review and submit payment to complete the process.
+                            </p>
+                            <button class="btn btn-primary" onclick="viewInvoice('${booking.booking_id}')">
+                                <i class="fas fa-file-invoice"></i> View Invoice
+                            </button>
+                            <button class="btn btn-secondary" onclick="contactUs()">
+                                <i class="fas fa-phone"></i> Contact Us
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (booking.status === 'invoice-sent') {
+                // Clear quote preview for invoice stages
+                clearQuotePreview();
+                
+                buttons = `
+                    <div class="job-completion-notice">
+                        <h3>🎉 Job Completed Successfully!</h3>
+                        <p>Your tree service work has been finished. Thank you for choosing Stellar Tree Management!</p>
+                    </div>
+                    <div class="invoice-sent-details">
+                        <h3>📧 Invoice Sent - Awaiting Payment</h3>
+                        <div class="invoice-info">
+                            <p><strong>Work Description:</strong> ${booking.work_description || 'Tree service as requested'}</p>
+                            <p><strong>Invoice Amount:</strong> $${booking.estimated_cost || '0.00'}</p>
+                            <p><strong>Status:</strong> <span style="color: var(--success-color); font-weight: bold;">✅ Job Completed - Payment Required</span></p>
+                        </div>
+                        <div class="invoice-actions">
+                            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--secondary-color);">
+                                Please review the invoice and submit payment to complete the process.
+                            </p>
+                            <button class="btn btn-primary" onclick="viewInvoice('${booking.booking_id}')">
+                                <i class="fas fa-file-invoice"></i> View Invoice
+                            </button>
+                            <button class="btn btn-secondary" onclick="contactUs()">
+                                <i class="fas fa-phone"></i> Contact Us
+                            </button>
+                        </div>
+                    </div>
                 `;
             } else if (booking.status === 'cancelled') {
                 buttons = `
@@ -658,6 +1862,30 @@
             } catch (error) {
                 console.error('Error confirming booking:', error);
                 showError('Network error confirming booking');
+            }
+        }
+
+        // Accept quote
+        async function acceptQuote(bookingId) {
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/accept-quote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showSuccess('Quote accepted successfully! We\'ll contact you soon to schedule your job.');
+                    // Reload booking details to update status
+                    setTimeout(() => loadBookingDetails(), 1000);
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to accept quote');
+                }
+            } catch (error) {
+                console.error('Error accepting quote:', error);
+                showError('Network error accepting quote');
             }
         }
 
@@ -714,8 +1942,1561 @@
         `;
         document.head.appendChild(style);
 
+        // Test API connection
+        async function testBookingAPI() {
+            const bookingId = getBookingIdFromUrl();
+            if (!bookingId) {
+                alert('No booking ID available to test');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(`✅ API Test Successful!\n\nStatus: ${response.status}\nBooking ID: ${result.booking_id}\nService: ${result.service}`);
+                } else {
+                    alert(`❌ API Test Failed!\n\nStatus: ${response.status}\nError: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                alert(`❌ API Test Failed!\n\nError: ${error.message}`);
+            }
+        }
+
+        // View Invoice function
+        async function viewInvoice(bookingId) {
+            try {
+                // Redirect to admin panel to view invoice
+                // This is because the invoice viewing requires admin privileges
+                window.location.href = `/admin.html?booking=${bookingId}&action=view-invoice`;
+            } catch (error) {
+                console.error('Error viewing invoice:', error);
+                showError('Failed to view invoice. Please contact us for assistance.');
+            }
+        }
+
+        // Fetch and display quote details
+        async function fetchQuoteDetails(bookingId) {
+            // Check if we have a current booking and if it's in an invoice stage
+            const currentBooking = window.currentBookingData;
+            if (currentBooking && (currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+                console.log('✅ Skipping quote fetch for invoice stage - job completed, no quote needed');
+                return;
+            }
+            
+            try {
+                console.log('🔍 Fetching quote details for booking:', bookingId);
+                const response = await fetch(`/api/bookings/${bookingId}/quote`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch quote: ${response.status}`);
+                }
+
+                const quoteData = await response.json();
+                console.log('📋 Quote data received:', quoteData);
+                populateQuotePreview(quoteData);
+                showQuotePreview();
+            } catch (error) {
+                console.error('Error fetching quote details:', error);
+                // If quote API is not available, create a mock quote from booking data
+                createMockQuoteFromBooking();
+            }
+        }
+
+        // Populate quote preview with data
+        function populateQuotePreview(quoteData) {
+            console.log('📋 Populating quote preview with data:', quoteData);
+            
+            // Populate quote header
+            document.getElementById('quote-number').textContent = quoteData.quote_number || 'QT-' + Date.now();
+            document.getElementById('quote-date').textContent = new Date(quoteData.quote_date || Date.now()).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Populate client information
+            document.getElementById('quote-client-name').textContent = quoteData.client_name || 'N/A';
+            document.getElementById('quote-client-phone').textContent = quoteData.client_phone || 'N/A';
+            document.getElementById('quote-client-email').textContent = quoteData.client_email || 'N/A';
+            document.getElementById('quote-client-address').textContent = quoteData.client_address || 'N/A';
+
+            // Populate bill to information
+            document.getElementById('quote-bill-name').textContent = quoteData.bill_name || quoteData.client_name || 'N/A';
+            document.getElementById('quote-bill-address').textContent = quoteData.bill_address || quoteData.client_address || 'N/A';
+
+            // Populate services
+            const servicesBody = document.getElementById('quote-services-body');
+            servicesBody.innerHTML = '';
+            
+            if (quoteData.services && quoteData.services.length > 0) {
+                console.log('📋 Loading services:', quoteData.services);
+                quoteData.services.forEach((service, index) => {
+                    const serviceRow = document.createElement('div');
+                    serviceRow.className = 'table-row';
+                    serviceRow.innerHTML = `
+                        <div class="table-cell">${index + 1}</div>
+                        <div class="table-cell description">${service.description || 'Service'}</div>
+                        <div class="table-cell quantity">${service.quantity || 1}</div>
+                        <div class="table-cell price">$${(service.unit_price || 0).toFixed(2)}</div>
+                        <div class="table-cell total">$${(service.total || 0).toFixed(2)}</div>
+                    `;
+                    servicesBody.appendChild(serviceRow);
+                });
+            } else {
+                // Fallback to basic service info
+                console.log('📋 No services found, using fallback');
+                const serviceRow = document.createElement('div');
+                serviceRow.className = 'table-row';
+                serviceRow.innerHTML = `
+                    <div class="table-cell">1</div>
+                    <div class="table-cell description">Tree Service</div>
+                    <div class="table-cell quantity">1</div>
+                    <div class="table-cell price">$${(quoteData.estimated_cost || 0).toFixed(2)}</div>
+                    <div class="table-cell total">$${(quoteData.estimated_cost || 0).toFixed(2)}</div>
+                `;
+                servicesBody.appendChild(serviceRow);
+            }
+
+            // Populate summary
+            const subtotal = quoteData.subtotal || quoteData.estimated_cost || 0;
+            const total = quoteData.total || quoteData.estimated_cost || 0;
+            const tax = quoteData.tax || 0;
+            const taxEnabled = quoteData.tax_enabled;
+            
+            document.getElementById('quote-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('quote-total').textContent = `$${total.toFixed(2)}`;
+            
+            // Handle tax row
+            const taxRow = document.getElementById('quote-tax-row');
+            const taxValue = document.getElementById('quote-tax');
+            if (taxEnabled && tax > 0) {
+                taxRow.style.display = 'flex';
+                taxValue.textContent = `$${tax.toFixed(2)}`;
+            } else {
+                taxRow.style.display = 'none';
+            }
+            
+            console.log('✅ Quote preview populated successfully');
+        }
+
+        // Create mock quote from booking data (fallback)
+        function createMockQuoteFromBooking() {
+            console.log('📝 Creating mock quote from booking data');
+            const bookingId = getBookingIdFromUrl();
+            
+            // Get booking details from the page
+            const service = document.getElementById('service').textContent;
+            const customer = document.getElementById('customer').textContent;
+            const phone = document.getElementById('phone').textContent;
+            const address = document.getElementById('address').textContent;
+            const email = document.getElementById('email').textContent;
+            
+            // Create mock quote data
+            const mockQuote = {
+                quote_number: 'QT-' + Date.now(),
+                quote_date: new Date(),
+                client_name: customer,
+                client_phone: phone,
+                client_email: email || 'N/A',
+                client_address: address,
+                bill_name: customer,
+                bill_address: address,
+                services: [
+                    {
+                        description: service,
+                        quantity: 1,
+                        unit_price: 0,
+                        total: 0
+                    }
+                ],
+                estimated_cost: 0,
+                subtotal: 0,
+                total: 0
+            };
+            
+            console.log('📝 Mock quote created:', mockQuote);
+            populateQuotePreview(mockQuote);
+            showQuotePreview();
+        }
+
+        // Show quote preview section
+        function showQuotePreview() {
+            // Check if we have a current booking and if it's in an invoice stage
+            const currentBooking = window.currentBookingData; // We'll need to store this globally
+            if (currentBooking && (currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+                // Hide quote preview for invoice stages - job is done, no quote needed
+                document.getElementById('quote-preview-section').style.display = 'none';
+                console.log('✅ Quote preview hidden for invoice stage - job completed');
+                return;
+            }
+            
+            document.getElementById('quote-preview-section').style.display = 'block';
+            // Ensure quote preview starts collapsed
+            const content = document.getElementById('quote-preview-content');
+            const icon = document.getElementById('quote-toggle-icon');
+            const header = document.querySelector('.quote-preview-header');
+            content.classList.remove('expanded');
+            icon.classList.remove('rotated');
+            header.classList.remove('expanded');
+            console.log('✅ Quote preview section shown (collapsed by default)');
+        }
+
+        // Show invoice preview section
+        function showInvoicePreview() {
+            const currentBooking = window.currentBookingData;
+            if (currentBooking && (currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+                // Load and show invoice preview
+                loadInvoicePreview(currentBooking.booking_id);
+                console.log('✅ Invoice preview shown for invoice stage');
+            } else {
+                // Hide invoice preview for non-invoice stages
+                document.getElementById('invoice-preview-section').style.display = 'none';
+                console.log('✅ Invoice preview hidden for non-invoice stage');
+            }
+        }
+
+        // Clear quote preview section
+        function clearQuotePreview() {
+            document.getElementById('quote-preview-section').style.display = 'none';
+            console.log('✅ Quote preview section cleared');
+        }
+
+        // Toggle quote preview content
+        function toggleQuotePreview() {
+            const content = document.getElementById('quote-preview-content');
+            const icon = document.getElementById('quote-toggle-icon');
+            const header = document.querySelector('.quote-preview-header');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('rotated');
+                header.classList.remove('expanded');
+                console.log('📋 Quote preview collapsed');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('rotated');
+                header.classList.add('expanded');
+                console.log('📋 Quote preview expanded');
+            }
+        }
+
+        // Download quote as PDF
+        function downloadQuote() {
+            try {
+                console.log('📥 Downloading quote...');
+                // Create a new window with the quote content for printing
+                const quoteWindow = window.open('', '_blank');
+                const quoteContent = document.querySelector('.quote-document').innerHTML;
+                
+                quoteWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Quote - Stellar Tree Management</title>
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                margin: 20px; 
+                                background: white; 
+                                font-size: 12px;
+                                line-height: 1.4;
+                                color: #333;
+                            }
+                            
+                            .quote-document { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                line-height: 1.4; 
+                                color: #333; 
+                                font-size: 12px; 
+                                max-width: 800px; 
+                                margin: 0 auto; 
+                                background: white; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .quote-header { 
+                                background: white; 
+                                color: #333; 
+                                padding: 24px; 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: flex-start; 
+                                border-bottom: 3px solid #8cc63f; 
+                            }
+                            
+                            .company-brand { 
+                                display: flex; 
+                                align-items: center; 
+                                gap: 16px; 
+                            }
+                            
+                            .company-logo { 
+                                width: 48px; 
+                                height: 48px; 
+                                object-fit: contain; 
+                                border-radius: 4px; 
+                            }
+                            
+                            .company-name { 
+                                font-size: 20px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                                margin: 0 0 10px 0; 
+                                letter-spacing: 0.3px; 
+                            }
+                            
+                            .company-contact { 
+                                margin-top: 10px; 
+                            }
+                            
+                            .contact-item { 
+                                display: flex; 
+                                align-items: center; 
+                                gap: 8px; 
+                                margin-bottom: 5px; 
+                                font-size: 11px; 
+                                color: #666; 
+                            }
+                            
+                            .contact-item i { 
+                                width: 12px; 
+                                color: #8cc63f; 
+                                text-align: center; 
+                            }
+                            
+                            .document-info { 
+                                text-align: right; 
+                                display: flex; 
+                                flex-direction: column; 
+                                align-items: flex-end; 
+                            }
+                            
+                            .document-type { 
+                                font-size: 22px; 
+                                font-weight: 800; 
+                                color: #2c3e50; 
+                                margin-bottom: 8px; 
+                                letter-spacing: 1.2px; 
+                            }
+                            
+                            .document-number { 
+                                font-size: 15px; 
+                                font-weight: 600; 
+                                margin-bottom: 6px; 
+                                color: #555; 
+                            }
+                            
+                            .document-date { 
+                                font-size: 12px; 
+                                color: #666; 
+                            }
+                            
+                            .client-billing-section { 
+                                display: grid; 
+                                grid-template-columns: 1fr 1fr; 
+                                gap: 24px; 
+                                padding: 24px; 
+                                background: #f8f9fa; 
+                                border: 1px solid #e1e8ed; 
+                                border-radius: 8px; 
+                                margin: 24px; 
+                            }
+                            
+                            .section-heading { 
+                                font-size: 15px; 
+                                font-weight: 600; 
+                                margin: 0 0 12px 0; 
+                                color: #2c3e50; 
+                                border-bottom: 2px solid #8cc63f; 
+                                padding-bottom: 6px; 
+                            }
+                            
+                            .data-row { 
+                                display: flex; 
+                                margin-bottom: 8px; 
+                                align-items: flex-start; 
+                                min-height: 16px; 
+                            }
+                            
+                            .data-row .label { 
+                                font-weight: 600; 
+                                min-width: 70px; 
+                                color: #555; 
+                                font-size: 11px; 
+                                flex-shrink: 0; 
+                            }
+                            
+                            .data-row .value { 
+                                flex: 1; 
+                                color: #333; 
+                                font-size: 11px; 
+                                word-wrap: break-word; 
+                            }
+                            
+                            .services-section { 
+                                padding: 24px; 
+                            }
+                            
+                            .services-table { 
+                                border: 1px solid #e1e8ed; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                                margin-top: 12px; 
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .table-header { 
+                                display: grid; 
+                                grid-template-columns: 40px 1fr 60px 90px 90px; 
+                                background: #2c3e50; 
+                                color: white; 
+                                font-weight: 600; 
+                                font-size: 11px; 
+                            }
+                            
+                            .header-item { 
+                                padding: 12px 10px; 
+                                text-align: left; 
+                                border-right: 1px solid rgba(255, 255, 255, 0.1); 
+                            }
+                            
+                            .header-item:last-child { 
+                                border-right: none; 
+                            }
+                            
+                            .table-body { 
+                                background: white; 
+                            }
+                            
+                            .table-row { 
+                                display: grid; 
+                                grid-template-columns: 40px 1fr 60px 90px 90px; 
+                                border-bottom: 1px solid #e1e8ed; 
+                                font-size: 11px; 
+                                min-height: 40px; 
+                            }
+                            
+                            .table-row:nth-child(even) { 
+                                background: #f8f9fa; 
+                            }
+                            
+                            .table-row:last-child { 
+                                border-bottom: none; 
+                            }
+                            
+                            .table-cell { 
+                                padding: 12px 10px; 
+                                display: flex; 
+                                align-items: center; 
+                                border-right: 1px solid #e1e8ed; 
+                            }
+                            
+                            .table-cell:last-child { 
+                                border-right: none; 
+                            }
+                            
+                            .table-cell.description { 
+                                font-weight: 500; 
+                            }
+                            
+                            .table-cell.quantity { 
+                                justify-content: center; 
+                            }
+                            
+                            .table-cell.price, .table-cell.total { 
+                                justify-content: flex-end; 
+                                font-weight: 600; 
+                            }
+                            
+                            .totals-section { 
+                                padding: 0 24px 24px; 
+                                display: flex; 
+                                justify-content: flex-end; 
+                            }
+                            
+                            .totals-container { 
+                                width: 240px; 
+                                background: #f8f9fa; 
+                                border-radius: 8px; 
+                                padding: 16px; 
+                                border: 1px solid #e1e8ed; 
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .total-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 8px; 
+                                font-size: 12px; 
+                                align-items: center; 
+                                min-height: 20px; 
+                            }
+                            
+                            .total-row.grand-total { 
+                                border-top: 2px solid #8cc63f; 
+                                padding-top: 10px; 
+                                margin-top: 10px; 
+                                font-size: 15px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                            }
+                            
+                            .total-label { 
+                                font-weight: 600; 
+                            }
+                            
+                            .total-value { 
+                                font-weight: 600; 
+                            }
+                            
+                            .terms-section { 
+                                padding: 24px; 
+                                background: #f8f9fa; 
+                                border-top: 1px solid #e1e8ed; 
+                            }
+                            
+                            .terms-content p { 
+                                margin: 0; 
+                                font-size: 10px; 
+                                color: #666; 
+                                line-height: 1.3; 
+                            }
+                            
+                            @media print { 
+                                body { margin: 0; } 
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${quoteContent}
+                    </body>
+                    </html>
+                `);
+                
+                quoteWindow.document.close();
+                quoteWindow.print();
+                
+                showSuccess('Quote download initiated!');
+            } catch (error) {
+                console.error('Error downloading quote:', error);
+                showError('Failed to download quote. Please try again.');
+            }
+        }
+
+        // Print quote
+        function printQuote() {
+            try {
+                console.log('🖨️ Printing quote...');
+                const printContent = document.querySelector('#invoice-preview-section .quote-document').innerHTML;
+                const printWindow = window.open('', '_blank');
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Quote - Stellar Tree Management</title>
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                margin: 20px; 
+                                background: white; 
+                                font-size: 12px;
+                                line-height: 1.4;
+                                color: #333;
+                            }
+                            
+                            .quote-document { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                line-height: 1.4; 
+                                color: #333; 
+                                font-size: 12px; 
+                                max-width: 800px; 
+                                margin: 0 auto; 
+                                background: white; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .quote-header { 
+                                background: white; 
+                                color: #333; 
+                                padding: 24px; 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: flex-start; 
+                                border-bottom: 3px solid #8cc63f; 
+                            }
+                            
+                            .company-brand { 
+                                display: flex; 
+                                align-items: center; 
+                                gap: 16px; 
+                            }
+                            
+                            .company-logo { 
+                                width: 48px; 
+                                height: 48px; 
+                                object-fit: contain; 
+                                border-radius: 4px; 
+                            }
+                            
+                            .company-name { 
+                                font-size: 20px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                                margin: 0 0 10px 0; 
+                                letter-spacing: 0.3px; 
+                            }
+                            
+                            .company-contact { 
+                                margin-top: 10px; 
+                            }
+                            
+                            .contact-item { 
+                                display: flex; 
+                                align-items: center; 
+                                gap: 8px; 
+                                margin-bottom: 5px; 
+                                font-size: 11px; 
+                                color: #666; 
+                            }
+                            
+                            .contact-item i { 
+                                width: 12px; 
+                                color: #8cc63f; 
+                                text-align: center; 
+                            }
+                            
+                            .document-info { 
+                                text-align: right; 
+                                display: flex; 
+                                flex-direction: column; 
+                                align-items: flex-end; 
+                            }
+                            
+                            .document-type { 
+                                font-size: 22px; 
+                                font-weight: 800; 
+                                color: #2c3e50; 
+                                margin-bottom: 8px; 
+                                letter-spacing: 1.2px; 
+                            }
+                            
+                            .document-number { 
+                                font-size: 15px; 
+                                font-weight: 600; 
+                                margin-bottom: 6px; 
+                                color: #555; 
+                            }
+                            
+                            .document-date { 
+                                font-size: 12px; 
+                                color: #666; 
+                            }
+                            
+                            .client-billing-section { 
+                                display: grid; 
+                                grid-template-columns: 1fr 1fr; 
+                                gap: 24px; 
+                                padding: 24px; 
+                                background: #f8f9fa; 
+                                border: 1px solid #e1e8ed; 
+                                border-radius: 8px; 
+                                margin: 24px; 
+                            }
+                            
+                            .section-heading { 
+                                font-size: 15px; 
+                                font-weight: 600; 
+                                margin: 0 0 12px 0; 
+                                color: #2c3e50; 
+                                border-bottom: 2px solid #8cc63f; 
+                                padding-bottom: 6px; 
+                            }
+                            
+                            .data-row { 
+                                display: flex; 
+                                margin-bottom: 8px; 
+                                align-items: flex-start; 
+                                min-height: 16px; 
+                            }
+                            
+                            .data-row .label { 
+                                font-weight: 600; 
+                                min-width: 70px; 
+                                color: #555; 
+                                font-size: 11px; 
+                                flex-shrink: 0; 
+                            }
+                            
+                            .data-row .value { 
+                                flex: 1; 
+                                color: #333; 
+                                font-size: 11px; 
+                                word-wrap: break-word; 
+                            }
+                            
+                            .services-section { 
+                                padding: 24px; 
+                            }
+                            
+                            .services-table { 
+                                border: 1px solid #e1e8ed; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                                margin-top: 12px; 
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .table-header { 
+                                display: grid; 
+                                grid-template-columns: 40px 1fr 60px 90px 90px; 
+                                background: #2c3e50; 
+                                color: white; 
+                                font-weight: 600; 
+                                font-size: 12px; 
+                            }
+                            
+                            .header-item { 
+                                padding: 12px 10px; 
+                                text-align: left; 
+                                border-right: 1px solid rgba(255, 255, 255, 0.1); 
+                            }
+                            
+                            .header-item:last-child { 
+                                border-right: none; 
+                            }
+                            
+                            .table-body { 
+                                background: white; 
+                            }
+                            
+                            .table-row { 
+                                display: grid; 
+                                grid-template-columns: 40px 1fr 60px 90px 90px; 
+                                border-bottom: 1px solid #e1e8ed; 
+                                font-size: 11px; 
+                                min-height: 40px; 
+                            }
+                            
+                            .table-row:nth-child(even) { 
+                                background: #f8f9fa; 
+                            }
+                            
+                            .table-row:last-child { 
+                                border-bottom: none; 
+                            }
+                            
+                            .table-cell { 
+                                padding: 12px 10px; 
+                                display: flex; 
+                                align-items: center; 
+                                border-right: 1px solid #e1e8ed; 
+                            }
+                            
+                            .table-cell:last-child { 
+                                border-right: none; 
+                            }
+                            
+                            .table-cell.description { 
+                                font-weight: 500; 
+                            }
+                            
+                            .table-cell.quantity { 
+                                justify-content: center; 
+                            }
+                            
+                            .table-cell.price, .table-cell.total { 
+                                justify-content: flex-end; 
+                                font-weight: 600; 
+                            }
+                            
+                            .totals-section { 
+                                padding: 0 24px 24px; 
+                                display: flex; 
+                                justify-content: flex-end; 
+                            }
+                            
+                            .totals-container { 
+                                width: 240px; 
+                                background: #f8f9fa; 
+                                border-radius: 8px; 
+                                padding: 16px; 
+                                border: 1px solid #e1e8ed; 
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .total-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 8px; 
+                                font-size: 12px; 
+                                align-items: center; 
+                                min-height: 20px; 
+                            }
+                            
+                            .total-row.grand-total { 
+                                border-top: 2px solid #8cc63f; 
+                                padding-top: 10px; 
+                                margin-top: 10px; 
+                                font-size: 15px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                            }
+                            
+                            .total-label { 
+                                font-weight: 600; 
+                            }
+                            
+                            .total-value { 
+                                font-weight: 600; 
+                            }
+                            
+                            .terms-section { 
+                                padding: 24px; 
+                                background: #f8f9fa; 
+                                border-top: 1px solid #e1e8ed; 
+                            }
+                            
+                            .terms-content p { 
+                                margin: 0; 
+                                font-size: 10px; 
+                                color: #666; 
+                                line-height: 1.3; 
+                            }
+                            
+                            @media print { 
+                                body { margin: 0; }
+                                .quote-actions { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${printContent}
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                
+                showSuccess('Quote print dialog opened!');
+            } catch (error) {
+                console.error('Error printing quote:', error);
+                showError('Failed to print quote. Please try again.');
+            }
+        }
+
         // Load booking details when page loads
-        document.addEventListener('DOMContentLoaded', loadBookingDetails);
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Booking Status Page Loaded');
+            console.log('📍 Current URL:', window.location.href);
+            console.log('📍 Current Pathname:', window.location.pathname);
+            
+            loadBookingDetails();
+        });
+
+        // Utility function to format dates
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return dateString;
+            }
+        }
+
+        // Invoice Preview Functions
+        function toggleInvoicePreview() {
+            const content = document.getElementById('invoice-preview-content');
+            const icon = document.getElementById('invoice-toggle-icon');
+            const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('rotated');
+                header.classList.remove('expanded');
+                console.log('📋 Invoice preview collapsed');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('rotated');
+                header.classList.add('expanded');
+                console.log('📋 Invoice preview expanded');
+            }
+        }
+
+        // Load invoice data and populate preview
+        async function loadInvoicePreview(bookingId) {
+            try {
+                console.log('📋 Loading invoice for booking:', bookingId);
+                const response = await fetch(`/api/invoices/booking/${bookingId}`);
+                
+                if (response.ok) {
+                    const invoices = await response.json();
+                    if (invoices.length > 0) {
+                        const invoice = invoices[invoices.length - 1]; // Get most recent invoice
+                        populateInvoicePreview(invoice);
+                        document.getElementById('invoice-preview-section').style.display = 'block';
+                        console.log('✅ Invoice preview loaded');
+                    } else {
+                        console.log('ℹ️ No invoices found for this booking');
+                        document.getElementById('invoice-preview-section').style.display = 'none';
+                    }
+                } else {
+                    console.log('ℹ️ No invoices found for this booking');
+                    document.getElementById('invoice-preview-section').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading invoice:', error);
+                document.getElementById('invoice-preview-section').style.display = 'none';
+            }
+        }
+
+        // Populate invoice preview with data
+        function populateInvoicePreview(invoice) {
+            console.log('📋 Populating invoice preview:', invoice);
+            
+            // Set invoice details
+            document.getElementById('invoice-number').textContent = invoice.invoice_id;
+            document.getElementById('invoice-date').textContent = formatDate(invoice.invoice_date);
+            document.getElementById('invoice-client-name').textContent = invoice.client_name;
+            document.getElementById('invoice-client-phone').textContent = invoice.client_phone;
+            document.getElementById('invoice-client-email').textContent = invoice.client_email;
+            document.getElementById('invoice-client-address').textContent = invoice.client_address;
+            document.getElementById('invoice-bill-name').textContent = invoice.client_name;
+            document.getElementById('invoice-bill-address').textContent = invoice.client_address;
+            
+            // Set totals
+            document.getElementById('invoice-subtotal').textContent = `$${parseFloat(invoice.subtotal).toFixed(2)}`;
+            document.getElementById('invoice-total').textContent = `$${parseFloat(invoice.total_amount).toFixed(2)}`;
+            
+            // Handle tax
+            const taxRow = document.getElementById('invoice-tax-row');
+            if (invoice.tax_enabled && parseFloat(invoice.tax_amount) > 0) {
+                document.getElementById('invoice-tax').textContent = `$${parseFloat(invoice.tax_amount).toFixed(2)}`;
+                taxRow.style.display = 'flex';
+            } else {
+                taxRow.style.display = 'none';
+            }
+            
+            // Populate service items
+            const servicesBody = document.getElementById('invoice-services-body');
+            servicesBody.innerHTML = '';
+            
+            if (invoice.service_items && invoice.service_items.length > 0) {
+                invoice.service_items.forEach((item, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <div class="table-cell">${index + 1}</div>
+                        <div class="table-cell description">${item.description}</div>
+                        <div class="table-cell quantity">${item.quantity}</div>
+                        <div class="table-cell price">$${parseFloat(item.price).toFixed(2)}</div>
+                        <div class="table-cell total">$${parseFloat(item.total).toFixed(2)}</div>
+                    `;
+                    servicesBody.appendChild(row);
+                });
+            } else {
+                // Fallback to basic service info
+                console.log('📋 No services found, using fallback');
+                const row = document.createElement('div');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <div class="table-cell">1</div>
+                    <div class="table-cell description">Tree Service</div>
+                    <div class="table-cell quantity">1</div>
+                    <div class="table-cell price">$${(invoice.total_amount || 0).toFixed(2)}</div>
+                    <div class="table-cell total">$${(invoice.total_amount || 0).toFixed(2)}</div>
+                `;
+                servicesBody.appendChild(row);
+            }
+        }
+
+        // Download invoice
+        function downloadInvoice() {
+            try {
+                console.log('📥 Downloading invoice...');
+                
+                // Get the current invoice data
+                const currentBooking = window.currentBookingData;
+                if (!currentBooking) {
+                    showError('No booking data available for download');
+                    return;
+                }
+                
+                // Get the exact invoice content from the preview
+                const invoiceContent = document.querySelector('#invoice-preview-section .quote-document').innerHTML;
+                
+                // Create a new window with the invoice content
+                const invoiceWindow = window.open('', '_blank');
+                const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - Stellar Tree Management</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background: white; 
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        
+        .quote-document { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.4; 
+            color: #333; 
+            font-size: 12px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .quote-header { 
+            background: white; 
+            color: #333; 
+            padding: 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            border-bottom: 3px solid #e83e8c; 
+        }
+        
+        .company-brand { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+        }
+        
+        .company-logo { 
+            width: 48px; 
+            height: 48px; 
+            object-fit: contain; 
+            border-radius: 4px; 
+        }
+        
+        .company-name { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: #2c3e50; 
+            margin: 0 0 10px 0; 
+            letter-spacing: 0.3px; 
+        }
+        
+        .company-contact { 
+            margin-top: 10px; 
+        }
+        
+        .contact-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            margin-bottom: 4px; 
+            font-size: 11px; 
+            color: #666; 
+        }
+        
+        .document-info { 
+            text-align: right; 
+        }
+        
+        .document-type { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #e83e8c; 
+            margin-bottom: 8px; 
+        }
+        
+        .document-number { 
+            font-size: 14px; 
+            color: #666; 
+            margin-bottom: 4px; 
+        }
+        
+        .document-date { 
+            font-size: 14px; 
+            color: #666; 
+        }
+        
+        .client-billing-section { 
+            padding: 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            gap: 40px; 
+        }
+        
+        .section-heading { 
+            margin: 0 0 12px 0; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #2c3e50; 
+        }
+        
+        .data-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 8px; 
+            font-size: 12px; 
+        }
+        
+        .label { 
+            font-weight: 600; 
+            color: #666; 
+            min-width: 60px; 
+        }
+        
+        .value { 
+            color: #333; 
+            font-weight: 500; 
+        }
+        
+        .services-section { 
+            padding: 0 24px; 
+        }
+        
+        .services-table { 
+            border: 1px solid #e1e8ed; 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+        
+        .table-header { 
+            background: #8cc63f; 
+            color: white; 
+            display: flex; 
+            font-weight: 600; 
+            font-size: 12px; 
+        }
+        
+        .header-item { 
+            padding: 12px 8px; 
+            flex: 1; 
+            text-align: center; 
+        }
+        
+        .header-item:first-child { 
+            text-align: center; 
+            flex: 0.5; 
+        }
+        
+        .header-item.description { 
+            text-align: left; 
+            flex: 2; 
+        }
+        
+        .header-item.quantity { 
+            text-align: center; 
+            flex: 0.5; 
+        }
+        
+        .header-item.price { 
+            text-align: center; 
+            flex: 1; 
+        }
+        
+        .header-item.total { 
+            text-align: center; 
+            flex: 1; 
+        }
+        
+        .table-row { 
+            display: flex; 
+            border-bottom: 1px solid #e1e8ed; 
+            font-size: 12px; 
+        }
+        
+        .table-row:last-child { 
+            border-bottom: none; 
+        }
+        
+        .table-cell { 
+            padding: 12px 8px; 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            border-right: 1px solid #e1e8ed; 
+        }
+        
+        .table-cell:last-child { 
+            border-right: none; 
+        }
+        
+        .table-cell:first-child { 
+            flex: 0.5; 
+            justify-content: center; 
+        }
+        
+        .table-cell.description { 
+            flex: 2; 
+            justify-content: flex-start; 
+            font-weight: 500; 
+        }
+        
+        .table-cell.quantity { 
+            flex: 0.5; 
+            justify-content: center; 
+        }
+        
+        .table-cell.price { 
+            flex: 1; 
+            justify-content: center; 
+        }
+        
+        .table-cell.total { 
+            flex: 1; 
+            justify-content: center; 
+            font-weight: 600; 
+        }
+        
+        .totals-section { 
+            padding: 0 24px 24px; 
+            display: flex; 
+            justify-content: flex-end; 
+        }
+        
+        .totals-container { 
+            width: 240px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            padding: 16px; 
+            border: 1px solid #e1e8ed; 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .total-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 8px; 
+            font-size: 12px; 
+            align-items: center; 
+            min-height: 20px; 
+        }
+        
+        .total-row.grand-total { 
+            border-top: 2px solid #8cc63f; 
+            padding-top: 10px; 
+            margin-top: 10px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: #2c3e50; 
+        }
+        
+        .total-label { 
+            font-weight: 600; 
+        }
+        
+        .total-value { 
+            font-weight: 600; 
+        }
+        
+        .terms-section { 
+            padding: 24px; 
+            background: #f8f9fa; 
+            border-top: 1px solid #e1e8ed; 
+        }
+        
+        .terms-content p { 
+            margin: 0; 
+            font-size: 10px; 
+            color: #666; 
+            line-height: 1.3; 
+        }
+        
+        @media print { 
+            body { margin: 0; }
+            .quote-actions { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="quote-document">
+        ${invoiceContent}
+    </div>
+</body>
+</html>`;
+                
+                invoiceWindow.document.write(htmlContent);
+                invoiceWindow.document.close();
+                
+                // Wait for content to load, then show success message
+                setTimeout(() => {
+                    invoiceWindow.focus();
+                    showSuccess('Invoice downloaded! You can now print or save as PDF from the new window.');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error downloading invoice:', error);
+                showError('Failed to download invoice. Please try again.');
+            }
+        }
+
+        // Print invoice
+        function printInvoice() {
+            try {
+                console.log('🖨️ Printing invoice...');
+                
+                // Get the current invoice data
+                const currentBooking = window.currentBookingData;
+                if (!currentBooking) {
+                    showError('No booking data available for printing');
+                    return;
+                }
+                
+                // Get the exact invoice content from the preview
+                const printContent = document.querySelector('#invoice-preview-section .quote-document').innerHTML;
+                const printWindow = window.open('', '_blank');
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Invoice - Stellar Tree Management</title>
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                margin: 20px; 
+                                background: white; 
+                                font-size: 12px;
+                                line-height: 1.4;
+                                color: #333;
+                            }
+                            
+                            .quote-document { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                line-height: 1.4; 
+                                color: #333; 
+                                font-size: 12px; 
+                                max-width: 800px; 
+                                margin: 0 auto; 
+                                background: white; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .quote-header { 
+                                background: white; 
+                                color: #333; 
+                                padding: 24px; 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: flex-start; 
+                                border-bottom: 3px solid #8cc63f; 
+                            }
+                            
+                            .company-name { 
+                                font-size: 20px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                                margin: 0 0 10px 0; 
+                                letter-spacing: 0.3px; 
+                            }
+                            
+                            .document-type { 
+                                font-size: 18px; 
+                                font-weight: 700; 
+                                color: #e83e8c; 
+                                text-align: right; 
+                                margin-bottom: 8px; 
+                            }
+                            
+                            .document-number { 
+                                font-size: 14px; 
+                                color: #666; 
+                                margin-bottom: 4px; 
+                            }
+                            
+                            .document-date { 
+                                font-size: 14px; 
+                                color: #666; 
+                            }
+                            
+                            .client-info { 
+                                padding: 24px; 
+                                display: flex; 
+                                justify-content: space-between; 
+                                gap: 40px; 
+                            }
+                            
+                            .info-section h4 { 
+                                margin: 0 0 12px 0; 
+                                font-size: 14px; 
+                                font-weight: 600; 
+                                color: #2c3e50; 
+                            }
+                            
+                            .info-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 8px; 
+                                font-size: 12px; 
+                            }
+                            
+                            .label { 
+                                font-weight: 600; 
+                                color: #666; 
+                                min-width: 60px; 
+                            }
+                            
+                            .value { 
+                                color: #333; 
+                                font-weight: 500; 
+                            }
+                            
+                            .services-table { 
+                                margin: 0 24px; 
+                                border: 1px solid #e1e8ed; 
+                                border-radius: 8px; 
+                                overflow: hidden; 
+                            }
+                            
+                            .table-header { 
+                                background: #8cc63f; 
+                                color: white; 
+                                display: flex; 
+                                font-weight: 600; 
+                                font-size: 12px; 
+                            }
+                            
+                            .header-cell { 
+                                padding: 12px 8px; 
+                                flex: 1; 
+                                text-align: center; 
+                            }
+                            
+                            .header-cell:first-child { 
+                                text-align: left; 
+                                padding-left: 16px; 
+                            }
+                            
+                            .header-cell:last-child { 
+                                text-align: right; 
+                                padding-right: 16px; 
+                            }
+                            
+                            .table-row { 
+                                display: flex; 
+                                border-bottom: 1px solid #e1e8ed; 
+                                font-size: 12px; 
+                            }
+                            
+                            .table-row:last-child { 
+                                border-bottom: none; 
+                            }
+                            
+                            .table-cell { 
+                                padding: 12px 8px; 
+                                flex: 1; 
+                                display: flex; 
+                                align-items: center; 
+                                border-right: 1px solid #e1e8ed; 
+                            }
+                            
+                            .table-cell:last-child { 
+                                border-right: none; 
+                            }
+                            
+                            .table-cell.description { 
+                                justify-content: flex-start; 
+                                font-weight: 500; 
+                            }
+                            
+                            .table-cell.quantity { 
+                                justify-content: center; 
+                            }
+                            
+                            .table-cell.price, .table-cell.total { 
+                                justify-content: flex-end; 
+                                font-weight: 600; 
+                            }
+                            
+                            .totals-section { 
+                                padding: 0 24px 24px; 
+                                display: flex; 
+                                justify-content: flex-end; 
+                            }
+                            
+                            .totals-container { 
+                                width: 240px; 
+                                background: #f8f9fa; 
+                                border-radius: 8px; 
+                                padding: 16px; 
+                                border: 1px solid #e1e8ed; 
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+                            }
+                            
+                            .total-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 8px; 
+                                font-size: 12px; 
+                                align-items: center; 
+                                min-height: 20px; 
+                            }
+                            
+                            .total-row.grand-total { 
+                                border-top: 2px solid #8cc63f; 
+                                padding-top: 10px; 
+                                margin-top: 10px; 
+                                font-size: 15px; 
+                                font-weight: 700; 
+                                color: #2c3e50; 
+                            }
+                            
+                            .total-label { 
+                                font-weight: 600; 
+                            }
+                            
+                            .total-value { 
+                                font-weight: 600; 
+                            }
+                            
+                            @media print { 
+                                body { margin: 0; }
+                                .quote-actions { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${printContent}
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                
+                showSuccess('Invoice print dialog opened!');
+            } catch (error) {
+                console.error('Error printing invoice:', error);
+                showError('Failed to print invoice. Please try again.');
+            }
+        }
+
+
+            
+
+
     </script>
 </body>
 </html> 

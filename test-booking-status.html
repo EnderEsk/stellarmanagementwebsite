@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Booking Status - Stellar Tree Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-link {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Booking Status Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Test Links</h2>
+        <p>Click these links to test different booking status scenarios:</p>
+        
+        <a href="/ST-TEST-MEAFETST" class="test-link">Test with real booking ID: /ST-TEST-MEAFETST</a>
+        <a href="/booking-status/ST-TEST-MEAFETST" class="test-link">Test with /booking-status/ST-TEST-MEAFETST</a>
+        <a href="/ST-FAKE123" class="test-link">Test with fake booking ID: /ST-FAKE123</a>
+        <a href="/booking-status/ST-FAKE123" class="test-link">Test with /booking-status/ST-FAKE123</a>
+    </div>
+
+    <div class="test-section">
+        <h2>API Test</h2>
+        <p>Test the API endpoint directly:</p>
+        <button onclick="testAPI()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test API Endpoint
+        </button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>URL Parsing Test</h2>
+        <p>Test the URL parsing logic:</p>
+        <button onclick="testURLParsing()" style="padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test URL Parsing
+        </button>
+        <div id="url-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Page Info</h2>
+        <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+        <p><strong>Current Pathname:</strong> <span id="current-pathname"></span></p>
+        <p><strong>Extracted Booking ID:</strong> <span id="extracted-id"></span></p>
+    </div>
+
+    <script>
+        // Display current page info
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('current-pathname').textContent = window.location.pathname;
+        
+        // Test URL parsing logic (same as in booking-status.html)
+        function getBookingIdFromUrl() {
+            const path = window.location.pathname;
+            
+            // Handle both /booking-status/:id and /:id patterns
+            if (path.startsWith('/booking-status/')) {
+                return path.split('/').pop();
+            } else if (path !== '/' && path !== '/index.html') {
+                // Extract booking ID from path like /ST-ABC123
+                const segments = path.split('/').filter(segment => segment.length > 0);
+                if (segments.length > 0) {
+                    const potentialId = segments[segments.length - 1];
+                    // Check if it looks like a booking ID
+                    if (potentialId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(potentialId)) {
+                        return potentialId;
+                    }
+                }
+            }
+            
+            // Try to get from query parameters as fallback
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+        
+        document.getElementById('extracted-id').textContent = getBookingIdFromUrl() || 'None';
+        
+        // Test API endpoint
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="status info">Testing API...</div>';
+            
+            try {
+                const response = await fetch('/api/bookings/ST-TEST-MEAFETST');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ API Test Successful!<br>
+                            Status: ${response.status}<br>
+                            Booking ID: ${data.booking_id}<br>
+                            Service: ${data.service}<br>
+                            Status: ${data.status}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ API Test Failed!<br>
+                            Status: ${response.status}<br>
+                            Error: ${data.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ API Test Failed!<br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Test URL parsing
+        function testURLParsing() {
+            const resultDiv = document.getElementById('url-result');
+            const testUrls = [
+                '/ST-TEST-MEAFETST',
+                '/booking-status/ST-TEST-MEAFETST',
+                '/ST-FAKE123',
+                '/some-other-path',
+                '/'
+            ];
+            
+            let results = '<h3>URL Parsing Results:</h3>';
+            
+            testUrls.forEach(testUrl => {
+                // Simulate the URL parsing logic
+                const path = testUrl;
+                let extractedId = null;
+                
+                if (path.startsWith('/booking-status/')) {
+                    extractedId = path.split('/').pop();
+                } else if (path !== '/' && path !== '/index.html') {
+                    const segments = path.split('/').filter(segment => segment.length > 0);
+                    if (segments.length > 0) {
+                        const potentialId = segments[segments.length - 1];
+                        if (potentialId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(potentialId)) {
+                            extractedId = potentialId;
+                        }
+                    }
+                }
+                
+                const status = extractedId ? '✅' : '❌';
+                results += `<p><strong>${testUrl}:</strong> ${status} ${extractedId || 'No ID extracted'}</p>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>

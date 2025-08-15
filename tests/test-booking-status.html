@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Booking Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-link { display: block; margin: 10px 0; padding: 10px; background: #f0f0f0; text-decoration: none; color: #333; }
+        .test-link:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <h1>Test Booking Status Routes</h1>
+    
+    <h2>Test with different URL patterns:</h2>
+    
+    <a href="/test123" class="test-link">Test with path parameter: /test123</a>
+    <a href="/booking-status.html?id=test123" class="test-link">Test with query parameter: /booking-status.html?id=test123</a>
+    <a href="/booking-status?id=test123" class="test-link">Test with /booking-status?id=test123</a>
+    
+    <h2>Test with a real booking ID:</h2>
+    <p>Test with the actual test booking created:</p>
+    <a href="/ST-TEST-ME9JDVFF" class="test-link">Test with path parameter: /ST-TEST-ME9JDVFF</a>
+    <a href="/booking-status.html?id=ST-TEST-ME9JDVFF" class="test-link">Test with query parameter: /booking-status.html?id=ST-TEST-ME9JDVFF</a>
+    <a href="/booking-status?id=ST-TEST-ME9JDVFF" class="test-link">Test with /booking-status?id=ST-TEST-ME9JDVFF</a>
+    
+    <h2>Debug Information:</h2>
+    <p>Open the browser console to see debug logs when testing the booking status page.</p>
+    
+    <script>
+        // Add click handlers to log the URLs being tested
+        document.querySelectorAll('.test-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                console.log('Testing URL:', e.target.href);
+            });
+        });
+    </script>
+</body>
+</html>
