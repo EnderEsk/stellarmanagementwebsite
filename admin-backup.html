@@ -137,41 +137,214 @@
     </div>
 
     <div class="admin-container" id="adminContent" style="display: none;">
-        <div class="admin-header">
-            <div class="admin-header-content">
-                <div class="admin-title-section">
-                    <h1>Admin Dashboard</h1>
-                    <p>Manage bookings and view statistics for Stellar Tree Management</p>
+        <!-- Admin Sidebar Navigation -->
+        <div class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="images/logo.png" alt="Stellar Tree Management" class="sidebar-logo-img">
+                    <span class="sidebar-title">Admin Panel</span>
                 </div>
-                <div class="admin-user-section">
-                    <div class="admin-user-info">
-                        <div class="user-avatar">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <div class="user-details">
-                            <div class="user-role">Administrator</div>
-                            <div id="userEmail" class="user-email">Loading...</div>
-                        </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <!-- Dashboard - Active by default -->
+                    <li class="nav-item active" data-section="dashboard">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tachometer-alt nav-icon"></i>
+                            <span class="nav-label">Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Customers -->
+                    <li class="nav-item" data-section="customers">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-users nav-icon"></i>
+                            <span class="nav-label">Customers</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Bookings with dropdown -->
+                    <li class="nav-item has-dropdown" data-section="bookings">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-calendar-check nav-icon"></i>
+                            <span class="nav-label">Bookings</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" data-filter="pending">Pending Site Visit</a></li>
+                            <li><a href="#" data-filter="quote-ready">Quote Ready</a></li>
+                            <li><a href="#" data-filter="quote-sent">Quote Sent</a></li>
+                            <li><a href="#" data-filter="quote-accepted">Quote Accepted</a></li>
+                            <li><a href="#" data-filter="confirmed">Request Booking</a></li>
+                            <li><a href="#" data-filter="pending-booking">Job Booked</a></li>
+                            <li><a href="#" data-filter="invoice-ready">Invoice Ready</a></li>
+                            <li><a href="#" data-filter="invoice-sent">Invoice Sent</a></li>
+                            <li><a href="#" data-filter="completed">Completed</a></li>
+                            <li><a href="#" data-filter="all-bookings">All Bookings</a></li>
+                            <li><a href="#" data-filter="calendar">Calendar View</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Website with dropdown -->
+                    <li class="nav-item has-dropdown" data-section="website">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-globe nav-icon"></i>
+                            <span class="nav-label">Website</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/" target="_blank">Home</a></li>
+                            <li><a href="/about" target="_blank">About</a></li>
+                            <li><a href="/projects" target="_blank">Projects</a></li>
+                            <li><a href="/booking/" target="_blank">Book Quote</a></li>
+                            <li><a href="/admin" target="_blank" class="active-link">Admin</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Socials -->
+                    <li class="nav-item" data-section="socials">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-share-alt nav-icon"></i>
+                            <span class="nav-label">Socials</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- User section at bottom of sidebar -->
+            <div class="sidebar-user">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-shield"></i>
                     </div>
-                    <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()" title="Sign Out">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span class="logout-text">Logout</span>
-                    </button>
+                    <div class="user-details">
+                        <div class="user-role">Administrator</div>
+                        <div id="sidebarUserEmail" class="user-email">Loading...</div>
+                    </div>
                 </div>
+                <button class="logout-btn" onclick="window.simpleGoogleAuth.logout()" title="Sign Out">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
 
+                        <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card pending clickable" data-filter="pending" onclick="filterByStatCard('pending')">
+                        <h3 id="pendingCount">0</h3>
+                        <p>Pending Site Visit</p>
+                    </div>
 
+                    <div class="stat-card quote-ready clickable" data-filter="quote-ready" onclick="filterByStatCard('quote-ready')">
+                        <h3 id="quoteReadyCount">0</h3>
+                        <p>Quote Ready</p>
+                    </div>
+                    <div class="stat-card quote-sent clickable" data-filter="quote-sent" onclick="filterByStatCard('quote-sent')">
+                        <h3 id="quoteSentCount">0</h3>
+                        <p>Quote Sent</p>
+                    </div>
+                    <div class="stat-card quote-accepted clickable" data-filter="quote-accepted" onclick="filterByStatCard('quote-accepted')">
+                        <h3 id="quoteAcceptedCount">0</h3>
+                        <p>Quote Accepted</p>
+                    </div>
+                    <div class="stat-card confirmed clickable" data-filter="confirmed" onclick="filterByStatCard('confirmed')">
+                        <h3 id="confirmedCount">0</h3>
+                        <p>Request Booking</p>
+                    </div>
+                    <div class="stat-card pending-booking clickable" data-filter="pending-booking" onclick="filterByStatCard('pending-booking')">
+                        <h3 id="pendingBookingCount">0</h3>
+                        <p>Job Booked - Awaiting Confirmation</p>
+                    </div>
+                    <div class="stat-card invoice-ready clickable" data-filter="invoice-ready" onclick="filterByStatCard('invoice-ready')">
+                        <h3 id="invoiceReadyCount">0</h3>
+                        <p>Invoice Ready</p>
+                    </div>
+                    <div class="stat-card invoice-sent clickable" data-filter="invoice-sent" onclick="filterByStatCard('invoice-sent')">
+                        <h3 id="invoiceSentCount">0</h3>
+                        <p>Invoice Sent</p>
+                    </div>
+                    <div class="stat-card completed clickable" data-filter="completed" onclick="filterByStatCard('completed')">
+                        <h3 id="completedCount">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
 
-        <!-- Main Content Area -->
-        <div class="bookings-container">
-            <!-- Active Bookings Section -->
-            <div class="active-bookings-section">
+                <!-- Recent Bookings Section -->
+                <div class="recent-bookings-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-clock"></i> Recent Bookings</h2>
+                        <button class="refresh-btn" onclick="manualRefreshBookings()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <!-- Bookings Grid -->
+                    <div class="bookings-grid" id="activeBookingsGrid">
+                        <div class="empty-state">Loading bookings...</div>
+                    </div>
+                </div>
+
+                <!-- Calendar Preview Section -->
+                <div class="calendar-preview-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-calendar-week"></i> Calendar Overview</h2>
+                        <button class="view-all-btn" onclick="switchToSection('bookings', 'calendar')">
+                            View Full Calendar
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-preview" id="calendarPreview">
+                        <!-- Mini calendar will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Section -->
+            <div class="content-section" id="customersSection">
                 <div class="section-header">
-                    <h2><i class="fas fa-calendar-check"></i> <span id="sectionTitle">Request Quote</span></h2>
-                            <button class="refresh-btn" onclick="manualRefreshBookings()">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </button>
+                    <h1><i class="fas fa-users"></i> Customer Management</h1>
+                    <p>Manage your customer database and relationships</p>
+                </div>
+                
+                <div class="customer-controls">
+                    <div class="customer-search">
+                        <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
+                        <button class="search-btn" onclick="searchCustomers()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="customer-actions">
+                        <button class="action-btn confirm" onclick="showAddCustomerModal()">
+                            <i class="fas fa-plus"></i> Add Customer
+                        </button>
+                        <button class="action-btn complete" onclick="migrateCustomers()">
+                            <i class="fas fa-sync"></i> Migrate Existing
+                        </button>
+                        <button class="action-btn warning" onclick="recalculateCustomerTotals()">
+                            <i class="fas fa-calculator"></i> Recalculate Totals
+                        </button>
+                        <button class="action-btn info" onclick="refreshCustomerData()">
+                            <i class="fas fa-sync"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="customers-grid" id="customersGrid">
+                    <div class="empty-state">Loading customers...</div>
+                </div>
+            </div>
+
+            <!-- Bookings Section -->
+            <div class="content-section" id="bookingsSection">
+                <div class="section-header">
+                    <h1><i class="fas fa-calendar-check"></i> <span id="sectionTitle">All Bookings</span></h1>
+                    <button class="refresh-btn" onclick="manualRefreshBookings()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
 
                 <!-- Modern Filter Tabs -->
@@ -187,48 +360,248 @@
                             <div class="filter-tab" data-filter="pending">
                                 <i class="fas fa-clock"></i>
                                 Pending Site Visit
-                                <span class="tab-count" id="pendingCount">0</span>
                             </div>
 
                             <div class="filter-tab" data-filter="quote-ready">
                                 <i class="fas fa-file-invoice-dollar"></i>
                                 Quote Ready
-                                <span class="tab-count" id="quoteReadyCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="quote-sent">
                                 <i class="fas fa-paper-plane"></i>
                                 Quote Sent
-                                <span class="tab-count" id="quoteSentCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="quote-accepted">
                                 <i class="fas fa-check-circle"></i>
                                 Quote Accepted
-                                <span class="tab-count" id="quoteAcceptedCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="confirmed">
                                 <i class="fas fa-check-circle"></i>
                                 Request Booking
-                                <span class="tab-count" id="confirmedCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="pending-booking">
                                 <i class="fas fa-calendar-plus"></i>
                                 Job Booked
-                                <span class="tab-count" id="pendingBookingCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="invoice-ready">
                                 <i class="fas fa-file-invoice"></i>
                                 Invoice Ready
-                                <span class="tab-count" id="invoiceReadyCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="invoice-sent">
                                 <i class="fas fa-paper-plane"></i>
                                 Invoice Sent
-                                <span class="tab-count" id="invoiceSentCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="completed">
                                 <i class="fas fa-check-double"></i>
                                 Completed
-                                <span class="tab-count" id="completedCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Management Views Category -->
+                    <div class="tab-category">
+                        <div class="tab-category-title">Management Views</div>
+                        <div class="tab-row">
+                            <div class="filter-tab" data-filter="all-bookings">
+                                <i class="fas fa-calendar-alt"></i>
+                                All Bookings
+                            </div>
+                            <div class="filter-tab" data-filter="calendar">
+                                <i class="fas fa-calendar-week"></i>
+                                Calendar View
+                            </div>
+                            <div class="filter-tab" data-filter="customers">
+                                <i class="fas fa-users"></i>
+                                Customer Management
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Grid -->
+                <div class="bookings-grid" id="activeBookingsGrid">
+                    <div class="empty-state">Loading bookings...</div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="calendar-view" id="calendarView" style="display: none;">
+                    <div class="calendar-controls">
+                        <button class="calendar-nav-btn" onclick="previousMonth()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 id="calendarMonth">July 2025</h3>
+                        <button class="calendar-nav-btn" onclick="nextMonth()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be populated here -->
+                    </div>
+                    
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-indicator available"></span>
+                            <span>Available</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-indicator booked"></span>
+                            <span>Booked</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-indicator blocked"></span>
+                            <span>Blocked</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-indicator weekend"></span>
+                            <span>Weekend</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Website Section -->
+            <div class="content-section" id="websiteSection">
+                <div class="section-header">
+                    <h1><i class="fas fa-globe"></i> Website Management</h1>
+                    <p>Quick access to your website pages and content</p>
+                </div>
+                
+                <div class="website-links-grid">
+                    <a href="/" class="website-card" target="_blank">
+                        <div class="website-card-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <h3>Home Page</h3>
+                        <p>Main landing page of your website</p>
+                    </a>
+                    
+                    <a href="/about" class="website-card" target="_blank">
+                        <div class="website-card-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h3>About Us</h3>
+                        <p>Company information and team details</p>
+                    </a>
+                    
+                    <a href="/projects" class="website-card" target="_blank">
+                        <div class="website-card-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <h3>Projects</h3>
+                        <p>Portfolio of completed work</p>
+                    </a>
+                    
+                    <a href="/booking/" class="website-card" target="_blank">
+                        <div class="website-card-icon">
+                            <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <h3>Book Quote</h3>
+                        <p>Customer booking and quote request form</p>
+                    </a>
+                    
+                    <a href="/admin" class="website-card active" target="_blank">
+                        <div class="website-card-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h3>Admin Panel</h3>
+                        <p>Current admin dashboard (you are here)</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Socials Section -->
+            <div class="content-section" id="socialsSection">
+                <div class="section-header">
+                    <h1><i class="fas fa-share-alt"></i> Social Media</h1>
+                    <p>Quick access to your social media profiles</p>
+                </div>
+                
+                <div class="social-links-grid">
+                    <a href="#" class="social-card instagram" onclick="openSocialLink('instagram')">
+                        <div class="social-card-icon">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <h3>Instagram</h3>
+                        <p>Share your tree service projects and updates</p>
+                        <span class="social-status">Coming Soon</span>
+                    </a>
+                    
+                    <a href="#" class="social-card facebook" onclick="openSocialLink('facebook')">
+                        <div class="social-card-icon">
+                            <i class="fab fa-facebook"></i>
+                        </div>
+                        <h3>Facebook</h3>
+                        <p>Connect with customers and share updates</p>
+                        <span class="social-status">Coming Soon</span>
+                    </a>
+                    
+                    <a href="#" class="social-card twitter" onclick="openSocialLink('twitter')">
+                        <div class="website-card-icon">
+                            <i class="fab fa-twitter"></i>
+                        </div>
+                        <h3>Twitter</h3>
+                        <p>Quick updates and industry news</p>
+                        <span class="social-status">Coming Soon</span>
+                    </a>
+                    
+                    <a href="#" class="social-card linkedin" onclick="openSocialLink('linkedin')">
+                        <div class="social-card-icon">
+                            <i class="fab fa-linkedin"></i>
+                        </div>
+                        <h3>LinkedIn</h3>
+                        <p>Professional networking and business updates</p>
+                        <span class="social-status">Coming Soon</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+                <!-- Modern Filter Tabs -->
+                <div class="filter-tabs">
+                    <!-- Booking Status Category -->
+                    <div class="tab-category">
+                        <div class="tab-category-title">Booking Status</div>
+                        <div class="tab-row">
+                            <div class="filter-tab active" data-filter="all">
+                                <i class="fas fa-list"></i>
+                                All Active
+                            </div>
+                            <div class="filter-tab" data-filter="pending">
+                                <i class="fas fa-clock"></i>
+                                Pending Site Visit
+                            </div>
+
+                            <div class="filter-tab" data-filter="quote-ready">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                Quote Ready
+                            </div>
+                            <div class="filter-tab" data-filter="quote-sent">
+                                <i class="fas fa-paper-plane"></i>
+                                Quote Sent
+                            </div>
+                            <div class="filter-tab" data-filter="quote-accepted">
+                                <i class="fas fa-check-circle"></i>
+                                Quote Accepted
+                            </div>
+                            <div class="filter-tab" data-filter="confirmed">
+                                <i class="fas fa-check-circle"></i>
+                                Request Booking
+                            </div>
+                            <div class="filter-tab" data-filter="pending-booking">
+                                <i class="fas fa-calendar-plus"></i>
+                                Job Booked
+                            </div>
+                            <div class="filter-tab" data-filter="invoice-ready">
+                                <i class="fas fa-file-invoice"></i>
+                                Invoice Ready
+                            </div>
+                            <div class="filter-tab" data-filter="invoice-sent">
+                                <i class="fas fa-paper-plane"></i>
+                                Invoice Sent
+                            </div>
+                            <div class="filter-tab" data-filter="completed">
+                                <i class="fas fa-check-double"></i>
+                                Completed
                             </div>
                         </div>
                     </div>
@@ -983,11 +1356,13 @@
             // Find the corresponding filter tab and trigger its click
             const filterTab = document.querySelector(`.filter-tab[data-filter="${filter}"]`);
             if (filterTab) {
-                // Remove active class from all tabs
+                // Remove active class from all tabs and stat cards
                 document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
                 
-                // Add active class to the clicked filter tab
+                // Add active class to the clicked filter tab and corresponding stat card
                 filterTab.classList.add('active');
+                document.querySelector(`.stat-card[data-filter="${filter}"]`).classList.add('active');
                 
                 // Update current filter
                 currentFilter = filter;
@@ -1027,7 +1402,17 @@
             }
         }
 
-
+        // Update stat card active states when filter changes
+        function updateStatCardActiveStates() {
+            // Remove active class from all stat cards
+            document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+            
+            // Add active class to current filter's stat card
+            const activeStatCard = document.querySelector(`.stat-card[data-filter="${currentFilter}"]`);
+            if (activeStatCard) {
+                activeStatCard.classList.add('active');
+            }
+        }
 
         // Render active bookings (pending and confirmed)
         function renderActiveBookings() {
@@ -1629,6 +2014,9 @@
                 // Update filter
                 currentFilter = e.target.dataset.filter;
                 updateSectionTitle();
+                
+                // Update stat card active states
+                updateStatCardActiveStates();
                 
                 // Show/hide appropriate view
                 if (currentFilter === 'calendar') {
@@ -2263,9 +2651,6 @@
                 `;
             } else if (booking.status === 'cancelled') {
                 actionButtons = `
-                    <button class="action-btn reopen" onclick="updateBookingStatus('${booking.booking_id}', 'pending')">
-                        <i class="fas fa-redo"></i> Reopen
-                    </button>
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
@@ -4716,112 +5101,6 @@ stellartmanagement@outlook.com</span>
             }
         }
 
-        // Send Invoice from Booking (directly generates and sends invoice without showing modal)
-        async function sendInvoiceFromBooking(bookingId) {
-            try {
-                console.log('sendInvoiceFromBooking called with bookingId:', bookingId);
-                
-                // Show loading notification
-                showNotification('Preparing and sending invoice...', 'info');
-                
-                // Fetch the latest quote for this booking (without showing modal)
-                const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
-                if (!quoteResponse.ok) {
-                    throw new Error('Failed to fetch quote data');
-                }
-                
-                const quotes = await quoteResponse.json();
-                if (!quotes || quotes.length === 0) {
-                    throw new Error('No quotes found for this booking');
-                }
-                
-                const quote = quotes[0];
-                console.log('Using quote:', quote);
-                
-                // Fetch the booking data
-                const bookingResponse = await fetch(`/api/bookings/${bookingId}`);
-                if (!bookingResponse.ok) {
-                    throw new Error('Failed to fetch booking data');
-                }
-                
-                const booking = await bookingResponse.json();
-                console.log('Using booking:', booking);
-                
-                // Prepare invoice data directly from quote
-                const invoiceData = {
-                    quote_id: quote.quote_id,
-                    booking_id: bookingId,
-                    client_name: quote.client_name || booking.name || '',
-                    client_phone: quote.client_phone || booking.phone || '',
-                    client_address: quote.client_address || booking.address || '',
-                    client_email: quote.client_email || booking.email || '',
-                    invoice_date: new Date().toISOString().split('T')[0],
-                    service_items: quote.service_items || [],
-                    subtotal: quote.subtotal || 0,
-                    tax_amount: quote.tax_amount || 0,
-                    total_amount: quote.total_amount || 0,
-                    tax_enabled: quote.tax_enabled || false
-                };
-                
-                console.log('Creating invoice with data:', invoiceData);
-                
-                // Create the invoice directly
-                const createResponse = await fetch('/api/invoices', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(invoiceData)
-                });
-                
-                if (!createResponse.ok) {
-                    const error = await createResponse.json();
-                    throw new Error(error.error || 'Failed to create invoice');
-                }
-                
-                const createResult = await createResponse.json();
-                const invoiceId = createResult.invoice_id;
-                console.log('Invoice created successfully with ID:', invoiceId);
-                
-                // Send the invoice email immediately
-                console.log('Sending invoice email...');
-                const emailResponse = await fetch(`/api/invoices/${invoiceId}/email`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!emailResponse.ok) {
-                    const error = await emailResponse.json();
-                    throw new Error(error.error || 'Failed to send invoice email');
-                }
-                
-                const emailResult = await emailResponse.json();
-                console.log('Invoice email sent successfully:', emailResult);
-                
-                // Update booking status to 'invoice-sent'
-                const statusResponse = await fetch(`/api/bookings/${bookingId}/status`, {
-                    method: 'PATCH',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ status: 'invoice-sent' })
-                });
-                
-                if (statusResponse.ok) {
-                    showNotification('Invoice sent successfully and booking status updated!', 'success');
-                    // Reload bookings to reflect the status change
-                    loadBookings();
-                } else {
-                    console.warn('Invoice sent but failed to update booking status');
-                    showNotification('Invoice sent but failed to update booking status', 'warning');
-                }
-                
-            } catch (error) {
-                console.error('Error in sendInvoiceFromBooking:', error);
-                showNotification(`Failed to send invoice: ${error.message}`, 'error');
-            }
-        }
-
         // Show Invoice Modal
         function showInvoiceModal(quote, booking) {
             console.log('showInvoiceModal called with:', { quote, booking });
@@ -6283,6 +6562,9 @@ stellartmanagement@outlook.com</span>
                 // Update current filter
                 currentFilter = filter;
                 
+                // Update stat card active states
+                updateStatCardActiveStates();
+                
                 // Update section title smoothly
                 const sectionTitle = document.getElementById('sectionTitle');
                 let newTitle = '';
@@ -7160,6 +7442,9 @@ Check console for detailed analysis.
                     <div class="quote-actions">
                         <button type="button" class="btn-secondary" onclick="closeModal('invoiceModal')">
                             <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="debugQuoteInvoiceDiscrepancy()" title="Debug Quote vs Invoice Totals">
+                            <i class="fas fa-bug"></i> Debug Totals
                         </button>
                         <button type="button" class="btn-primary" onclick="generateInvoice()">
                             <i class="fas fa-file-invoice"></i> Invoice

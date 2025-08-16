@@ -210,15 +210,8 @@
                 scroll-behavior: smooth;
             }
 
-            /* Improve touch targets */
-            .stat-card.clickable {
-                min-height: 60px;
-                padding: 1.25rem 1rem;
-            }
-
             /* Enhanced tap feedback */
             .filter-tab:active,
-            .stat-card:active,
             .booking-card:active {
                 transform: scale(0.98);
                 transition: transform 0.1s ease;
@@ -246,74 +239,7 @@
             }
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid var(--admin-border);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-        }
 
-        /* Clickable stat cards */
-        .stat-card.clickable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .stat-card.clickable:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            border-color: var(--admin-accent);
-        }
-
-        .stat-card.clickable:active {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Active state for stat cards */
-        .stat-card.clickable.active {
-            border-color: var(--admin-accent);
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
-        }
-        
-        .stat-card h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--admin-accent);
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-card p {
-            color: var(--admin-primary);
-            font-weight: 500;
-        }
-
-        .stat-card.pending h3 { color: #fd7e14; }
-
-        .stat-card.quote-ready h3 { color: #17a2b8; }
-        .stat-card.quote-sent h3 { color: #fd7e14; }
-        .stat-card.quote-accepted h3 { color: #6f42c1; }
-        .stat-card.invoice-ready h3 { color: #e83e8c; }
-        .stat-card.invoice-sent h3 { color: #fd7e14; }
-        .stat-card.confirmed h3 { color: var(--admin-success); }
-        .stat-card.completed h3 { color: var(--admin-info); }
-        .stat-card.cancelled h3 { color: var(--admin-danger); }
         
         .bookings-container {
             display: grid;
@@ -463,6 +389,25 @@
 
         .filter-tab.active i {
             transform: scale(1.05);
+        }
+
+        /* Tab count styling */
+        .tab-count {
+            background: var(--admin-accent);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .filter-tab.active .tab-count {
+            background: white;
+            color: var(--admin-accent);
         }
 
         /* Loading state for tabs */
@@ -847,6 +792,11 @@
 
         .action-btn.quote {
             background: #8cc63f;
+            color: white;
+        }
+
+        .action-btn.reopen {
+            background: #20c997;
             color: white;
         }
 
