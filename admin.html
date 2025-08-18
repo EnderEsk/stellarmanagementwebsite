@@ -231,16 +231,7 @@
                                 Quote Sent
                                 <span class="tab-count" id="quoteSentCount">0</span>
                             </div>
-                            <div class="filter-tab" data-filter="quote-accepted">
-                                <i class="fas fa-check-circle"></i>
-                                Quote Accepted & Scheduling
-                                <span class="tab-count" id="quoteAcceptedCount">0</span>
-                            </div>
-                            <div class="filter-tab" data-filter="confirmed">
-                                <i class="fas fa-check-circle"></i>
-                                Request Booking
-                                <span class="tab-count" id="confirmedCount">0</span>
-                            </div>
+
                             <div class="filter-tab" data-filter="pending-booking">
                                 <i class="fas fa-calendar-plus"></i>
                                 Job Scheduled
@@ -1000,8 +991,6 @@
                 pending: allBookings.filter(b => b.status === 'pending').length,
                 quoteReady: allBookings.filter(b => b.status === 'quote-ready').length,
                 quoteSent: allBookings.filter(b => b.status === 'quote-sent').length,
-                quoteAccepted: allBookings.filter(b => b.status === 'quote-accepted').length,
-                confirmed: allBookings.filter(b => b.status === 'confirmed').length,
                 pendingBooking: allBookings.filter(b => b.status === 'pending-booking').length,
                 invoiceReady: allBookings.filter(b => b.status === 'invoice-ready').length,
                 invoiceSent: allBookings.filter(b => b.status === 'invoice-sent').length,
@@ -1011,8 +1000,6 @@
             document.getElementById('pendingCount').textContent = stats.pending;
             document.getElementById('quoteReadyCount').textContent = stats.quoteReady;
             document.getElementById('quoteSentCount').textContent = stats.quoteSent;
-            document.getElementById('quoteAcceptedCount').textContent = stats.quoteAccepted;
-            document.getElementById('confirmedCount').textContent = stats.confirmed;
             document.getElementById('pendingBookingCount').textContent = stats.pendingBooking;
             document.getElementById('invoiceReadyCount').textContent = stats.invoiceReady;
             document.getElementById('invoiceSentCount').textContent = stats.invoiceSent;
@@ -1066,7 +1053,7 @@
 
 
 
-        // Render active bookings (pending and confirmed)
+        // Render active bookings (pending and scheduled)
         function renderActiveBookings() {
             const grid = document.getElementById('activeBookingsGrid');
             
@@ -1080,11 +1067,11 @@
             let filteredBookings = [];
             
             if (currentFilter === 'all') {
-                // Show only active bookings (pending, confirmed, pending-booking, and completed)
+                // Show only active bookings (pending, pending-booking, and completed)
                 filteredBookings = allBookings.filter(booking => 
                     booking.status === 'pending' || 
                     booking.status === 'quote-ready' || booking.status === 'pending-booking' || 
-                    booking.status === 'confirmed' || booking.status === 'completed'
+                    booking.status === 'completed'
                 );
             } else if (currentFilter === 'pending') {
                 filteredBookings = allBookings.filter(b => b.status === 'pending');
@@ -1093,10 +1080,6 @@
                 filteredBookings = allBookings.filter(b => b.status === 'quote-ready');
             } else if (currentFilter === 'quote-sent') {
                 filteredBookings = allBookings.filter(b => b.status === 'quote-sent');
-            } else if (currentFilter === 'quote-accepted') {
-                filteredBookings = allBookings.filter(b => b.status === 'quote-accepted');
-            } else if (currentFilter === 'confirmed') {
-                filteredBookings = allBookings.filter(b => b.status === 'confirmed');
             } else if (currentFilter === 'pending-booking') {
                 filteredBookings = allBookings.filter(b => b.status === 'pending-booking');
             } else if (currentFilter === 'invoice-ready') {
@@ -1169,35 +1152,6 @@
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     `;
-                } else if (booking.status === 'quote-accepted') {
-                    statusText = 'Quote Accepted - Job Scheduling in Progress';
-                    actionButtons = `
-                        <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                            <i class="fas fa-file-invoice-dollar"></i> Quote
-                        </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    `;
-                } else if (booking.status === 'confirmed') {
-                    statusText = 'Confirmed';
-                    actionButtons = `
-                        <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                            <i class="fas fa-file-invoice-dollar"></i> Quote
-                        </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-ready')" title="Revert to Quote Ready">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
-                        <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    `;
                 } else if (booking.status === 'pending-booking') {
                     statusText = 'Job Scheduled - Awaiting Admin Confirmation';
                     actionButtons = `
@@ -1207,7 +1161,7 @@
                         <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
                         </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-accepted')" title="Revert to Quote Accepted">
+                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
                             <i class="fas fa-undo"></i> Revert
                         </button>
                         <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
@@ -1255,7 +1209,7 @@
                 } else if (booking.status === 'completed') {
                     statusText = 'Completed';
                     actionButtons = `
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'confirmed')" title="Revert to Confirmed">
+                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                             <i class="fas fa-undo"></i> Revert
                         </button>
                         <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -1443,11 +1397,11 @@
         // Confirm quote and send email to customer
         async function confirmQuoteAndSendEmail(bookingId) {
             try {
-                // First, update the booking status to 'quote-accepted' (Quote Accepted - Job Scheduling in Progress)
+                // First, update the booking status to 'pending-booking' (Job Scheduling in Progress)
                 const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'PATCH',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ status: 'quote-accepted' })
+                    body: JSON.stringify({ status: 'pending-booking' })
                 });
 
                 if (!response.ok) {
@@ -1536,7 +1490,7 @@
         // Confirm booking (admin confirms customer's booking request)
         async function confirmBooking(bookingId) {
             try {
-                // Update the booking status to 'completed' (Confirmed Booking)
+                // Update the booking status to 'completed' (Completed Booking)
                 const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'PATCH',
                     headers: getAuthHeaders(),
@@ -1699,12 +1653,7 @@
                 case 'quote-sent':
                     sectionTitle.textContent = 'Quote Sent';
                     break;
-                case 'quote-accepted':
-                    sectionTitle.textContent = 'Quote Accepted & Job Scheduling';
-                    break;
-                case 'confirmed':
-                    sectionTitle.textContent = 'Request Booking';
-                    break;
+
                 case 'pending-booking':
                     sectionTitle.textContent = 'Job Scheduled - Awaiting Admin Confirmation';
                     break;
@@ -1805,8 +1754,8 @@
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
-                    <button class="action-btn confirm" onclick="updateBookingStatus('${booking.booking_id}', 'confirmed')">
-                        <i class="fas fa-check"></i> Confirm
+                    <button class="action-btn confirm" onclick="updateBookingStatus('${booking.booking_id}', 'pending-booking')">
+                        <i class="fas fa-check"></i> Schedule Job
                     </button>
                     <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
                         <i class="fas fa-times"></i> Cancel
@@ -1818,33 +1767,13 @@
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 `;
-            } else if (booking.status === 'confirmed') {
-                actionButtons = `
-                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
-                        <i class="fas fa-envelope"></i> Message
-                    </button>
-                    <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                        <i class="fas fa-file-invoice-dollar"></i> Quote
-                    </button>
-                    <button class="action-btn complete" onclick="updateBookingStatus('${booking.booking_id}', 'completed')">
-                        <i class="fas fa-check-double"></i> Complete
-                    </button>
-                    <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
-                        <i class="fas fa-arrows-alt"></i> Move
-                    </button>
-                    <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                `;
+
             } else if (booking.status === 'completed') {
                 actionButtons = `
                     <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
                         <i class="fas fa-envelope"></i> Message
                     </button>
-                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'confirmed')" title="Revert to Confirmed">
+                                            <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                         <i class="fas fa-undo"></i> Revert
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -1862,8 +1791,8 @@
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
-                    <button class="action-btn confirm" onclick="updateBookingStatus('${booking.booking_id}', 'confirmed')">
-                        <i class="fas fa-check"></i> Confirm
+                    <button class="action-btn confirm" onclick="updateBookingStatus('${booking.booking_id}', 'pending-booking')">
+                        <i class="fas fa-check"></i> Schedule Job
                     </button>
                     <button class="action-btn complete" onclick="updateBookingStatus('${booking.booking_id}', 'completed')">
                         <i class="fas fa-check-double"></i> Complete
@@ -5915,7 +5844,7 @@ stellartmanagement@outlook.com</span>
                 let newTitle = '';
                 if (filter === 'all') newTitle = 'Active Bookings';
                 else if (filter === 'pending') newTitle = 'Pending Bookings';
-                else if (filter === 'confirmed') newTitle = 'Confirmed Bookings';
+
                 else if (filter === 'all-bookings') newTitle = 'All Bookings';
                 else if (filter === 'calendar') newTitle = 'Calendar View';
                 else if (filter === 'customers') newTitle = 'Customer Management';
