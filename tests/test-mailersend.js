@@ -41,7 +41,8 @@ async function testMailerSend() {
             [
                 { description: 'Tree Removal', quantity: 1, price: 300.00, total: 300.00 },
                 { description: 'Stump Grinding', quantity: 1, price: 150.00, total: 150.00 }
-            ]
+            ],
+            'ST-ABC123' // Test booking ID
         );
         
         if (quoteResult.success) {

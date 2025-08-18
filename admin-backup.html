@@ -2337,7 +2337,7 @@
                     bookingInfo.className = 'booking-info';
                     
                     // Group bookings by time slot
-                    const timeSlots = ['8:00 AM', '1:00 PM', '4:00 PM'];
+                    const timeSlots = ['5:30 PM', '6:30 PM', '7:30 PM'];
                     const bookedTimeSlots = timeSlots.filter(time => 
                         dayBookings.some(booking => booking.time === time)
                     );
@@ -7206,16 +7206,9 @@ Check console for detailed analysis.
                         <label for="recommendedTime">Recommended Time</label>
                         <select id="recommendedTime" name="recommendedTime" required>
                             <option value="">Select time</option>
-                            <option value="08:00">8:00 AM</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
+                            <option value="17:30">5:30 PM</option>
+                            <option value="18:30">6:30 PM</option>
+                            <option value="19:30">7:30 PM</option>
                         </select>
                     </div>
                 </form>

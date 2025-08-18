@@ -38,18 +38,36 @@ class EmailService {
         }
     }
 
-    async sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems) {
+    async sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems, bookingId = null, serviceItemPhotos = null) {
         const subject = `Your Quote from Stellar Tree Management - ${quoteId}`;
         
-        // Format service items for email
-        const serviceItemsList = serviceItems.map(item => 
-            `<tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #2a2a2a;">${item.description}</td>
+        // Format service items for email with photos
+        const serviceItemsList = serviceItems.map((item, index) => {
+            let photosHtml = '';
+            if (serviceItemPhotos && serviceItemPhotos[index + 1] && serviceItemPhotos[index + 1].length > 0) {
+                const photos = serviceItemPhotos[index + 1];
+                photosHtml = `
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 12px; color: #fd7e14; font-weight: 600; margin-bottom: 5px;">📸 Photos:</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            ${photos.map(photo => `
+                                <img src="${photo}" alt="Service photo" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;">
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return `<tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #2a2a2a;">
+                    <div>${item.description}</div>
+                    ${photosHtml}
+                </td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #5a5a5a;">${item.quantity}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #5a5a5a;">$${item.price.toFixed(2)}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #2a2a2a;">$${item.total.toFixed(2)}</td>
-            </tr>`
-        ).join('');
+            </tr>`;
+        }).join('');
         
         const htmlContent = `
             <!DOCTYPE html>
@@ -74,15 +92,15 @@ class EmailService {
                         max-width: 600px; 
                         margin: 0 auto; 
                         background: #ffffff; 
-                        border-radius: 12px; 
+                        border-radius: 16px; 
                         overflow: hidden; 
-                        box-shadow: 0 8px 32px rgba(42, 42, 42, 0.08);
+                        box-shadow: 0 12px 40px rgba(42, 42, 42, 0.12);
                     }
                     
                     .header { 
                         background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%); 
                         color: white; 
-                        padding: 40px 30px; 
+                        padding: 50px 30px; 
                         text-align: center; 
                         position: relative;
                     }
@@ -93,71 +111,115 @@ class EmailService {
                         bottom: 0;
                         left: 0;
                         width: 100%;
-                        height: 4px;
-                        background: #8cc63f;
+                        height: 6px;
+                        background: linear-gradient(90deg, #fd7e14 0%, #ff8c42 100%);
                     }
                     
                     .logo-section {
-                        margin-bottom: 20px;
+                        margin-bottom: 25px;
+                        text-align: center;
                     }
                     
                     .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #8cc63f;
+                        width: 80px;
+                        height: 80px;
+                        background: #ffffff;
                         border-radius: 50%;
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 24px;
-                        color: white;
-                        margin-bottom: 15px;
+                        display: inline-block;
+                        margin-bottom: 20px;
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                        border: 4px solid #fd7e14;
+                        text-align: center;
+                        line-height: 80px;
+                        font-size: 40px;
                     }
                     
                     .company-name { 
                         font-family: 'Poppins', sans-serif; 
-                        font-size: 28px; 
+                        font-size: 32px; 
                         font-weight: 700; 
                         margin: 0; 
                         color: white;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
                     }
                     
                     .quote-badge {
-                        background: #8cc63f;
+                        background: linear-gradient(135deg, #fd7e14 0%, #ff8c42 100%);
                         color: white;
-                        padding: 8px 20px;
-                        border-radius: 20px;
-                        font-size: 14px;
+                        padding: 12px 24px;
+                        border-radius: 25px;
+                        font-size: 15px;
                         font-weight: 600;
-                        margin-top: 15px;
+                        margin-top: 20px;
                         display: inline-block;
+                        box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
                     }
                     
                     .content { 
-                        padding: 40px 30px; 
+                        padding: 50px 30px; 
                         background: #ffffff; 
                     }
                     
                     .greeting {
-                        font-size: 18px;
+                        font-size: 20px;
                         color: #2a2a2a;
-                        margin-bottom: 20px;
+                        margin-bottom: 25px;
                         font-weight: 600;
                     }
                     
                     .intro-text {
                         color: #5a5a5a;
-                        margin-bottom: 30px;
+                        margin-bottom: 35px;
                         font-size: 16px;
                         line-height: 1.7;
                     }
                     
+                    .success-message {
+                        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                        border: 1px solid #28a745;
+                        padding: 25px;
+                        border-radius: 16px;
+                        text-align: center;
+                        margin: 30px 0;
+                        box-shadow: 0 4px 16px rgba(40, 167, 69, 0.15);
+                    }
+                    
+                    .success-icon {
+                        font-size: 32px;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .success-title {
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #155724;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .success-text {
+                        color: #155724;
+                        margin: 0;
+                        font-size: 16px;
+                        line-height: 1.6;
+                    }
+                    
                     .quote-details { 
-                        background: #f8f9fa; 
-                        padding: 25px; 
-                        margin: 30px 0; 
-                        border-radius: 12px; 
-                        border-left: 4px solid #8cc63f;
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+                        padding: 30px; 
+                        margin: 35px 0; 
+                        border-radius: 16px; 
+                        border-left: 6px solid #fd7e14;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                    }
+                    
+                    .summary-title {
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #fd7e14;
+                        margin-bottom: 20px;
+                        text-align: center;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
                     }
                     
                     .quote-meta {
@@ -179,7 +241,7 @@ class EmailService {
                     
                     .quote-info-label {
                         font-size: 12px;
-                        color: #8cc63f;
+                        color: #fd7e14;
                         font-weight: 600;
                         text-transform: uppercase;
                         letter-spacing: 0.5px;
@@ -199,6 +261,7 @@ class EmailService {
                         border-radius: 8px;
                         overflow: hidden;
                         border: 1px solid #e5e7eb;
+                        margin-top: 25px;
                     }
                     
                     .services-table th {
@@ -216,7 +279,7 @@ class EmailService {
                     }
                     
                     .total-section { 
-                        background: linear-gradient(135deg, #8cc63f 0%, #7ab832 100%); 
+                        background: linear-gradient(135deg, #fd7e14 0%, #ff8c42 100%); 
                         color: white; 
                         padding: 25px; 
                         text-align: center; 
@@ -224,7 +287,7 @@ class EmailService {
                         font-weight: 700; 
                         margin: 30px 0;
                         border-radius: 12px;
-                        box-shadow: 0 4px 20px rgba(140, 198, 63, 0.3);
+                        box-shadow: 0 4px 20px rgba(253, 126, 20, 0.3);
                     }
                     
                     .cta-section {
@@ -237,7 +300,7 @@ class EmailService {
                     }
                     
                     .cta-button {
-                        background: #8cc63f;
+                        background: #fd7e14;
                         color: white;
                         padding: 15px 30px;
                         border-radius: 8px;
@@ -248,52 +311,93 @@ class EmailService {
                         transition: all 0.3s ease;
                     }
                     
+                    .cta-button:hover {
+                        background: #ff8c42;
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(253, 126, 20, 0.4);
+                    }
+                    
+                    .booking-status-link {
+                        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+                        color: white;
+                        padding: 15px 30px;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        display: inline-block;
+                        margin-top: 15px;
+                        margin-left: 15px;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .booking-status-link:hover {
+                        background: #138496;
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+                    }
+                    
                     .footer { 
-                        background: #2a2a2a; 
+                        background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%); 
                         color: white; 
-                        padding: 30px; 
+                        padding: 40px 30px; 
                         text-align: center; 
                     }
                     
                     .footer-content {
-                        margin-bottom: 20px;
+                        margin-bottom: 25px;
                     }
                     
                     .contact-info {
-                        display: flex;
-                        justify-content: center;
-                        gap: 30px;
-                        margin-bottom: 20px;
-                        flex-wrap: wrap;
+                        margin-bottom: 25px;
                     }
                     
                     .contact-item {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        color: rgba(255, 255, 255, 0.8);
-                        font-size: 14px;
+                        margin-bottom: 20px;
+                        color: rgba(255, 255, 255, 0.9);
+                        font-size: 15px;
+                        font-weight: 500;
+                    }
+                    
+                    .contact-item:last-child {
+                        margin-bottom: 0;
                     }
                     
                     .contact-icon {
-                        color: #8cc63f;
-                        width: 16px;
+                        display: inline-block;
+                        width: 20px;
+                        margin-right: 12px;
+                        font-size: 18px;
+                    }
+                    
+                    .contact-link {
+                        color: rgba(255, 255, 255, 0.9);
+                        text-decoration: none;
+                        transition: color 0.2s ease;
+                    }
+                    
+                    .contact-link:hover {
+                        color: #fd7e14;
                     }
                     
                     .footer-note {
-                        color: rgba(255, 255, 255, 0.6);
-                        font-size: 12px;
-                        border-top: 1px solid rgba(255, 255, 255, 0.1);
-                        padding-top: 20px;
+                        color: rgba(255, 255, 255, 0.7);
+                        font-size: 13px;
+                        border-top: 1px solid rgba(255, 255, 255, 0.15);
+                        padding-top: 25px;
+                        line-height: 1.5;
                     }
                     
                     @media (max-width: 600px) {
                         .email-container { margin: 0 15px; }
-                        .content { padding: 25px 20px; }
-                        .header { padding: 30px 20px; }
+                        .content { padding: 30px 20px; }
+                        .header { padding: 40px 20px; }
                         .quote-meta { flex-direction: column; }
-                        .contact-info { flex-direction: column; gap: 15px; }
-                        .services-table th, .services-table td { padding: 10px 8px; font-size: 13px; }
+                        .cta-section .cta-button,
+                        .cta-section .booking-status-link {
+                            display: block;
+                            margin: 10px 0;
+                            margin-left: 0;
+                        }
                     }
                 </style>
             </head>
@@ -314,7 +418,14 @@ class EmailService {
                             Thank you for choosing Stellar Tree Management! We're excited to work with you and have prepared a detailed quote for your tree care needs.
                         </div>
                         
+                        <div class="success-message">
+                            <div class="success-icon">📋</div>
+                            <div class="success-title">Your Quote is Ready!</div>
+                            <p class="success-text">Please review the details below and let us know if you'd like to proceed with scheduling.</p>
+                        </div>
+                        
                         <div class="quote-details">
+                            <div class="summary-title">Quote Details</div>
                             <div class="quote-meta">
                                 <div class="quote-info">
                                     <div class="quote-info-label">Quote ID</div>
@@ -348,7 +459,8 @@ class EmailService {
                         <div class="cta-section">
                             <p style="margin: 0 0 10px 0; color: #2a2a2a; font-weight: 600;">Ready to proceed?</p>
                             <p style="margin: 0 0 15px 0; color: #5a5a5a; font-size: 14px;">Contact us to schedule your service or if you have any questions about this quote.</p>
-                            <a href="mailto:stellartmanagement@outlook.com?subject=Quote ${quoteId} - Ready to Schedule" class="cta-button">Accept Quote & Schedule</a>
+
+                            ${bookingId ? `<a href="https://www.stellartreemanagement.ca/booking-status.html?id=${bookingId}" class="booking-status-link">View Booking Status</a>` : ''}
                         </div>
                         
                         <p style="color: #5a5a5a; margin-bottom: 0;">This quote is valid for 30 days. We're here to answer any questions you may have about our services.</p>
@@ -359,16 +471,21 @@ class EmailService {
                             <div class="contact-info">
                                 <div class="contact-item">
                                     <span class="contact-icon">📧</span>
-                                    <span>stellartmanagement@outlook.com</span>
+                                    <a href="mailto:stellartmanagement@outlook.com" class="contact-link">stellartmanagement@outlook.com</a>
                                 </div>
                                 <div class="contact-item">
                                     <span class="contact-icon">🌐</span>
-                                    <span>www.stellartreemanagement.ca</span>
+                                    <a href="https://www.stellartreemanagement.ca" class="contact-link">www.stellartreemanagement.ca</a>
+                                </div>
+                                <div class="contact-item">
+                                    <span class="contact-icon">📞</span>
+                                    <a href="tel:+12505511021" class="contact-link">(250) 551-1021</a>
                                 </div>
                             </div>
                         </div>
                         <div class="footer-note">
-                            © 2024 Stellar Tree Management. Professional tree care services in Calgary.
+                            © 2024 Stellar Tree Management. Professional tree care services in Calgary, Alberta.<br>
+                            Serving Calgary and surrounding areas with quality tree care solutions.
                         </div>
                     </div>
                 </div>
@@ -379,42 +496,73 @@ class EmailService {
         const textContent = `
             Dear ${clientName},
             
-            Thank you for your interest in Stellar Tree Management services!
+            Thank you for choosing Stellar Tree Management! We're excited to work with you and have prepared a detailed quote for your tree care needs.
             
-            Please find your quote details below:
+            📋 Your Quote is Ready!
+            Please review the details below and let us know if you'd like to proceed with scheduling.
             
-            Quote ID: ${quoteId}
-            Date: ${quoteDate}
+            Quote Details:
+            - Quote ID: ${quoteId}
+            - Date Prepared: ${quoteDate}
             
             Service Items:
             ${serviceItems.map(item => 
                 `- ${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`
             ).join('\n')}
             
-            Total Amount: $${totalAmount.toFixed(2)}
+            Total Quote Amount: $${totalAmount.toFixed(2)}
             
-            Please review this quote and contact us if you have any questions.
+            Ready to proceed? Contact us to schedule your service or if you have any questions about this quote.
+            Email: stellartmanagement@outlook.com
+            
+            ${bookingId ? `View your booking status: https://www.stellartreemanagement.ca/booking-status.html?booking=${bookingId}` : ''}
+            
+            This quote is valid for 30 days. We're here to answer any questions you may have about our services.
             
             Best regards,
             Stellar Tree Management Team
+            
+            Contact Information:
             Email: stellartmanagement@outlook.com
+            Website: www.stellartreemanagement.ca
+            Phone: (250) 551-1021
+            
+            © 2024 Stellar Tree Management. Professional tree care services in Calgary, Alberta.
         `;
         
         return await this.sendEmail(email, subject, htmlContent, textContent);
     }
 
-    async sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems) {
+    async sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems, serviceItemPhotos = null) {
         const subject = `Invoice from Stellar Tree Management - ${invoiceId}`;
         
-        // Format service items for email
-        const serviceItemsList = serviceItems.map(item => 
-            `<tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #2a2a2a;">${item.description}</td>
+        // Format service items for email with photos
+        const serviceItemsList = serviceItems.map((item, index) => {
+            let photosHtml = '';
+            if (serviceItemPhotos && serviceItemPhotos[index + 1] && serviceItemPhotos[index + 1].length > 0) {
+                const photos = serviceItemPhotos[index + 1];
+                photosHtml = `
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 12px; color: #dc3545; font-weight: 600; margin-bottom: 5px;">📸 Photos:</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            ${photos.map(photo => `
+                                <img src="${photo}" alt="Service photo" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;">
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return `<tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #2a2a2a;">
+                    <div>${item.description}</div>
+                    ${photosHtml}
+                </td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #5a5a5a;">${item.quantity}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #5a5a5a;">$${item.price.toFixed(2)}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #2a2a2a;">$${item.total.toFixed(2)}</td>
-            </tr>`
-        ).join('');
+            </tr>`;
+        }).join('');
         
         const htmlContent = `
             <!DOCTYPE html>
@@ -459,7 +607,7 @@ class EmailService {
                         left: 0;
                         width: 100%;
                         height: 4px;
-                        background: #8cc63f;
+                        background: #fd7e14;
                     }
                     
                     .logo-section {
@@ -469,7 +617,7 @@ class EmailService {
                     .logo {
                         width: 60px;
                         height: 60px;
-                        background: #8cc63f;
+                        background: #fd7e14;
                         border-radius: 50%;
                         display: inline-flex;
                         align-items: center;
@@ -625,7 +773,7 @@ class EmailService {
                     }
                     
                     .cta-button {
-                        background: #8cc63f;
+                        background: #fd7e14;
                         color: white;
                         padding: 15px 30px;
                         border-radius: 8px;
@@ -664,7 +812,7 @@ class EmailService {
                     }
                     
                     .contact-icon {
-                        color: #8cc63f;
+                        color: #fd7e14;
                         width: 16px;
                     }
                     
@@ -944,7 +1092,7 @@ class EmailService {
                         left: 0;
                         width: 100%;
                         height: 4px;
-                        background: #8cc63f;
+                        background: #fd7e14;
                     }
                     
                     .logo-section {
@@ -1072,7 +1220,7 @@ class EmailService {
                     }
                     
                     .action-button {
-                        background: #8cc63f;
+                        background: #fd7e14;
                         color: white;
                         padding: 15px 20px;
                         border-radius: 8px;
@@ -1115,7 +1263,7 @@ class EmailService {
                     }
                     
                     .contact-icon {
-                        color: #8cc63f;
+                        color: #fd7e14;
                         width: 16px;
                     }
                     

@@ -45,13 +45,8 @@ app.use('/api/quotes', express.json());
 app.use('/api/quotes/:quoteId', express.json());
 app.use('/api/invoices', express.json());
 app.use('/api/invoices/:invoiceId/payment', express.json());
-app.use('/api/customers', express.json());
-app.use('/api/customers/:customerId', express.json());
-app.use('/api/customers/search/:query', express.json());
-app.use('/api/customers/migrate', express.json());
 app.use('/api/bookings/stats/overview', express.json());
-app.use('/api/customers/recalculate-totals', express.json());
-app.use('/api/customers/:customerId/recalculate-total', express.json());
+// Customer management middleware - REMOVED
 
 // OAuth Configuration
 const ALLOWED_ADMIN_EMAILS = [
@@ -476,17 +471,27 @@ app.get('/api/bookings/date/:date', async (req, res) => {
 function normalizeTimeFormat(time) {
     // Handle "Full Day" format (old format)
     if (time === 'Full Day') {
-        return '8:00 AM'; // Default to morning slot
+        return '5:30 PM'; // Default to evening slot
     }
     
-    // Handle 24-hour format (e.g., "14:00", "15:00", "16:00")
+    // Handle abbreviated formats (8am, 1pm, 4pm)
+    const timeLower = time.toLowerCase();
+    if (timeLower === '8am') return '5:30 PM';
+    if (timeLower === '1pm') return '6:30 PM';
+    if (timeLower === '4pm') return '7:30 PM';
+    
+    // Handle 24-hour format (e.g., "17:30", "18:30", "19:30")
     if (time.includes(':')) {
         const [hours, minutes] = time.split(':').map(Number);
-        if (hours === 8) return '8:00 AM';
-        if (hours === 13) return '1:00 PM';
-        if (hours === 16) return '4:00 PM';
-        if (hours === 14) return '1:00 PM'; // 14:00 = 2 PM, but we'll map to 1 PM
-        if (hours === 15) return '4:00 PM'; // 15:00 = 3 PM, but we'll map to 4 PM
+        if (hours === 17 && minutes === 30) return '5:30 PM';
+        if (hours === 18 && minutes === 30) return '6:30 PM';
+        if (hours === 19 && minutes === 30) return '7:30 PM';
+        // Handle legacy time formats for backward compatibility
+        if (hours === 8) return '5:30 PM';
+        if (hours === 13) return '6:30 PM';
+        if (hours === 16) return '7:30 PM';
+        if (hours === 14) return '6:30 PM'; // 14:00 = 2 PM, but we'll map to 6:30 PM
+        if (hours === 15) return '7:30 PM'; // 15:00 = 3 PM, but we'll map to 7:30 PM
     }
     
     // Return as-is if it's already in 12-hour format
@@ -592,7 +597,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         }
 
         // Validate time format
-        const validTimes = ['8:00 AM', '1:00 PM', '4:00 PM'];
+        const validTimes = ['5:30 PM', '6:30 PM', '7:30 PM'];
         if (!validTimes.includes(time)) {
             return res.status(400).json({ error: 'Invalid time slot' });
         }
@@ -748,32 +753,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             });
         }
 
-        // Check if customer already exists with this phone number
-        let existingCustomer = await db.collection('customers').findOne({ phone: cleanedData.phone });
-        let customerId;
-        
-        if (existingCustomer) {
-            // Use existing customer
-            customerId = existingCustomer.customer_id;
-            console.log(`Using existing customer ${customerId} for phone ${cleanedData.phone}`);
-        } else {
-            // Create a new customer
-            customerId = generateUniqueId('CUST');
-            const newCustomer = {
-                customer_id: customerId,
-                name: cleanedData.name,
-                email: cleanedData.email,
-                phone: cleanedData.phone,
-                address: cleanedData.address,
-                total_bookings: 0,
-                total_spent: 0,
-                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-            
-            await db.collection('customers').insertOne(newCustomer);
-            console.log(`Created new customer ${customerId} for phone ${cleanedData.phone}`);
-        }
+        // Customer management - REMOVED
 
         // Process uploaded images with improved error handling
         const imagePaths = [];
@@ -812,10 +792,9 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             console.log(`📸 Stored ${imagePaths.length} images for booking ${cleanedData.booking_id}`);
         }
 
-        // Insert new booking with customer_id and images
+        // Insert new booking with images
         const newBooking = {
             booking_id: cleanedData.booking_id,
-            customer_id: customerId,
             service: cleanedData.service,
             date: cleanedData.date,
             time: cleanedData.time,
@@ -889,7 +868,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         res.status(201).json({
             message: 'Booking created successfully',
             bookingId: cleanedData.booking_id,
-            customerId: customerId,
             id: result.insertedId
         });
     } catch (error) {
@@ -943,15 +921,7 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
 
         console.log(`✅ Successfully updated booking ${bookingId} status to ${status}`);
 
-        // If booking is completed, update customer total spent
-        if (status === 'completed' && booking.customer_id) {
-            try {
-                await updateCustomerTotalSpent(booking.customer_id);
-            } catch (error) {
-                console.error('Error updating customer total spent:', error);
-                // Don't fail the request, just log the error
-            }
-        }
+        // Customer total spent update - REMOVED
 
         res.json({ message: 'Booking status updated successfully' });
     } catch (error) {
@@ -1119,37 +1089,10 @@ app.post('/api/bookings/:bookingId/create-invoice', requireAdminAuth, async (req
         const invoice_id = generateUniqueId('INV');
         const serviceItemsJson = JSON.stringify(service_items);
 
-        // Get or create customer_id
-        let customerId = null;
-        if (booking.customer_id) {
-            customerId = booking.customer_id;
-        } else {
-            // Create a new customer if booking doesn't have customer_id
-            customerId = generateUniqueId('CUST');
-            const newCustomer = {
-                customer_id: customerId,
-                name: client_name,
-                email: client_email,
-                phone: client_phone,
-                address: client_address,
-                total_bookings: 0,
-                total_spent: 0,
-                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-            
-            await db.collection('customers').insertOne(newCustomer);
-            
-            // Update the booking with the customer_id
-            await db.collection('bookings').updateOne(
-                { booking_id: bookingId },
-                { $set: { customer_id: customerId } }
-            );
-        }
+        // Customer management - REMOVED
 
         const newInvoice = {
             invoice_id: invoice_id,
-            customer_id: customerId,
             quote_id: null, // No quote associated when creating directly from booking
             booking_id: bookingId,
             client_name: client_name,
@@ -1169,15 +1112,7 @@ app.post('/api/bookings/:bookingId/create-invoice', requireAdminAuth, async (req
 
         const result = await db.collection('invoices').insertOne(newInvoice);
 
-        // Update customer total spent when invoice is created
-        if (customerId) {
-            try {
-                await updateCustomerTotalSpent(customerId);
-            } catch (error) {
-                console.error('Error updating customer total spent:', error);
-                // Don't fail the request, just log the error
-            }
-        }
+        // Customer total spent update - REMOVED
 
         // Update booking status to 'invoice-ready'
         await db.collection('bookings').updateOne(
@@ -1212,20 +1147,72 @@ app.post('/api/bookings/:bookingId/send-quote', requireAdminAuth, async (req, re
             return res.status(404).json({ error: 'Booking not found' });
         }
 
+        // Try to get the actual quote cost from the quotes collection
+        let actualCost = 'TBD';
+        let workDescription = 'Tree service as requested';
+        
+        try {
+            const quotes = await db.collection('quotes').find({ booking_id: bookingId }).sort({ created_at: -1 }).limit(1).toArray();
+            if (quotes.length > 0) {
+                const latestQuote = quotes[0];
+                if (latestQuote.total_amount) {
+                    actualCost = latestQuote.total_amount;
+                    console.log(`✅ Found quote cost: $${actualCost}`);
+                }
+                if (latestQuote.work_description && latestQuote.work_description.trim() !== 't') {
+                    workDescription = latestQuote.work_description;
+                }
+            }
+        } catch (quoteError) {
+            console.log('⚠️ Could not fetch quote data, using booking data');
+        }
+
         // Import and use EmailService
         const EmailService = require('./email-service');
         const emailService = new EmailService();
         
-        // Send quote sent email to customer
-        const result = await emailService.sendQuoteSentEmail(
+        // Send quote email using the same comprehensive template as the quote preview
+        // This ensures both quote sending mechanisms use the exact same email template
+        
+        // Get quote data to send the comprehensive email
+        let quoteData = null;
+        let serviceItems = [];
+        
+        try {
+            const quotes = await db.collection('quotes').find({ booking_id: bookingId }).sort({ created_at: -1 }).limit(1).toArray();
+            if (quotes.length > 0) {
+                quoteData = quotes[0];
+                // Parse service items
+                try {
+                    serviceItems = JSON.parse(quoteData.service_items);
+                } catch (e) {
+                    serviceItems = [];
+                }
+            }
+        } catch (quoteError) {
+            console.log('⚠️ Could not fetch quote data, using basic service structure');
+            // Create basic service structure if no quote exists
+            serviceItems = [{
+                description: booking.service || 'Tree service as requested',
+                quantity: 1,
+                price: actualCost === 'TBD' ? 0 : parseFloat(actualCost),
+                total: actualCost === 'TBD' ? 0 : parseFloat(actualCost)
+            }];
+        }
+        
+        // Generate a quote ID if none exists
+        const quoteId = quoteData ? quoteData.quote_id : `QT-${Date.now()}`;
+        const quoteDate = quoteData ? quoteData.quote_date : new Date().toISOString().split('T')[0];
+        const totalAmount = actualCost === 'TBD' ? 0 : parseFloat(actualCost);
+        
+        const result = await emailService.sendQuoteEmail(
             booking.email, 
-            bookingId, 
-            booking.service, 
-            booking.estimated_cost || 'TBD',
-            booking.work_description || booking.notes || 'Tree service as requested',
+            quoteId,
             booking.name,
-            booking.address || '',
-            booking.notes || ''
+            quoteDate,
+            totalAmount,
+            serviceItems,
+            bookingId
         );
 
         if (result.success) {
@@ -1627,20 +1614,230 @@ app.post('/api/bookings/:bookingId/confirm', async (req, res) => {
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        // Update customer total spent if customer_id exists
-        if (booking.customer_id) {
-            try {
-                await updateCustomerTotalSpent(booking.customer_id);
-            } catch (error) {
-                console.error('Error updating customer total spent:', error);
-                // Don't fail the request, just log the error
-            }
-        }
+        // Customer total spent update - REMOVED
 
         res.json({ message: 'Booking confirmed successfully' });
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Send customer message via email
+app.post('/api/bookings/send-customer-message', requireAdminAuth, async (req, res) => {
+    try {
+        // Import and initialize EmailService
+        const EmailService = require('./email-service');
+        const emailService = new EmailService();
+        
+        const { bookingId, customerName, customerEmail, subject, message } = req.body;
+
+        if (!bookingId || !customerName || !customerEmail || !subject || !message) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Create email content with the requested format
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${subject}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+                    
+                    body { 
+                        margin: 0; 
+                        padding: 0; 
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                        line-height: 1.6; 
+                        color: #2a2a2a; 
+                        background-color: #f8f9fa; 
+                    }
+                    
+                    .email-container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background: #ffffff; 
+                        border-radius: 12px; 
+                        overflow: hidden; 
+                        box-shadow: 0 8px 32px rgba(42, 42, 42, 0.08);
+                    }
+                    
+                    .header { 
+                        background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%); 
+                        color: white; 
+                        padding: 40px 30px; 
+                        text-align: center; 
+                        position: relative;
+                    }
+                    
+                    .header::after {
+                        content: '';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 4px;
+                        background: #8cc63f;
+                    }
+                    
+                    .logo-section {
+                        margin-bottom: 20px;
+                    }
+                    
+                    .logo {
+                        width: 60px;
+                        height: 60px;
+                        background: #8cc63f;
+                        border-radius: 50%;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: white;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .company-name {
+                        font-size: 28px;
+                        font-weight: 700;
+                        margin-bottom: 10px;
+                        font-family: 'Poppins', sans-serif;
+                    }
+                    
+                    .company-tagline {
+                        font-size: 16px;
+                        opacity: 0.9;
+                        font-weight: 400;
+                    }
+                    
+                    .content { 
+                        padding: 40px 30px; 
+                        background: #ffffff; 
+                    }
+                    
+                    .greeting {
+                        font-size: 20px;
+                        font-weight: 600;
+                        color: #2a2a2a;
+                        margin-bottom: 25px;
+                        font-family: 'Poppins', sans-serif;
+                    }
+                    
+                    .message-body {
+                        font-size: 16px;
+                        line-height: 1.7;
+                        color: #4a4a4a;
+                        margin-bottom: 30px;
+                        white-space: pre-wrap;
+                    }
+                    
+                    .footer { 
+                        background: #f8f9fa; 
+                        padding: 30px; 
+                        text-align: center; 
+                        border-top: 1px solid #e5e7eb;
+                    }
+                    
+                    .signature {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #2a2a2a;
+                        margin-bottom: 10px;
+                        font-family: 'Poppins', sans-serif;
+                    }
+                    
+                    .company-info {
+                        font-size: 14px;
+                        color: #6b7280;
+                        line-height: 1.5;
+                    }
+                    
+                    .contact-info {
+                        margin-top: 20px;
+                        padding-top: 20px;
+                        border-top: 1px solid #e5e7eb;
+                    }
+                    
+                    .contact-item {
+                        display: inline-block;
+                        margin: 0 15px;
+                        font-size: 14px;
+                        color: #6b7280;
+                    }
+                    
+                    .contact-item i {
+                        margin-right: 5px;
+                        color: #8cc63f;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <div class="logo-section">
+                            <div class="logo">🌳</div>
+                            <div class="company-name">Stellar Tree Management</div>
+                            <div class="company-tagline">Professional Tree Care Services</div>
+                        </div>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="greeting">Dear ${customerName},</div>
+                        
+                        <div class="message-body">${message}</div>
+                    </div>
+                    
+                    <div class="footer">
+                        <div class="signature">Sincerely,</div>
+                        <div class="company-info">
+                            <strong>Stellar Tree Management Team</strong><br>
+                            Professional tree care and maintenance services
+                        </div>
+                        
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <i class="fas fa-phone"></i> (403) 555-0123
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i> info@stellartreemanagement.ca
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-globe"></i> stellartreemanagement.ca
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Send email using the email service
+        const emailResult = await emailService.sendEmail(
+            customerEmail,
+            subject,
+            htmlContent
+        );
+
+        if (emailResult.success) {
+            console.log('📧 Customer message sent successfully');
+            res.json({
+                message: 'Customer message sent successfully',
+                emailResult: emailResult
+            });
+        } else {
+            console.error('❌ Failed to send customer message:', emailResult.error);
+            res.status(500).json({ 
+                error: 'Failed to send customer message',
+                details: emailResult.error 
+            });
+        }
+    } catch (error) {
+        console.error('Error sending customer message:', error);
+        res.status(500).json({ error: 'Failed to send customer message' });
     }
 });
 
@@ -1699,18 +1896,7 @@ app.get('/api/bookings/stats/overview', async (req, res) => {
             { $sort: { count: -1 } }
         ]).toArray();
 
-        // Customer stats
-        const customerStats = await db.collection('customers').aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total_customers: { $sum: 1 },
-                    customers_with_bookings: {
-                        $sum: { $cond: [{ $gt: ['$total_bookings', 0] }, 1, 0] }
-                    }
-                }
-            }
-        ]).toArray();
+        // Customer stats - REMOVED
 
         // Revenue stats (from invoices)
         const revenueStats = await db.collection('invoices').aggregate([
@@ -1752,7 +1938,7 @@ app.get('/api/bookings/stats/overview', async (req, res) => {
                 bookings_last_7_days: 0
             }),
             service_stats: serviceStats,
-            customer_stats: customerStats[0] || { total_customers: 0, customers_with_bookings: 0 },
+            customer_stats: { total_customers: 0, customers_with_bookings: 0 }, // REMOVED
             revenue_stats: revenueStats[0] || {
                 total_invoices: 0,
                 total_revenue: 0,
@@ -2004,33 +2190,10 @@ app.post('/api/quotes', async (req, res) => {
         const quote_id = generateUniqueId('QT');
         const serviceItemsJson = JSON.stringify(service_items);
 
-        // Get the customer_id from the original booking
-        const booking = await db.collection('bookings').findOne({ booking_id: booking_id });
-        let customerId = null;
-        
-        if (booking && booking.customer_id) {
-            customerId = booking.customer_id;
-        } else {
-            // Create a new customer if booking doesn't exist or has no customer_id
-            customerId = generateUniqueId('CUST');
-            const newCustomer = {
-                customer_id: customerId,
-                name: client_name,
-                email: client_email,
-                phone: client_phone,
-                address: client_address,
-                total_bookings: 0,
-                total_spent: 0,
-                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-            
-            await db.collection('customers').insertOne(newCustomer);
-        }
+        // Customer management - REMOVED
 
         const newQuote = {
             quote_id: quote_id,
-            customer_id: customerId,
             booking_id: booking_id,
             client_name: client_name,
             client_phone: client_phone,
@@ -2063,7 +2226,17 @@ app.post('/api/quotes', async (req, res) => {
 // Get all quotes
 app.get('/api/quotes', async (req, res) => {
     try {
+        const { booking_id } = req.query;
+        
+        let matchStage = {};
+        if (booking_id) {
+            matchStage = { booking_id: booking_id };
+        }
+        
         const quotes = await db.collection('quotes').aggregate([
+            {
+                $match: matchStage
+            },
             {
                 $lookup: {
                     from: 'bookings',
@@ -2214,6 +2387,7 @@ app.put('/api/quotes/:quoteId', async (req, res) => {
 app.get('/api/quotes/booking/:bookingId', async (req, res) => {
     try {
         const { bookingId } = req.params;
+        console.log(`🔍 Fetching quotes for booking: ${bookingId}`);
         
         const quotes = await db.collection('quotes').aggregate([
             {
@@ -2242,6 +2416,8 @@ app.get('/api/quotes/booking/:bookingId', async (req, res) => {
             }
         ]).toArray();
         
+        console.log(`📋 Found ${quotes.length} quotes for booking ${bookingId}`);
+        
         // Parse service_items JSON for each quote
         quotes.forEach(quote => {
             try {
@@ -2253,7 +2429,7 @@ app.get('/api/quotes/booking/:bookingId', async (req, res) => {
         
         res.json(quotes);
     } catch (error) {
-        console.error('Database error:', error);
+        console.error('❌ Database error fetching quotes:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });
@@ -2352,7 +2528,7 @@ app.get('/api/bookings/:bookingId/quote', async (req, res) => {
     }
 });
 
-// Send quote email
+// Send quote
 app.post('/api/quotes/:quoteId/email', async (req, res) => {
     try {
         const { quoteId } = req.params;
@@ -2376,30 +2552,199 @@ app.post('/api/quotes/:quoteId/email', async (req, res) => {
         const EmailService = require('./email-service');
         const emailService = new EmailService();
         
-        // Send email using MailerSend
+        // Send email using the comprehensive quote email template with orange theme
+        // This ensures both quote sending mechanisms use the exact same email template
         const result = await emailService.sendQuoteEmail(
             quote.client_email,
             quote.quote_id,
             quote.client_name,
             quote.quote_date,
             quote.total_amount,
-            serviceItems
+            serviceItems,
+            quote.booking_id,
+            quote.serviceItemPhotos
         );
         
         if (result.success) {
+            // Update the booking status to 'quote-sent' if we have a booking ID
+            if (quote.booking_id) {
+                try {
+                    await db.collection('bookings').updateOne(
+                        { booking_id: quote.booking_id },
+                        { 
+                            $set: { 
+                                status: 'quote-sent',
+                                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                            }
+                        }
+                    );
+                } catch (statusError) {
+                    console.warn('Could not update booking status:', statusError);
+                    // Don't fail the whole operation if status update fails
+                }
+            }
+            
             res.json({
-                message: 'Quote email sent successfully via MailerSend',
-                messageId: result.messageId
+                message: 'Quote sent successfully via MailerSend and status updated',
+                messageId: result.messageId,
+                statusUpdated: true
             });
         } else {
             res.status(500).json({
-                error: 'Failed to send quote email',
+                error: 'Failed to send quote',
                 details: result.error
             });
         }
     } catch (error) {
-        console.error('Error sending quote email:', error);
-        res.status(500).json({ error: 'Failed to send quote email' });
+        console.error('Error sending quote:', error);
+        res.status(500).json({ error: 'Failed to send quote' });
+    }
+});
+
+// Service Item Photo Management endpoints
+
+// Upload photos for a specific service item in a quote
+app.post('/api/service-item-photos/:quoteId/:itemId', upload.array('photos', 5), async (req, res) => {
+    try {
+        const { quoteId, itemId } = req.params;
+        const { itemIndex } = req.body; // Index of the service item in the quote
+        
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ error: 'No photos uploaded' });
+        }
+
+        console.log(`📸 Processing ${req.files.length} photos for service item ${itemId} in quote ${quoteId}`);
+
+        const imagePaths = [];
+        
+        for (const file of req.files) {
+            // Create a unique ID for the image
+            const imageId = new ObjectId();
+            
+            // Store the image in MongoDB
+            await db.collection('images').insertOne({
+                _id: imageId,
+                quoteId: quoteId,
+                itemId: itemId,
+                itemIndex: parseInt(itemIndex),
+                filename: file.originalname,
+                contentType: file.mimetype,
+                size: file.size,
+                data: new Binary(file.buffer),
+                uploadedAt: new Date(),
+                type: 'service-item-photo'
+            });
+
+            const imagePath = `/uploads/${imageId}`;
+            imagePaths.push(imagePath);
+            
+            console.log(`✅ Stored service item photo: ${file.originalname} -> ${imageId}`);
+        }
+
+        // Update the quote with the new photo paths
+        const quotesCollection = db.collection('quotes');
+        const quote = await quotesCollection.findOne({ quote_id: quoteId });
+        
+        if (!quote) {
+            return res.status(404).json({ error: 'Quote not found' });
+        }
+
+        // Initialize serviceItemPhotos if it doesn't exist
+        if (!quote.serviceItemPhotos) {
+            quote.serviceItemPhotos = {};
+        }
+        
+        // Add photos to the specific service item
+        if (!quote.serviceItemPhotos[itemId]) {
+            quote.serviceItemPhotos[itemId] = [];
+        }
+        
+        quote.serviceItemPhotos[itemId].push(...imagePaths);
+
+        // Update the quote in the database
+        await quotesCollection.updateOne(
+            { quote_id: quoteId },
+            { $set: { serviceItemPhotos: quote.serviceItemPhotos } }
+        );
+
+        console.log(`✅ Updated quote ${quoteId} with ${imagePaths.length} photos for item ${itemId}`);
+
+        res.json({
+            success: true,
+            message: `${imagePaths.length} photos uploaded successfully`,
+            imagePaths: imagePaths
+        });
+
+    } catch (error) {
+        console.error('❌ Error uploading service item photos:', error);
+        res.status(500).json({ error: 'Failed to upload photos' });
+    }
+});
+
+// Get photos for a specific service item in a quote
+app.get('/api/service-item-photos/:quoteId/:itemId', async (req, res) => {
+    try {
+        const { quoteId, itemId } = req.params;
+        
+        const quotesCollection = db.collection('quotes');
+        const quote = await quotesCollection.findOne({ quote_id: quoteId });
+        
+        if (!quote) {
+            return res.status(404).json({ error: 'Quote not found' });
+        }
+
+        const photos = quote.serviceItemPhotos?.[itemId] || [];
+        
+        res.json({
+            success: true,
+            photos: photos
+        });
+
+    } catch (error) {
+        console.error('❌ Error fetching service item photos:', error);
+        res.status(500).json({ error: 'Failed to fetch photos' });
+    }
+});
+
+// Delete a specific photo from a service item
+app.delete('/api/service-item-photos/:quoteId/:itemId/:imageId', async (req, res) => {
+    try {
+        const { quoteId, itemId, imageId } = req.params;
+        
+        // Remove the image from MongoDB
+        try {
+            const objectId = new ObjectId(imageId);
+            await db.collection('images').deleteOne({ _id: objectId });
+            console.log(`✅ Deleted service item photo: ${imageId}`);
+        } catch (error) {
+            console.error('❌ Error deleting image from MongoDB:', error);
+        }
+
+        // Update the quote to remove the photo reference
+        const quotesCollection = db.collection('quotes');
+        const quote = await quotesCollection.findOne({ quote_id: quoteId });
+        
+        if (quote && quote.serviceItemPhotos && quote.serviceItemPhotos[itemId]) {
+            quote.serviceItemPhotos[itemId] = quote.serviceItemPhotos[itemId].filter(
+                path => !path.includes(imageId)
+            );
+
+            await quotesCollection.updateOne(
+                { quote_id: quoteId },
+                { $set: { serviceItemPhotos: quote.serviceItemPhotos } }
+            );
+
+            console.log(`✅ Updated quote ${quoteId} to remove photo ${imageId} from item ${itemId}`);
+        }
+
+        res.json({
+            success: true,
+            message: 'Photo deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('❌ Error deleting service item photo:', error);
+        res.status(500).json({ error: 'Failed to delete photo' });
     }
 });
 
@@ -2430,33 +2775,10 @@ app.post('/api/invoices', async (req, res) => {
         const invoice_id = generateUniqueId('INV');
         const serviceItemsJson = JSON.stringify(service_items);
 
-        // Get the customer_id from the original booking
-        const booking = await db.collection('bookings').findOne({ booking_id: booking_id });
-        let customerId = null;
-        
-        if (booking && booking.customer_id) {
-            customerId = booking.customer_id;
-        } else {
-            // Create a new customer if booking doesn't exist or has no customer_id
-            customerId = generateUniqueId('CUST');
-            const newCustomer = {
-                customer_id: customerId,
-                name: client_name,
-                email: client_email,
-                phone: client_phone,
-                address: client_address,
-                total_bookings: 0,
-                total_spent: 0,
-                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-            
-            await db.collection('customers').insertOne(newCustomer);
-        }
+        // Customer management - REMOVED
 
         const newInvoice = {
             invoice_id: invoice_id,
-            customer_id: customerId,
             quote_id: quote_id,
             booking_id: booking_id,
             client_name: client_name,
@@ -2476,15 +2798,7 @@ app.post('/api/invoices', async (req, res) => {
 
         const result = await db.collection('invoices').insertOne(newInvoice);
 
-        // Update customer total spent when invoice is created
-        if (customerId) {
-            try {
-                await updateCustomerTotalSpent(customerId);
-            } catch (error) {
-                console.error('Error updating customer total spent:', error);
-                // Don't fail the request, just log the error
-            }
-        }
+        // Customer total spent update - REMOVED
 
         res.json({
             message: 'Invoice created successfully',
@@ -2664,6 +2978,48 @@ app.get('/api/invoices/:invoiceId', async (req, res) => {
     }
 });
 
+// Update invoice
+app.patch('/api/invoices/:invoiceId', async (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+        const updateData = req.body;
+
+        // Validate required fields
+        if (!updateData.client_name || !updateData.client_phone || !updateData.client_address || !updateData.client_email) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Prepare update object
+        const updateObject = {
+            client_name: updateData.client_name,
+            client_phone: updateData.client_phone,
+            client_address: updateData.client_address,
+            client_email: updateData.client_email,
+            invoice_date: updateData.invoice_date,
+            service_items: JSON.stringify(updateData.service_items),
+            subtotal: updateData.subtotal,
+            tax_amount: updateData.tax_amount,
+            total_amount: updateData.total_amount,
+            tax_enabled: updateData.tax_enabled,
+            updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        const result = await db.collection('invoices').updateOne(
+            { invoice_id: invoiceId },
+            { $set: updateObject }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Invoice not found' });
+        }
+
+        res.json({ message: 'Invoice updated successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Update invoice payment status
 app.patch('/api/invoices/:invoiceId/payment', async (req, res) => {
     try {
@@ -2695,15 +3051,7 @@ app.patch('/api/invoices/:invoiceId/payment', async (req, res) => {
             return res.status(404).json({ error: 'Invoice not found' });
         }
 
-        // If invoice is paid, update customer total spent
-        if (payment_status === 'paid' && invoice.customer_id) {
-            try {
-                await updateCustomerTotalSpent(invoice.customer_id);
-            } catch (error) {
-                console.error('Error updating customer total spent:', error);
-                // Don't fail the request, just log the error
-            }
-        }
+        // Customer total spent update - REMOVED
 
         res.json({ message: 'Payment status updated successfully' });
     } catch (error) {
@@ -2743,7 +3091,8 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
             invoice.client_name,
             invoice.invoice_date,
             invoice.total_amount,
-            serviceItems
+            serviceItems,
+            invoice.serviceItemPhotos
         );
         
         if (result.success) {
@@ -2763,474 +3112,7 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
     }
 });
 
-// Customer Management API Endpoints
-
-// Get all customers with their statistics (admin only)
-app.get('/api/customers', requireAdminAuth, async (req, res) => {
-    try {
-        const customers = await db.collection('customers').aggregate([
-            {
-                $lookup: {
-                    from: 'bookings',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'bookings'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'quotes',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'quotes'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'invoices',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'invoices'
-                }
-            },
-            {
-                $addFields: {
-                    total_bookings_calc: { $size: '$bookings' },
-                    total_quotes: { $size: '$quotes' },
-                    total_invoices: { $size: '$invoices' },
-                    total_paid: {
-                        $sum: {
-                            $map: {
-                                input: '$invoices',
-                                as: 'invoice',
-                                in: {
-                                    $cond: {
-                                        if: { $eq: ['$$invoice.payment_status', 'paid'] },
-                                        then: '$$invoice.total_amount',
-                                        else: 0
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    total_unpaid: {
-                        $sum: {
-                            $map: {
-                                input: '$invoices',
-                                as: 'invoice',
-                                in: {
-                                    $cond: {
-                                        if: { $eq: ['$$invoice.payment_status', 'unpaid'] },
-                                        then: '$$invoice.total_amount',
-                                        else: 0
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    first_booking_date_calc: { $min: '$bookings.date' },
-                    last_booking_date_calc: { $max: '$bookings.date' }
-                }
-            },
-            {
-                $sort: { name: 1 }
-            }
-        ]).toArray();
-        
-        res.json(customers);
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Get customer by ID with detailed information
-app.get('/api/customers/:customerId', async (req, res) => {
-    try {
-        const { customerId } = req.params;
-        
-        // Get customer details
-        const customer = await db.collection('customers').findOne({ customer_id: customerId });
-        
-        if (!customer) {
-            return res.status(404).json({ error: 'Customer not found' });
-        }
-        
-        // Get customer's bookings
-        const bookings = await db.collection('bookings')
-            .find({ customer_id: customerId })
-            .sort({ date: -1, time: -1 })
-            .toArray();
-        
-        // Get customer's quotes
-        const quotes = await db.collection('quotes')
-            .find({ customer_id: customerId })
-            .sort({ created_at: -1 })
-            .toArray();
-        
-        // Get customer's invoices
-        const invoices = await db.collection('invoices')
-            .find({ customer_id: customerId })
-            .sort({ created_at: -1 })
-            .toArray();
-        
-        // Calculate total breakdown for debugging
-        const allInvoices = invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-        const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid');
-        const totalFromPaidInvoices = paidInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-        const completedBookingsWithoutInvoices = bookings.filter(b => 
-            b.status === 'completed' && 
-            !invoices.some(inv => inv.booking_id === b.booking_id)
-        );
-        const estimatedTotal = completedBookingsWithoutInvoices.length * 200;
-        const calculatedTotal = allInvoices + estimatedTotal;
-        
-        res.json({
-            customer,
-            bookings,
-            quotes,
-            invoices,
-            calculatedTotal: totalFromPaidInvoices,
-            storedTotal: customer.total_spent
-        });
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-
-// Create or update customer (based on phone number)
-app.post('/api/customers', async (req, res) => {
-    try {
-        const { name, email, phone, address, notes } = req.body;
-        
-        if (!name || !email || !phone) {
-            return res.status(400).json({ error: 'Name, email, and phone are required' });
-        }
-        
-        // Check if customer already exists by phone number
-        const existingCustomer = await db.collection('customers').findOne({ phone: phone });
-        
-        if (existingCustomer) {
-            // Update existing customer
-            await db.collection('customers').updateOne(
-                { phone: phone },
-                {
-                    $set: {
-                        name: name,
-                        email: email,
-                        address: address || '',
-                        notes: notes || '',
-                        updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-                    }
-                }
-            );
-            
-            res.json({
-                message: 'Customer updated successfully',
-                customer: { ...existingCustomer, name, email, address, notes }
-            });
-        } else {
-            // Create new customer
-            const customerId = generateUniqueId('CUST');
-            const newCustomer = {
-                customer_id: customerId,
-                name: name,
-                email: email,
-                phone: phone,
-                address: address || '',
-                notes: notes || '',
-                total_bookings: 0,
-                total_spent: 0,
-                created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-            
-            await db.collection('customers').insertOne(newCustomer);
-            
-            res.status(201).json({
-                message: 'Customer created successfully',
-                customer: {
-                    customer_id: customerId,
-                    name,
-                    email,
-                    phone,
-                    address,
-                    notes
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Update customer
-app.put('/api/customers/:customerId', async (req, res) => {
-    try {
-        const { customerId } = req.params;
-        const { name, email, phone, address, notes } = req.body;
-        
-        if (!name || !email || !phone) {
-            return res.status(400).json({ error: 'Name, email, and phone are required' });
-        }
-        
-        const result = await db.collection('customers').updateOne(
-            { customer_id: customerId },
-            {
-                $set: {
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    address: address || '',
-                    notes: notes || '',
-                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-                }
-            }
-        );
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: 'Customer not found' });
-        }
-        
-        res.json({ message: 'Customer updated successfully' });
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Delete customer
-app.delete('/api/customers/:customerId', async (req, res) => {
-    try {
-        const { customerId } = req.params;
-        const { force } = req.query; // Check for force parameter
-        
-        // Check if customer has any bookings, quotes, or invoices
-        const bookingCount = await db.collection('bookings').countDocuments({ customer_id: customerId });
-        const quoteCount = await db.collection('quotes').countDocuments({ customer_id: customerId });
-        const invoiceCount = await db.collection('invoices').countDocuments({ customer_id: customerId });
-        
-        const counts = {
-            booking_count: bookingCount,
-            quote_count: quoteCount,
-            invoice_count: invoiceCount
-        };
-        
-        // If force delete is not enabled and customer has data, prevent deletion
-        if (!force && (counts.booking_count > 0 || counts.quote_count > 0 || counts.invoice_count > 0)) {
-            return res.status(400).json({ 
-                error: 'Cannot delete customer with existing bookings, quotes, or invoices. Use ?force=true to force delete.',
-                hasData: true,
-                counts: counts
-            });
-        }
-        
-        // If force delete is enabled, delete all associated data first
-        if (force) {
-            // Delete in order: invoices -> quotes -> bookings -> customer
-            await db.collection('invoices').deleteMany({ customer_id: customerId });
-            await db.collection('quotes').deleteMany({ customer_id: customerId });
-            await db.collection('bookings').deleteMany({ customer_id: customerId });
-            
-            // Finally delete the customer
-            const result = await db.collection('customers').deleteOne({ customer_id: customerId });
-            
-            if (result.deletedCount === 0) {
-                return res.status(404).json({ error: 'Customer not found' });
-            }
-            
-            res.json({ 
-                message: 'Customer and all associated data deleted successfully',
-                deletedCounts: counts
-            });
-        } else {
-            // Normal delete (no associated data)
-            const result = await db.collection('customers').deleteOne({ customer_id: customerId });
-            
-            if (result.deletedCount === 0) {
-                return res.status(404).json({ error: 'Customer not found' });
-            }
-            
-            res.json({ message: 'Customer deleted successfully' });
-        }
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Search customers
-app.get('/api/customers/search/:query', async (req, res) => {
-    try {
-        const { query } = req.params;
-        const searchTerm = query;
-        
-        const customers = await db.collection('customers').aggregate([
-            {
-                $match: {
-                    $or: [
-                        { name: { $regex: searchTerm, $options: 'i' } },
-                        { email: { $regex: searchTerm, $options: 'i' } },
-                        { phone: { $regex: searchTerm, $options: 'i' } },
-                        { address: { $regex: searchTerm, $options: 'i' } }
-                    ]
-                }
-            },
-            {
-                $lookup: {
-                    from: 'bookings',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'bookings'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'quotes',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'quotes'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'invoices',
-                    localField: 'customer_id',
-                    foreignField: 'customer_id',
-                    as: 'invoices'
-                }
-            },
-            {
-                $addFields: {
-                    total_bookings: { $size: '$bookings' },
-                    total_quotes: { $size: '$quotes' },
-                    total_invoices: { $size: '$invoices' },
-                    total_paid: {
-                        $sum: {
-                            $map: {
-                                input: {
-                                    $filter: {
-                                        input: '$invoices',
-                                        cond: { $eq: ['$$this.payment_status', 'paid'] }
-                                    }
-                                },
-                                in: '$$this.total_amount'
-                            }
-                        }
-                    },
-                    total_unpaid: {
-                        $sum: {
-                            $map: {
-                                input: {
-                                    $filter: {
-                                        input: '$invoices',
-                                        cond: { $ne: ['$$this.payment_status', 'paid'] }
-                                    }
-                                },
-                                in: '$$this.total_amount'
-                            }
-                        }
-                    }
-                }
-            },
-            {
-                $unset: ['bookings', 'quotes', 'invoices']
-            },
-            {
-                $sort: { name: 1 }
-            }
-        ]).toArray();
-        
-        res.json(customers);
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Link existing bookings to customers (migration function)
-app.post('/api/customers/migrate', async (req, res) => {
-    try {
-        const bookings = await db.collection('bookings').aggregate([
-            {
-                $match: {
-                    phone: { $ne: null, $ne: '' }
-                }
-            },
-            {
-                $group: {
-                    _id: '$phone',
-                    name: { $first: '$name' },
-                    email: { $first: '$email' },
-                    address: { $first: '$address' },
-                    phone: { $first: '$phone' }
-                }
-            },
-            {
-                $sort: { phone: 1 }
-            }
-        ]).toArray();
-        
-        let processed = 0;
-        let errors = 0;
-        
-        for (const booking of bookings) {
-            try {
-                // Check if customer already exists
-                const existing = await db.collection('customers').findOne({ phone: booking.phone });
-                
-                if (!existing) {
-                    // Create new customer
-                    const customerId = generateUniqueId('CUST');
-                    const newCustomer = {
-                        customer_id: customerId,
-                        name: booking.name,
-                        email: booking.email,
-                        phone: booking.phone,
-                        address: booking.address || '',
-                        total_bookings: 0,
-                        total_spent: 0,
-                        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                        updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-                    };
-                    
-                    await db.collection('customers').insertOne(newCustomer);
-                    
-                    // Update bookings with customer_id
-                    await db.collection('bookings').updateMany(
-                        { phone: booking.phone },
-                        { $set: { customer_id: customerId } }
-                    );
-                    
-                    processed++;
-                } else {
-                    // Update existing bookings with customer_id
-                    await db.collection('bookings').updateMany(
-                        { phone: booking.phone },
-                        { $set: { customer_id: existing.customer_id } }
-                    );
-                    
-                    processed++;
-                }
-            } catch (error) {
-                console.error('Error processing booking:', error);
-                errors++;
-            }
-        }
-        
-        res.json({ 
-            message: 'Migration completed', 
-            processed, 
-            errors 
-        });
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
+// Customer Management API Endpoints - REMOVED
 
 // Email confirmation function (placeholder) - REMOVED: Now using EmailService
 
@@ -3326,143 +3208,7 @@ function sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount
 
 
 
-// Function to update customer total spent
-async function updateCustomerTotalSpent(customerId) {
-    try {
-        // Calculate total from completed bookings
-        const bookingStats = await db.collection('bookings').aggregate([
-            { $match: { customer_id: customerId } },
-            {
-                $group: {
-                    _id: null,
-                    total_bookings: { $sum: 1 },
-                    completed_bookings: {
-                        $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
-                    }
-                }
-            }
-        ]).toArray();
-        
-        const totalBookings = bookingStats.length > 0 ? bookingStats[0].total_bookings : 0;
-        
-        // Calculate total from all invoices (both paid and unpaid)
-        const invoiceStats = await db.collection('invoices').aggregate([
-            { $match: { customer_id: customerId } },
-            { $group: { _id: null, total_paid: { $sum: '$total_amount' } } }
-        ]).toArray();
-        
-        const invoiceTotal = invoiceStats.length > 0 ? invoiceStats[0].total_paid : 0;
-        
-        // Calculate total from quotes that have been converted to invoices
-        const quoteStats = await db.collection('quotes').aggregate([
-            { $match: { customer_id: customerId } },
-            {
-                $lookup: {
-                    from: 'invoices',
-                    localField: 'quote_id',
-                    foreignField: 'quote_id',
-                    as: 'invoices'
-                }
-            },
-            { $match: { invoices: { $size: 0 } } },
-            { $group: { _id: null, total_quotes: { $sum: '$total_amount' } } }
-        ]).toArray();
-        
-        const quoteTotal = quoteStats.length > 0 ? quoteStats[0].total_quotes : 0;
-        
-        // Check if there are completed bookings that don't have corresponding invoices
-        const completedWithoutInvoices = await db.collection('bookings').aggregate([
-            { $match: { customer_id: customerId, status: 'completed' } },
-            {
-                $lookup: {
-                    from: 'invoices',
-                    localField: 'booking_id',
-                    foreignField: 'booking_id',
-                    as: 'invoices'
-                }
-            },
-            { $match: { invoices: { $size: 0 } } },
-            { $count: 'count' }
-        ]).toArray();
-        
-        // Only add default cost for completed bookings that don't have invoices
-        const defaultServiceCost = 200.00;
-        const bookingTotal = (completedWithoutInvoices.length > 0 ? completedWithoutInvoices[0].count : 0) * defaultServiceCost;
-        
-        // Total spent should primarily come from invoices
-        // Only add estimated cost for completed bookings that don't have invoices
-        const totalSpent = invoiceTotal + bookingTotal;
-        
-        // Debug logging
-        console.log(`Customer ${customerId} calculation breakdown:`);
-        console.log(`- Invoice total: $${invoiceTotal.toFixed(2)}`);
-        console.log(`- Completed bookings without invoices: ${completedWithoutInvoices.length > 0 ? completedWithoutInvoices[0].count : 0}`);
-        console.log(`- Booking total (estimated): $${bookingTotal.toFixed(2)}`);
-        console.log(`- Final total: $${totalSpent.toFixed(2)}`);
-        
-        // Update customer record
-        await db.collection('customers').updateOne(
-            { customer_id: customerId },
-            {
-                $set: {
-                    total_spent: totalSpent,
-                    total_bookings: totalBookings,
-                    updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-                }
-            }
-        );
-        
-        console.log(`Updated customer ${customerId} total_spent to $${totalSpent.toFixed(2)}`);
-        return totalSpent;
-    } catch (error) {
-        console.error('Error updating customer total spent:', error);
-        throw error;
-    }
-}
-
-// Recalculate all customer total spent (admin utility)
-app.post('/api/customers/recalculate-totals', async (req, res) => {
-    try {
-        const customers = await db.collection('customers').find({}, { customer_id: 1 }).toArray();
-        
-        let completed = 0;
-        let errors = 0;
-        
-        for (const customer of customers) {
-            try {
-                await updateCustomerTotalSpent(customer.customer_id);
-                completed++;
-            } catch (error) {
-                console.error(`Error updating customer ${customer.customer_id}:`, error);
-                errors++;
-            }
-        }
-        
-        res.json({ 
-            message: `Recalculation completed. Updated ${completed} customers, ${errors} errors.` 
-        });
-    } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Recalculate specific customer total spent
-app.post('/api/customers/:customerId/recalculate-total', async (req, res) => {
-    try {
-        const { customerId } = req.params;
-        
-        const totalSpent = await updateCustomerTotalSpent(customerId);
-        
-        res.json({ 
-            message: `Customer total recalculated successfully. New total: $${totalSpent.toFixed(2)}`,
-            totalSpent: totalSpent
-        });
-    } catch (error) {
-        console.error(`Error updating customer ${req.params.customerId}:`, error);
-        res.status(500).json({ error: 'Failed to recalculate customer total' });
-    }
-});
+// Customer total spent functions - REMOVED
 
 // Error handling middleware
 app.use((err, req, res, next) => {

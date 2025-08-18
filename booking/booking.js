@@ -15,7 +15,7 @@ class BookingSystem {
         this.businessHours = {
             maxBookingsPerTimeSlot: 1, // Only 1 booking per time slot
             workingDays: [1, 2, 3, 4, 5], // Monday to Friday (0 = Sunday, 6 = Saturday)
-            timeSlots: ['8:00 AM', '1:00 PM', '4:00 PM'] // Available time slots
+            timeSlots: ['5:30 PM', '6:30 PM', '7:30 PM'] // Available time slots
         };
         
         this.init();
@@ -549,7 +549,7 @@ class BookingSystem {
         }
         
         // Validate time slot
-        const validTimes = ['8:00 AM', '1:00 PM', '4:00 PM'];
+        const validTimes = ['5:30 PM', '6:30 PM', '7:30 PM'];
         if (!validTimes.includes(this.selectedTime)) {
             this.showNotification('Invalid time slot selected', 'error');
             return false;

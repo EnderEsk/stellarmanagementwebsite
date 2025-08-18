@@ -12,6 +12,8 @@
     <script src="simple-google-oauth.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
     <script src="assets/js/admin.js" defer></script>
+    <!-- Load admin calendar functionality -->
+    <script src="admin-calendar.js" defer></script>
     
     <style>
         /* Ensure quote modal is always visible when shown */
@@ -82,6 +84,35 @@
         /* Remove the problematic ::before pseudo-element */
         .modal.show::before {
             display: none !important;
+        }
+        
+        /* Clickable address styling */
+        .clickable-address {
+            color: #007bff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .clickable-address:hover {
+            background-color: #f8f9fa;
+            border-color: #007bff;
+            color: #0056b3;
+            text-decoration: none;
+        }
+        
+        .clickable-address:active {
+            transform: translateY(1px);
+        }
+        
+        .clickable-address i {
+            color: #dc3545;
+            font-size: 14px;
         }
     </style>
 
@@ -202,7 +233,7 @@
                             </div>
                             <div class="filter-tab" data-filter="quote-accepted">
                                 <i class="fas fa-check-circle"></i>
-                                Quote Accepted
+                                Quote Accepted & Scheduling
                                 <span class="tab-count" id="quoteAcceptedCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="confirmed">
@@ -212,7 +243,7 @@
                             </div>
                             <div class="filter-tab" data-filter="pending-booking">
                                 <i class="fas fa-calendar-plus"></i>
-                                Job Booked
+                                Job Scheduled
                                 <span class="tab-count" id="pendingBookingCount">0</span>
                             </div>
                             <div class="filter-tab" data-filter="invoice-ready">
@@ -245,10 +276,7 @@
                                 <i class="fas fa-calendar-week"></i>
                                 Calendar View
                             </div>
-                            <div class="filter-tab" data-filter="customers">
-                                <i class="fas fa-users"></i>
-                                Customer Management
-                            </div>
+                            <!-- Customer Management tab - REMOVED -->
                         </div>
                     </div>
                 </div>
@@ -261,11 +289,11 @@
                 <!-- Calendar View -->
                 <div class="calendar-view" id="calendarView" style="display: none;">
                     <div class="calendar-controls">
-                        <button class="calendar-nav-btn" onclick="previousMonth()">
+                        <button class="calendar-nav-btn" onclick="window.adminCalendar.previousMonth()">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <h3 id="calendarMonth">July 2025</h3>
-                        <button class="calendar-nav-btn" onclick="nextMonth()">
+                        <button class="calendar-nav-btn" onclick="window.adminCalendar.nextMonth()">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -294,34 +322,8 @@
                     </div>
                 </div>
 
-                <!-- Customer Management View -->
-                <div class="customer-view" id="customerView" style="display: none;">
-                    <div class="customer-controls">
-                        <div class="customer-search">
-                            <input type="text" id="customerSearchInput" placeholder="Search customers by name, email, phone, or address..." class="search-input">
-                            <button class="search-btn" onclick="searchCustomers()">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                        <div class="customer-actions">
-                            <button class="action-btn confirm" onclick="showAddCustomerModal()">
-                                <i class="fas fa-plus"></i> Add Customer
-                            </button>
-                            <button class="action-btn complete" onclick="migrateCustomers()">
-                                <i class="fas fa-sync"></i> Migrate Existing
-                            </button>
-                            <button class="action-btn warning" onclick="recalculateCustomerTotals()">
-                                <i class="fas fa-calculator"></i> Recalculate Totals
-                            </button>
-                            <button class="action-btn info" onclick="refreshCustomerData()">
-                                <i class="fas fa-sync"></i> Refresh Data
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="customers-grid" id="customersGrid">
-                        <div class="empty-state">Loading customers...</div>
-                    </div>
+                <!-- Customer Management View - REMOVED -->
+                    <!-- Customer management controls and grid - REMOVED -->
                 </div>
             </div>
 
@@ -372,7 +374,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="blockingModalTitle">Manage Date</h3>
-                <button class="modal-close" onclick="closeBlockingModal()">
+                <button class="modal-close" onclick="window.adminCalendar.closeBlockingModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -382,16 +384,16 @@
                     <p><strong>Status:</strong> <span id="dateStatusDisplay"></span></p>
                 </div>
                 <div class="blocking-actions">
-                    <button class="action-btn confirm" onclick="toggleDateBlock()" id="toggleBlockBtn">
+                    <button class="action-btn confirm" onclick="window.adminCalendar.toggleDateBlock()" id="toggleBlockBtn">
                         <i class="fas fa-lock"></i> Block Date
                     </button>
-                    <button class="action-btn complete" onclick="unblockDate()" id="unblockBtn" style="display: none;">
+                    <button class="action-btn complete" onclick="window.adminCalendar.unblockDate()" id="unblockBtn" style="display: none;">
                         <i class="fas fa-unlock"></i> Unblock Date
                     </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeBlockingModal()">Close</button>
+                <button class="btn-secondary" onclick="window.adminCalendar.closeBlockingModal()">Close</button>
             </div>
         </div>
     </div>
@@ -416,12 +418,71 @@
         </div>
     </div>
 
+    <!-- Customer Message Modal -->
+    <div id="customerMessageModal" class="modal">
+        <div class="modal-content customer-message-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-envelope"></i> Send Message to Customer</h3>
+                <button class="modal-close" onclick="closeCustomerMessageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="message-customer-info">
+                    <div class="info-card">
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <div>
+                                <label>Customer Name</label>
+                                <span id="messageCustomerName"></span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <label>Email</label>
+                                <span id="messageCustomerEmail"></span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <label>Booking ID</label>
+                                <span id="messageBookingId"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="message-compose-section">
+                    <h4><i class="fas fa-edit"></i> Compose Message</h4>
+                    <div class="form-group">
+                        <label for="messageSubject">Subject</label>
+                        <input type="text" id="messageSubject" class="form-control" placeholder="Enter message subject..." value="Message from Stellar Tree Management">
+                    </div>
+                    <div class="form-group">
+                        <label for="messageContent">Message</label>
+                        <textarea id="messageContent" class="form-control" rows="8" placeholder="Type your message here..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCustomerMessageModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn-primary" onclick="sendCustomerMessage()">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Move Booking Modal -->
     <div id="moveBookingModal" class="modal">
         <div class="modal-content move-booking-modal">
             <div class="modal-header">
                 <h3><i class="fas fa-arrows-alt"></i> Move Booking</h3>
-                <button class="modal-close" onclick="closeMoveBookingModal()">
+                <button class="modal-close" onclick="window.adminCalendar.closeMoveBookingModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -480,11 +541,11 @@
                     
                     <!-- Calendar Navigation -->
                     <div class="move-calendar-nav">
-                        <button class="nav-btn" onclick="changeMoveMonth(-1)">
+                        <button class="nav-btn" onclick="window.adminCalendar.changeMoveMonth(-1)">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <span id="moveCalendarMonth"></span>
-                        <button class="nav-btn" onclick="changeMoveMonth(1)">
+                        <button class="nav-btn" onclick="window.adminCalendar.changeMoveMonth(1)">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -503,13 +564,13 @@
 
                 <!-- Action Buttons -->
                 <div class="move-actions">
-                    <button class="action-btn confirm" id="moveConfirmBtn" onclick="moveBooking()" disabled>
+                    <button class="action-btn confirm" id="moveConfirmBtn" onclick="window.adminCalendar.moveBooking()" disabled>
                         <i class="fas fa-arrows-alt"></i> Move to Selected Date
                     </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeMoveBookingModal()">
+                <button type="button" class="btn-secondary" onclick="window.adminCalendar.closeMoveBookingModal()">
                     <i class="fas fa-times"></i> Cancel
                 </button>
             </div>
@@ -584,10 +645,6 @@
     <script>
         let allBookings = [];
         let currentFilter = 'all';
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let blockedDates = [];
-        let selectedDate = null;
         
         // Customer Management Variables
         let allCustomers = [];
@@ -909,13 +966,10 @@
                     renderHistory();
                     
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                     
-                    // Initialize customer management if needed
-                    if (currentFilter === 'customers') {
-                        loadCustomers();
-                    }
+                    // Customer management - REMOVED
                     
                     // Bookings loaded successfully (notification removed)
                     
@@ -938,20 +992,7 @@
             }
         }
 
-        // Load blocked dates
-        async function loadBlockedDates() {
-            try {
-                const response = await fetch('/api/blocked-dates');
-                if (response.ok) {
-                    blockedDates = await response.json();
-                } else {
-                    blockedDates = [];
-                }
-            } catch (error) {
-                console.error('Error loading blocked dates:', error);
-                blockedDates = [];
-            }
-        }
+
 
         // Update statistics
         function updateStatistics() {
@@ -1001,11 +1042,7 @@
                     calendarView.style.display = 'none';
                 }
                 
-                // Hide customer management view if it exists
-                const customerManagementView = document.getElementById('customerManagementView');
-                if (customerManagementView) {
-                    customerManagementView.style.display = 'none';
-                }
+                // Customer management view - REMOVED
                 
                 // Show bookings grid
                 const activeBookingsGrid = document.getElementById('activeBookingsGrid');
@@ -1133,7 +1170,7 @@
                         </button>
                     `;
                 } else if (booking.status === 'quote-accepted') {
-                    statusText = 'Quote Confirmed - Ready to Book Job';
+                    statusText = 'Quote Accepted - Job Scheduling in Progress';
                     actionButtons = `
                         <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
@@ -1162,7 +1199,7 @@
                         </button>
                     `;
                 } else if (booking.status === 'pending-booking') {
-                    statusText = 'Job Booked - Awaiting Admin Confirmation';
+                    statusText = 'Job Scheduled - Awaiting Admin Confirmation';
                     actionButtons = `
                         <button class="action-btn confirm" onclick="confirmJob('${booking.booking_id}')">
                             <i class="fas fa-check-double"></i> Confirm Job
@@ -1189,7 +1226,7 @@
                         <button class="action-btn quote" onclick="sendInvoiceFromBooking('${booking.booking_id}')">
                             <i class="fas fa-file-invoice-dollar"></i> Send Invoice
                         </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Booked">
+                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                             <i class="fas fa-undo"></i> Revert
                         </button>
                         <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -1253,7 +1290,7 @@
                             <div class="essential-row">
                                 <i class="fas fa-calendar essential-icon"></i>
                                 <span class="essential-label">Date:</span>
-                                <span class="essential-value">${formatBookingDate(booking.date)}</span>
+                                <span class="essential-value">${formatBookingDate(booking.date)}${booking.time ? ` at ${booking.time}` : ''}</span>
                             </div>
                             ${booking.job_date && booking.job_time ? `
                             <div class="essential-row job-details">
@@ -1333,7 +1370,7 @@
             
                     // Setup calendar drag and drop after rendering (only for calendar tab)
         if (currentFilter === 'calendar') {
-            setupCalendarDragAndDrop();
+            window.adminCalendar.setupCalendarDragAndDrop();
         }
         }
 
@@ -1388,7 +1425,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else if (response.status === 401 || response.status === 403) {
                     showNotification('Session expired. Please log in again.', 'error');
@@ -1406,7 +1443,7 @@
         // Confirm quote and send email to customer
         async function confirmQuoteAndSendEmail(bookingId) {
             try {
-                // First, update the booking status to 'quote-accepted' (Quote Accepted - Job Booking Pending)
+                // First, update the booking status to 'quote-accepted' (Quote Accepted - Job Scheduling in Progress)
                 const response = await fetch(`/api/bookings/${bookingId}/status`, {
                     method: 'PATCH',
                     headers: getAuthHeaders(),
@@ -1447,7 +1484,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else {
                     const emailError = await emailResponse.json();
@@ -1488,7 +1525,7 @@
                 
                 // Explicitly refresh calendar if it's currently visible
                 if (currentFilter === 'calendar') {
-                    renderCalendar();
+                    window.adminCalendar.renderCalendar();
                 }
             } catch (error) {
                 console.error('Error confirming job:', error);
@@ -1538,7 +1575,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else {
                     const emailError = await emailResponse.json();
@@ -1561,7 +1598,9 @@
                 }
 
                 // Check if there's a quote for this booking
-                const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
+                const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (quoteResponse.ok) {
                     const quotes = await quoteResponse.json();
                     if (quotes.length > 0) {
@@ -1604,7 +1643,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else if (response.status === 401 || response.status === 403) {
                     showNotification('Session expired. Please log in again.', 'error');
@@ -1634,7 +1673,7 @@
                 if (currentFilter === 'calendar') {
                     document.getElementById('activeBookingsGrid').style.display = 'none';
                     document.getElementById('calendarView').style.display = 'block';
-                    loadBlockedDates().then(() => renderCalendar());
+                    window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar());
                 } else {
                     document.getElementById('activeBookingsGrid').style.display = 'grid';
                     document.getElementById('calendarView').style.display = 'none';
@@ -1661,13 +1700,13 @@
                     sectionTitle.textContent = 'Quote Sent';
                     break;
                 case 'quote-accepted':
-                    sectionTitle.textContent = 'Quote Accepted';
+                    sectionTitle.textContent = 'Quote Accepted & Job Scheduling';
                     break;
                 case 'confirmed':
                     sectionTitle.textContent = 'Request Booking';
                     break;
                 case 'pending-booking':
-                    sectionTitle.textContent = 'Job Booked - Awaiting Admin Confirmation';
+                    sectionTitle.textContent = 'Job Scheduled - Awaiting Admin Confirmation';
                     break;
                 case 'invoice-ready':
                     sectionTitle.textContent = 'Invoice Ready';
@@ -1706,490 +1745,32 @@
             }, 3000);
         }
 
-        // Calendar functions
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const monthDisplay = document.getElementById('calendarMonth');
-            
-            // Update month display
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                               'July', 'August', 'September', 'October', 'November', 'December'];
-            monthDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            
-            // Clear grid
-            grid.innerHTML = '';
-            
-            // Check if we're on mobile
-            const isMobile = window.innerWidth <= 768;
-            
-            if (isMobile) {
-                // Mobile-friendly calendar with weeks
-                renderMobileCalendar(grid);
-            } else {
-                // Desktop calendar (original grid layout)
-                renderDesktopCalendar(grid);
-            }
-        }
 
-        function renderMobileCalendar(grid) {
-            // Create vertical timeline container
-            const timelineContainer = document.createElement('div');
-            timelineContainer.className = 'timeline-container';
-            
-            // Create vertical line
-            const timelineLine = document.createElement('div');
-            timelineLine.className = 'timeline-line';
-            timelineContainer.appendChild(timelineLine);
-            
-            // Get all days in the current month
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const today = new Date();
-            
-            // Generate timeline for each day in the month
-            for (let day = 1; day <= lastDay.getDate(); day++) {
-                const currentDate = new Date(currentYear, currentMonth, day);
-                const dateString = currentDate.toISOString().split('T')[0];
-                
-                // Create timeline item
-                const timelineItem = document.createElement('div');
-                timelineItem.className = 'timeline-item';
-                timelineItem.dataset.date = dateString;
-                
-                // Create timeline dot
-                const timelineDot = document.createElement('div');
-                timelineDot.className = 'timeline-dot';
-                
-                // Check if it's today
-                if (currentDate.toDateString() === today.toDateString()) {
-                    timelineDot.classList.add('today');
-                }
-                
-                // Check if it's weekend
-                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-                
-                // Check if it's blocked
-                const isBlocked = blockedDates.some(blockedDate => 
-                    blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
-                );
-                const isUnblockedWeekend = blockedDates.some(blockedDate => 
-                    blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
-                );
-                
-                // Set dot color based on status
-                if (isBlocked) {
-                    timelineDot.classList.add('blocked');
-                } else if (isWeekend && !isUnblockedWeekend) {
-                    timelineDot.classList.add('weekend');
-                } else if (isUnblockedWeekend) {
-                    timelineDot.classList.add('available');
-                }
-                
-                // Create date column
-                const dateColumn = document.createElement('div');
-                dateColumn.className = 'date-column';
-                
-                const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
-                const dayNumber = currentDate.getDate();
-                
-                dateColumn.innerHTML = `
-                    <div class="day-name">${dayName}</div>
-                    <div class="day-number">${dayNumber}</div>
-                `;
-                
-                // Create events column
-                const eventsColumn = document.createElement('div');
-                eventsColumn.className = 'events-column';
-                
-                // Check for bookings
-                const dayBookings = allBookings.filter(booking => 
-                    booking.date === dateString && 
-                    (booking.status === 'confirmed' || booking.status === 'pending' || 
-                     booking.status === 'quote-ready' || 
-                     booking.status === 'pending-booking')
-                );
-                
-                if (dayBookings.length > 0) {
-                    timelineDot.classList.add('booked');
-                    
-                    // Create booking events
-                    dayBookings.forEach(booking => {
-                        const eventBlock = document.createElement('div');
-                        eventBlock.className = `event-block ${booking.status}`;
-                        eventBlock.dataset.bookingId = booking.id;
-                        
-                        const timeSlot = booking.time || 'TBD';
-                        const customerName = booking.name || 'Unknown';
-                        
-                        eventBlock.innerHTML = `
-                            <div class="event-time">${timeSlot}</div>
-                            <div class="event-customer">${customerName}</div>
-                            <div class="event-status">${booking.status}</div>
-                        `;
-                        
-                        // Add click handler for booking details
-                        eventBlock.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            showBookingDetails(booking);
-                        });
-                        
-                        eventsColumn.appendChild(eventBlock);
-                    });
-                } else {
-                    // Show availability status
-                    let statusText = 'Available';
-                    let statusClass = 'available';
-                    
-                    if (isBlocked) {
-                        statusText = 'Blocked';
-                        statusClass = 'blocked';
-                    } else if (isWeekend && !isUnblockedWeekend) {
-                        statusText = 'Weekend';
-                        statusClass = 'weekend';
-                    }
-                    
-                    const statusBlock = document.createElement('div');
-                    statusBlock.className = `status-block ${statusClass}`;
-                    statusBlock.textContent = statusText;
-                    eventsColumn.appendChild(statusBlock);
-                }
-                
-                // Add click handler for day management
-                timelineItem.addEventListener('click', () => handleDayClick(currentDate, dayBookings));
-                
-                // Add drag and drop handlers
-                timelineItem.addEventListener('dragover', handleCalendarDragOver);
-                timelineItem.addEventListener('drop', handleCalendarDrop);
-                timelineItem.addEventListener('dragenter', handleCalendarDragEnter);
-                timelineItem.addEventListener('dragleave', handleCalendarDragLeave);
-                
-                // Assemble timeline item
-                timelineItem.appendChild(timelineDot);
-                timelineItem.appendChild(dateColumn);
-                timelineItem.appendChild(eventsColumn);
-                
-                timelineContainer.appendChild(timelineItem);
-            }
-            
-            grid.appendChild(timelineContainer);
-        }
 
-        function renderDesktopCalendar(grid) {
-            // Add day headers
-            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            dayHeaders.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'day-header';
-                header.textContent = day;
-                header.style.fontWeight = 'bold';
-                header.style.color = 'var(--admin-primary)';
-                grid.appendChild(header);
-            });
-            
-            // Get first day of month and number of days
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            // Generate calendar days
-            for (let i = 0; i < 42; i++) {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + i);
-                const dateString = currentDate.toISOString().split('T')[0];
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'day';
-                dayElement.textContent = currentDate.getDate();
-                dayElement.dataset.date = dateString;
-                
-                // Check if it's current month
-                if (currentDate.getMonth() !== currentMonth) {
-                    dayElement.style.opacity = '0.3';
-                }
-                
-                // Check if it's today
-                const today = new Date();
-                if (currentDate.toDateString() === today.toDateString()) {
-                    dayElement.classList.add('today');
-                }
-                
-                // Check if it's weekend (automatically blocked)
-                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-                
-                // Check if it's blocked
-                const isBlocked = blockedDates.some(blockedDate => 
-                    blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
-                );
-                const isUnblockedWeekend = blockedDates.some(blockedDate => 
-                    blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
-                );
-                
-                if (isBlocked) {
-                    dayElement.classList.add('blocked');
-                } else if (isWeekend && !isUnblockedWeekend) {
-                    // Weekends are blocked by default unless explicitly unblocked
-                    dayElement.classList.add('weekend');
-                } else if (isUnblockedWeekend) {
-                    // Unblocked weekends show as available
-                    dayElement.classList.add('available');
-                }
-                
-                // Check if it's booked
-                const dayBookings = allBookings.filter(booking => 
-                    booking.date === dateString && 
-                    (booking.status === 'confirmed' || booking.status === 'pending' || 
-                     booking.status === 'quote-ready' || 
-                     booking.status === 'pending-booking')
-                );
-                if (dayBookings.length > 0) {
-                    dayElement.classList.add('booked');
-                    // Add booking info to the day
-                    const bookingInfo = document.createElement('div');
-                    bookingInfo.className = 'booking-info';
-                    
-                    // Group bookings by time slot
-                    const timeSlots = ['8:00 AM', '1:00 PM', '4:00 PM'];
-                    const bookedTimeSlots = timeSlots.filter(time => 
-                        dayBookings.some(booking => booking.time === time)
-                    );
-                    
-                    bookingInfo.innerHTML = `
-                        <div class="booking-count">${dayBookings.length}</div>
-                        <div class="booking-preview">${bookedTimeSlots.join(', ')}</div>
-                    `;
-                    dayElement.appendChild(bookingInfo);
-                }
-                
-                // Add click handler
-                dayElement.addEventListener('click', () => handleDayClick(currentDate, dayBookings));
-                
-                // Add drag and drop handlers for calendar days
-                dayElement.addEventListener('dragover', handleCalendarDragOver);
-                dayElement.addEventListener('drop', handleCalendarDrop);
-                dayElement.addEventListener('dragenter', handleCalendarDragEnter);
-                dayElement.addEventListener('dragleave', handleCalendarDragLeave);
-                
-                grid.appendChild(dayElement);
-            }
-        }
 
-        function handleDayClick(date, bookings) {
-            const dateString = date.toISOString().split('T')[0];
-            const isBlocked = blockedDates.some(blockedDate => 
-                blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
-            );
-            const isUnblockedWeekend = blockedDates.some(blockedDate => 
-                blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
-            );
-            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            
-            if (bookings.length > 0) {
-                // Show booking details
-                showBookingDetails(date, bookings);
-            } else if (isBlocked) {
-                // Show unblock option for manually blocked dates
-                showBlockingModal(date, true);
-            } else if (isWeekend && isUnblockedWeekend) {
-                // Show re-block option for unblocked weekends
-                showBlockingModal(date, 'unblocked_weekend');
-            } else if (isWeekend) {
-                // Show make available option for blocked weekends
-                showBlockingModal(date, 'weekend');
-            } else {
-                // Show blocking management for available dates
-                showBlockingModal(date, false);
-            }
-        }
 
-        function showCalendarPopup(date, bookings) {
-            const modal = document.getElementById('bookingDetailsModal');
-            const modalContent = modal.querySelector('.modal-content');
-            
-            const dateString = date.toISOString().split('T')[0];
-            const formattedDate = date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            const isBlocked = blockedDates.some(d => d.date === dateString);
-            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            
-            // Clear existing modal structure and create clean content
-            modalContent.innerHTML = '';
-            
-            let popupContent = `
-                <div class="calendar-popup-compact">
-                    <div class="calendar-popup-header">
-                        <div class="calendar-popup-date">${formattedDate}</div>
-                        <button class="calendar-popup-close" onclick="closeModal('bookingDetailsModal')">&times;</button>
-                    </div>
-                    <div class="calendar-popup-content">
-            `;
-            
-            if (bookings.length > 0) {
-                bookings.forEach(booking => {
-                    popupContent += `
-                        <div class="calendar-booking-preview" onclick="showBookingDetailsPopup('${booking.booking_id}')">
-                            <h4>${booking.service}</h4>
-                            <p>${booking.time} • ${booking.name}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                popupContent += `
-                    <div class="calendar-booking-preview" style="border-left-color: #6c757d;">
-                        <h4>No Bookings</h4>
-                        <p>This date is available</p>
-                    </div>
-                `;
-            }
-            
-            popupContent += `
-                    </div>
-                    <div class="calendar-popup-actions">
-            `;
-            
-            if (isWeekend) {
-                if (isBlocked) {
-                    popupContent += `<button class="calendar-popup-btn primary" onclick="unblockWeekend('${dateString}')">Make Available</button>`;
-                } else {
-                    popupContent += `<button class="calendar-popup-btn secondary" onclick="reblockWeekend('${dateString}')">Block Weekend</button>`;
-                }
-            } else {
-                if (isBlocked) {
-                    popupContent += `<button class="calendar-popup-btn primary" onclick="unblockDate('${dateString}')">Unblock Date</button>`;
-                } else {
-                    popupContent += `<button class="calendar-popup-btn secondary" onclick="toggleDateBlock('${dateString}')">Block Date</button>`;
-                }
-            }
-            
-            popupContent += `
-                    </div>
-                </div>
-            `;
-            
-            modalContent.innerHTML = popupContent;
-            openModal('bookingDetailsModal');
-        }
 
-        function showBookingDetails(date, bookings) {
-            showCalendarPopup(date, bookings);
-        }
 
-        function showBlockingModal(date, isBlocked) {
-            const modal = document.getElementById('dateBlockingModal');
-            const dateDisplay = document.getElementById('selectedDateDisplay');
-            const statusDisplay = document.getElementById('dateStatusDisplay');
-            const toggleBtn = document.getElementById('toggleBlockBtn');
-            const unblockBtn = document.getElementById('unblockBtn');
-            
-            selectedDate = date;
-            const dateString = date.toISOString().split('T')[0];
-            const formattedDate = date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            dateDisplay.textContent = formattedDate;
-            
-            if (isBlocked === 'weekend') {
-                // Weekend - show make available option
-                statusDisplay.textContent = 'Weekend';
-                statusDisplay.style.color = 'var(--admin-primary)';
-                toggleBtn.innerHTML = '<i class="fas fa-unlock"></i> Make Available';
-                toggleBtn.className = 'action-btn confirm';
-                toggleBtn.onclick = () => unblockWeekend(dateString);
-                toggleBtn.style.display = 'inline-flex';
-                unblockBtn.style.display = 'none';
-            } else if (isBlocked === 'unblocked_weekend') {
-                // Unblocked weekend - show re-block option
-                statusDisplay.textContent = 'Weekend (Available)';
-                statusDisplay.style.color = 'var(--admin-success)';
-                toggleBtn.innerHTML = '<i class="fas fa-lock"></i> Block Weekend';
-                toggleBtn.className = 'action-btn cancel';
-                toggleBtn.onclick = () => reblockWeekend(dateString);
-                toggleBtn.style.display = 'inline-flex';
-                unblockBtn.style.display = 'none';
-            } else if (isBlocked) {
-                // Manually blocked date - show unblock option
-                statusDisplay.textContent = 'Blocked';
-                statusDisplay.style.color = 'var(--admin-danger)';
-                toggleBtn.style.display = 'none';
-                unblockBtn.style.display = 'inline-flex';
-            } else {
-                // Available date - show block option
-                statusDisplay.textContent = 'Available';
-                statusDisplay.style.color = 'var(--admin-success)';
-                toggleBtn.innerHTML = '<i class="fas fa-lock"></i> Block Date';
-                toggleBtn.className = 'action-btn confirm';
-                toggleBtn.onclick = () => toggleDateBlock();
-                toggleBtn.style.display = 'inline-flex';
-                unblockBtn.style.display = 'none';
-            }
-            
-            openModal('dateBlockingModal');
-        }
+
+
+
+
+
+
+
 
         function closeBookingModal() {
             document.getElementById('bookingDetailsModal').classList.remove('show');
             document.body.classList.remove('modal-open');
         }
 
-        function closeBlockingModal() {
-            document.getElementById('dateBlockingModal').classList.remove('show');
-            document.body.classList.remove('modal-open');
-        }
 
-        let moveBookingData = null;
-        let moveCalendarMonth = new Date();
-        let selectedMoveDate = null;
 
-        function showMoveBookingModal(bookingId, currentDate) {
-            const booking = allBookings.find(b => b.booking_id === bookingId);
-            if (!booking) return;
 
-            moveBookingData = booking;
-            moveCalendarMonth = new Date();
-            selectedMoveDate = null;
 
-            // Populate booking info
-            document.getElementById('moveBookingId').textContent = booking.booking_id;
-            document.getElementById('moveCurrentDate').textContent = (() => {
-                const [year, month, day] = booking.date.split('-').map(Number);
-                const date = new Date(year, month - 1, day);
-                return date.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            })();
-            document.getElementById('moveCustomerName').textContent = booking.name;
-            document.getElementById('moveCustomerPhone').textContent = booking.phone || 'Not provided';
-            document.getElementById('moveCustomerAddress').textContent = booking.address || 'Not provided';
-            document.getElementById('moveService').textContent = booking.service;
 
-            // Reset UI
-            document.getElementById('selectedDateDisplay').style.display = 'none';
-            document.getElementById('moveConfirmBtn').disabled = true;
 
-            // Render move calendar
-            renderMoveCalendar();
 
-            openModal('moveBookingModal');
-        }
-
-        function closeMoveBookingModal() {
-            document.getElementById('moveBookingModal').classList.remove('show');
-            document.body.classList.remove('modal-open');
-            moveBookingData = null;
-            selectedMoveDate = null;
-        }
 
         function showBookingDetailsPopup(bookingId) {
             const booking = allBookings.find(b => b.booking_id === bookingId);
@@ -2218,6 +1799,9 @@
             let actionButtons = '';
             if (booking.status === 'pending') {
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
@@ -2227,7 +1811,7 @@
                     <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
                         <i class="fas fa-times"></i> Cancel
                     </button>
-                    <button class="action-btn move" onclick="showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
+                    <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
                         <i class="fas fa-arrows-alt"></i> Move
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -2236,6 +1820,9 @@
                 `;
             } else if (booking.status === 'confirmed') {
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
@@ -2245,7 +1832,7 @@
                     <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
                         <i class="fas fa-times"></i> Cancel
                     </button>
-                    <button class="action-btn move" onclick="showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
+                    <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
                         <i class="fas fa-arrows-alt"></i> Move
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -2254,6 +1841,9 @@
                 `;
             } else if (booking.status === 'completed') {
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'confirmed')" title="Revert to Confirmed">
                         <i class="fas fa-undo"></i> Revert
                     </button>
@@ -2263,6 +1853,9 @@
                 `;
             } else if (booking.status === 'cancelled') {
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn reopen" onclick="updateBookingStatus('${booking.booking_id}', 'pending')">
                         <i class="fas fa-redo"></i> Reopen
                     </button>
@@ -2275,7 +1868,7 @@
                     <button class="action-btn complete" onclick="updateBookingStatus('${booking.booking_id}', 'completed')">
                         <i class="fas fa-check-double"></i> Complete
                     </button>
-                    <button class="action-btn move" onclick="showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
+                    <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
                         <i class="fas fa-arrows-alt"></i> Move
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -2284,13 +1877,16 @@
                 `;
             } else if (booking.status === 'invoice-ready') {
                 actionButtons = `
-                                            <button class="action-btn invoice" onclick="showInvoiceModalFromBooking('${booking.booking_id}')">
-                            <i class="fas fa-file-invoice"></i> Invoice
-                        </button>
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
+                    <button class="action-btn invoice" onclick="showInvoiceModalFromBooking('${booking.booking_id}')">
+                        <i class="fas fa-file-invoice"></i> Invoice
+                    </button>
                     <button class="action-btn quote" onclick="sendInvoiceFromBooking('${booking.booking_id}')">
                         <i class="fas fa-file-invoice-dollar"></i> Send Invoice
                     </button>
-                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Booked">
+                                            <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                         <i class="fas fa-undo"></i> Revert
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
@@ -2299,6 +1895,9 @@
                 `;
             } else if (booking.status === 'invoice-sent') {
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn invoice" onclick="showInvoiceModalFromBooking('${booking.booking_id}')">
                         <i class="fas fa-file-invoice"></i> View Invoice
                     </button>
@@ -2319,6 +1918,9 @@
                 // Fallback for any other statuses
                 statusText = booking.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
                 actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
@@ -2383,7 +1985,14 @@
                         </div>
                         <div class="detail-popup-row">
                             <span class="detail-popup-label">Address:</span>
-                            <span class="detail-popup-value">${booking.address || 'Not provided'}</span>
+                            <span class="detail-popup-value">
+                                ${booking.address ? 
+                                    `<a href="https://maps.google.com/?q=${encodeURIComponent(booking.address)}" target="_blank" class="clickable-address" title="Click to open in Google Maps">
+                                        <i class="fas fa-map-marker-alt"></i> ${booking.address}
+                                    </a>` 
+                                    : 'Not provided'
+                                }
+                            </span>
                         </div>
                         <div class="detail-popup-row">
                             <span class="detail-popup-label">Notes:</span>
@@ -2469,392 +2078,39 @@
             document.body.classList.remove('modal-open');
         }
 
-        function renderMoveCalendar() {
-            const year = moveCalendarMonth.getFullYear();
-            const month = moveCalendarMonth.getMonth();
-            
-            // Update month display
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                               'July', 'August', 'September', 'October', 'November', 'December'];
-            document.getElementById('moveCalendarMonth').textContent = `${monthNames[month]} ${year}`;
-            
-            // Get first day and last day of month
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            const grid = document.getElementById('moveCalendarGrid');
-            grid.innerHTML = '';
-            
-            // Add day headers
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            dayNames.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'day-header';
-                header.textContent = day;
-                grid.appendChild(header);
-            });
-            
-            // Generate calendar days
-            for (let i = 0; i < 42; i++) {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + i);
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'day';
-                dayElement.textContent = currentDate.getDate();
-                
-                // Check if it's current month
-                if (currentDate.getMonth() !== month) {
-                    dayElement.classList.add('other-month');
-                }
-                
-                // Check if it's today
-                const today = new Date();
-                if (currentDate.toDateString() === today.toDateString()) {
-                    dayElement.classList.add('today');
-                }
-                
-                // Check if it's in the past
-                if (currentDate < today) {
-                    dayElement.classList.add('disabled');
-                } else {
-                    const dateString = currentDate.toISOString().split('T')[0];
-                    
-                    // Check if it's the current booking date
-                    if (moveBookingData && dateString === moveBookingData.date) {
-                        dayElement.classList.add('disabled');
-                        dayElement.title = 'Current booking date';
-                    } else {
-                        // Check if it's booked
-                        const dayBookings = allBookings.filter(booking => 
-                            booking.date === dateString && 
-                            (booking.status === 'confirmed' || booking.status === 'pending' || 
-                             booking.status === 'quote-ready' || 
-                             booking.status === 'pending-booking')
-                        );
-                        
-                        if (dayBookings.length > 0) {
-                            dayElement.classList.add('booked');
-                            dayElement.title = 'Already booked';
-                        } else {
-                            // Check if it's blocked
-                            const isBlocked = blockedDates.some(blockedDate => 
-                                blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
-                            );
-                            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-                            const isUnblockedWeekend = blockedDates.some(blockedDate => 
-                                blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
-                            );
-                            
-                            if (isBlocked || (isWeekend && !isUnblockedWeekend)) {
-                                dayElement.classList.add('blocked');
-                                dayElement.title = 'Date blocked';
-                            } else {
-                                dayElement.classList.add('available');
-                                dayElement.addEventListener('click', () => selectMoveDate(currentDate, dateString));
-                            }
-                        }
-                    }
-                }
-                
-                grid.appendChild(dayElement);
-            }
-        }
 
-        function changeMoveMonth(direction) {
-            moveCalendarMonth.setMonth(moveCalendarMonth.getMonth() + direction);
-            renderMoveCalendar();
-        }
 
-        function selectMoveDate(date, dateString) {
-            // Remove previous selection
-            document.querySelectorAll('.move-calendar-grid .day.selected').forEach(day => {
-                day.classList.remove('selected');
-            });
-            
-            // Add selection to clicked day
-            const dayElements = document.querySelectorAll('.move-calendar-grid .day');
-            const dayIndex = Array.from(dayElements).findIndex(day => 
-                day.textContent == date.getDate() && 
-                !day.classList.contains('other-month')
-            );
-            
-            if (dayIndex !== -1) {
-                dayElements[dayIndex].classList.add('selected');
-            }
-            
-            selectedMoveDate = dateString;
-            
-            // Update selected date display
-            const selectedDateText = date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            document.getElementById('selectedDateText').textContent = selectedDateText;
-            document.getElementById('selectedDateDisplay').style.display = 'flex';
-            document.getElementById('moveConfirmBtn').disabled = false;
-        }
 
-        async function moveBooking() {
-            if (!selectedMoveDate || !moveBookingData) {
-                showNotification('Please select a new date', 'error');
-                return;
-            }
 
-            try {
-                const response = await fetch(`/api/bookings/${moveBookingData.booking_id}/move`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ newDate: selectedMoveDate })
-                });
 
-                if (response.ok) {
-                    showNotification('Booking moved successfully', 'success');
-                    closeMoveBookingModal();
-                    loadBookings(); // Reload to update the display
-                } else {
-                    const error = await response.json();
-                    showNotification(error.message || 'Failed to move booking', 'error');
-                }
-            } catch (error) {
-                console.error('Error moving booking:', error);
-                showNotification('Network error moving booking', 'error');
-            }
-        }
 
-        async function toggleDateBlock() {
-            if (!selectedDate) return;
-            
-            const dateString = selectedDate.toISOString().split('T')[0];
-            
-            try {
-                const response = await fetch('/api/blocked-dates', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ date: dateString })
-                });
-                
-                if (response.ok) {
-                    showNotification('Date blocked successfully', 'success');
-                    closeBlockingModal();
-                    // Reload blocked dates and re-render calendar
-                    await loadBlockedDates();
-                    renderCalendar();
-                } else {
-                    showNotification('Failed to block date', 'error');
-                }
-            } catch (error) {
-                console.error('Error blocking date:', error);
-                showNotification('Network error blocking date', 'error');
-            }
-        }
 
-        async function unblockWeekend(dateString) {
-            try {
-                // Add the weekend to blocked dates with a special flag to indicate it's unblocked
-                const response = await fetch('/api/blocked-dates', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        date: dateString,
-                        unblockWeekend: true 
-                    })
-                });
 
-                if (response.ok) {
-                    showNotification('Weekend made available for booking', 'success');
-                    closeBlockingModal();
-                    // Reload blocked dates and re-render calendar
-                    await loadBlockedDates();
-                    renderCalendar();
-                } else {
-                    const error = await response.json();
-                    showNotification(error.message || 'Failed to make weekend available', 'error');
-                }
-            } catch (error) {
-                console.error('Error making weekend available:', error);
-                showNotification('Network error making weekend available', 'error');
-            }
-        }
 
-        async function reblockWeekend(dateString) {
-            try {
-                // Remove the weekend from blocked dates to re-block it
-                const response = await fetch(`/api/blocked-dates/${dateString}`, {
-                    method: 'DELETE'
-                });
 
-                if (response.ok) {
-                    showNotification('Weekend blocked successfully', 'success');
-                    closeBlockingModal();
-                    // Reload blocked dates and re-render calendar
-                    await loadBlockedDates();
-                    renderCalendar();
-                } else {
-                    const error = await response.json();
-                    showNotification(error.message || 'Failed to block weekend', 'error');
-                }
-            } catch (error) {
-                console.error('Error blocking weekend:', error);
-                showNotification('Network error blocking weekend', 'error');
-            }
-        }
 
-        async function unblockDate() {
-            if (!selectedDate) return;
-            
-            const dateString = selectedDate.toISOString().split('T')[0];
-            
-            try {
-                const response = await fetch(`/api/blocked-dates/${dateString}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    showNotification('Date unblocked successfully', 'success');
-                    closeBlockingModal();
-                    // Reload blocked dates and re-render calendar
-                    await loadBlockedDates();
-                    renderCalendar();
-                } else {
-                    showNotification('Failed to unblock date', 'error');
-                }
-            } catch (error) {
-                console.error('Error unblocking date:', error);
-                showNotification('Network error unblocking date', 'error');
-            }
-        }
 
-        function previousMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
 
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-        }
 
-        // Calendar Drag and Drop functionality
-        function setupCalendarDragAndDrop() {
-            const bookedDays = document.querySelectorAll('.calendar-grid .day.booked');
-            
-            bookedDays.forEach(day => {
-                day.draggable = true;
-                day.addEventListener('dragstart', handleCalendarDragStart);
-                day.addEventListener('dragend', handleCalendarDragEnd);
-            });
-        }
 
-        function handleCalendarDragStart(e) {
-            e.target.classList.add('dragging');
-            const dateString = e.target.dataset.date;
-            e.dataTransfer.setData('text/plain', dateString);
-            e.dataTransfer.effectAllowed = 'move';
-        }
 
-        function handleCalendarDragEnd(e) {
-            e.target.classList.remove('dragging');
-            document.querySelectorAll('.day.drag-over').forEach(day => {
-                day.classList.remove('drag-over');
-            });
-        }
 
-        function handleCalendarDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
 
-        function handleCalendarDragEnter(e) {
-            e.preventDefault();
-            const day = e.target.closest('.day');
-            if (day && !day.classList.contains('booked') && !day.classList.contains('blocked')) {
-                day.classList.add('drag-over');
-            }
-        }
 
-        function handleCalendarDragLeave(e) {
-            const day = e.target.closest('.day');
-            if (day) {
-                day.classList.remove('drag-over');
-            }
-        }
 
-        async function handleCalendarDrop(e) {
-            e.preventDefault();
-            const day = e.target.closest('.day');
-            if (!day) return;
 
-            const sourceDate = e.dataTransfer.getData('text/plain');
-            const targetDate = day.dataset.date;
 
-            if (!sourceDate || !targetDate || sourceDate === targetDate) return;
 
-            // Check if the target date is available
-            if (day.classList.contains('booked') || day.classList.contains('blocked')) {
-                showNotification('Cannot move booking to unavailable date', 'error');
-                return;
-            }
 
-            // Get bookings for the source date
-            const sourceBookings = allBookings.filter(booking => 
-                booking.date === sourceDate && 
-                (booking.status === 'confirmed' || booking.status === 'pending' || 
-                 booking.status === 'quote-ready' || 
-                 booking.status === 'pending-booking')
-            );
 
-            if (sourceBookings.length === 0) {
-                showNotification('No bookings found for source date', 'error');
-                return;
-            }
 
-            // Move all bookings from source to target date
-            try {
-                for (const booking of sourceBookings) {
-                    const response = await fetch(`/api/bookings/${booking.booking_id}/move`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ newDate: targetDate })
-                    });
 
-                    if (!response.ok) {
-                        const error = await response.json();
-                        showNotification(error.message || 'Failed to move booking', 'error');
-                        return;
-                    }
-                }
 
-                showNotification(`Moved ${sourceBookings.length} booking(s) successfully`, 'success');
-                loadBookings(); // Reload to update the display
-            } catch (error) {
-                console.error('Error moving bookings:', error);
-                showNotification('Network error moving bookings', 'error');
-            }
 
-            day.classList.remove('drag-over');
-        }
+
+
+
+
 
         function handleDragStart(e) {
             e.target.classList.add('dragging');
@@ -2909,7 +2165,8 @@
                 const response = await fetch(`/api/bookings/${bookingId}/move`, {
                     method: 'PATCH',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     },
                     body: JSON.stringify({ newDate: newDate })
                 });
@@ -2938,7 +2195,8 @@
                 const response = await fetch(`/api/bookings/${bookingId}/notes`, {
                     method: 'PATCH',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     },
                     body: JSON.stringify({ notes: notes })
                 });
@@ -3317,7 +2575,7 @@
         // Handle window resize for calendar layout
         window.addEventListener('resize', function() {
             if (currentFilter === 'calendar') {
-                renderCalendar();
+                window.adminCalendar.renderCalendar();
             }
         });
 
@@ -3452,8 +2710,6 @@
 
         // Show Quote Modal with Retry
         async function showQuoteModalWithRetry(booking) {
-            console.log('🔄 showQuoteModalWithRetry called with booking:', booking);
-            
             // Add loading state to the quote button
             const quoteButton = event?.target?.closest('.action-btn.quote');
             if (quoteButton) {
@@ -3467,7 +2723,6 @@
             async function attemptShowModal() {
                 try {
                     await showQuoteModal(booking);
-                    console.log('✅ Quote modal opened successfully on attempt', retryCount + 1);
                     
                     // Remove loading state
                     if (quoteButton) {
@@ -3477,13 +2732,12 @@
                     
                 } catch (error) {
                     retryCount++;
-                    console.warn(`⚠️ Attempt ${retryCount} failed:`, error);
+                    console.warn(`Attempt ${retryCount} failed:`, error);
                     
                     if (retryCount < maxRetries) {
-                        console.log(`🔄 Retrying in 200ms (attempt ${retryCount}/${maxRetries})...`);
                         setTimeout(attemptShowModal, 200);
                     } else {
-                        console.error(`❌ All ${maxRetries} attempts failed, using fallback`);
+                        console.error(`All ${maxRetries} attempts failed, using fallback`);
                         showNotification('Quote modal failed to open, using fallback', 'warning');
                         
                         // Remove loading state
@@ -3509,16 +2763,13 @@
 
         // Show Quote Modal
         async function showQuoteModal(booking) {
-            console.log('🔍 showQuoteModal called with booking:', booking);
-            
             try {
                 // If booking is passed as a string (from onclick), parse it
                 if (typeof booking === 'string') {
                     try {
                         booking = JSON.parse(booking);
-                        console.log('✅ Parsed booking string successfully');
                     } catch (e) {
-                        console.error('❌ Error parsing booking data:', e);
+                        console.error('Error parsing booking data:', e);
                         showNotification('Error loading booking data', 'error');
                         return;
                     }
@@ -3526,30 +2777,26 @@
 
                 // Validate booking object
                 if (!booking || !booking.booking_id) {
-                    console.error('❌ Invalid booking object:', booking);
+                    console.error('Invalid booking object:', booking);
                     showNotification('Invalid booking data', 'error');
                     return;
                 }
-
-                console.log('✅ Validated booking object:', booking.booking_id);
 
                 // Ensure modal elements are available
                 const quoteModal = document.getElementById('quoteModal');
                 const serviceContainer = document.querySelector('.service-items-container');
                 
                 if (!quoteModal) {
-                    console.error('❌ Quote modal not found in DOM');
+                    console.error('Quote modal not found in DOM');
                     showNotification('Quote modal not found', 'error');
                     return;
                 }
                 
                 if (!serviceContainer) {
-                    console.error('❌ Service items container not found in DOM');
+                    console.error('Service items container not found in DOM');
                     showNotification('Service items container not found', 'error');
                     return;
                 }
-
-                console.log('✅ All required DOM elements found');
 
                 // Clear cached data only if switching to a different booking
                 if (currentQuoteData && currentQuoteData.bookingId !== booking.booking_id) {
@@ -3568,30 +2815,26 @@
                     notes: booking.notes
                 };
 
-                console.log('✅ Current quote data set:', currentQuoteData);
-
                 // Check if there's an existing quote for this booking
                 try {
-                    console.log('🔍 Checking for existing quotes...');
-                    const quoteResponse = await fetch(`/api/quotes/booking/${booking.booking_id}`);
+                    const quoteResponse = await fetch(`/api/quotes/booking/${booking.booking_id}`, {
+                        headers: getAuthHeaders()
+                    });
                     if (quoteResponse.ok) {
                         const quotes = await quoteResponse.json();
                         if (quotes.length > 0) {
-                            console.log('✅ Found existing quote, loading...');
                             // Use the most recent quote
                             const existingQuote = quotes[0];
                             loadExistingQuote(existingQuote);
                             return;
                         }
                     }
-                    console.log('ℹ️ No existing quotes found, creating new one...');
                 } catch (error) {
-                    console.error('⚠️ Error checking for existing quotes:', error);
+                    console.error('Error checking for existing quotes:', error);
                     // Continue with creating new quote even if check fails
                 }
 
                 // No existing quote found, create new one
-                console.log('🚀 Loading new quote...');
                 loadNewQuote(booking);
                 
             } catch (error) {
@@ -3602,15 +2845,12 @@
 
         // Load existing quote data
         function loadExistingQuote(quote) {
-            console.log('🔍 loadExistingQuote called with quote:', quote);
-            
             try {
                 // Reset item counter when opening quote modal
                 itemCounter = 0;
                 
                 // Store the quote ID for updates
                 currentQuoteData.quoteId = quote.quote_id;
-                console.log('✅ Quote ID stored:', quote.quote_id);
 
                 // Pre-fill client information from saved quote
                 const nameField = document.getElementById('quoteClientName');
@@ -3625,25 +2865,19 @@
                 if (emailField) emailField.value = quote.client_email || '';
                 if (dateField) dateField.value = quote.quote_date || new Date().toISOString().split('T')[0];
 
-                console.log('✅ Client information fields populated from existing quote');
-
                 // Load service items from saved quote
                 // Handle both string and object formats
                 let serviceItems;
-                console.log('Quote service_items type:', typeof quote.service_items);
-                console.log('Quote service_items value:', quote.service_items);
                 
                 if (typeof quote.service_items === 'string') {
                     try {
                         serviceItems = JSON.parse(quote.service_items);
-                        console.log('✅ Parsed service items:', serviceItems);
                     } catch (e) {
-                        console.error('❌ Error parsing service items:', e);
+                        console.error('Error parsing service items:', e);
                         serviceItems = [];
                     }
                 } else {
                     serviceItems = quote.service_items || [];
-                    console.log('✅ Service items (not string):', serviceItems);
                 }
                 
                 loadServiceItems(serviceItems);
@@ -3661,19 +2895,21 @@
                 document.querySelectorAll('.service-item').forEach(setupItemEventListeners);
 
                 // Show modal
-                console.log('🚀 Opening quote modal (existing quote), itemCounter:', itemCounter);
                 openModal('quoteModal');
                 
+                // Load photos for service items if this is an existing quote
+                if (currentQuoteData && currentQuoteData.quoteId) {
+                    setTimeout(() => loadQuotePhotos(), 100);
+                }
+                
             } catch (error) {
-                console.error('❌ Error in loadExistingQuote:', error);
+                console.error('Error in loadExistingQuote:', error);
                 showNotification('Error loading existing quote', 'error');
             }
         }
 
         // Load new quote (no existing data)
         function loadNewQuote(booking) {
-            console.log('🔍 loadNewQuote called with booking:', booking);
-            
             try {
                 // Clear any previous form data and totals first
                 clearFormFields();
@@ -3694,8 +2930,6 @@
                     notes: booking.notes
                 };
                 
-                console.log('✅ Current quote data updated:', currentQuoteData);
-                
                 // Pre-fill client information from booking
                 const nameField = document.getElementById('quoteClientName');
                 const phoneField = document.getElementById('quoteClientPhone');
@@ -3709,8 +2943,6 @@
                 if (emailField) emailField.value = booking.email || '';
                 if (dateField) dateField.value = new Date().toISOString().split('T')[0];
 
-                console.log('✅ Client information fields populated');
-
                 // Create initial service item with booking service
                 const initialServiceItem = {
                     description: booking.service || 'Tree Service',
@@ -3718,8 +2950,6 @@
                     price: 0,
                     total: 0
                 };
-
-                console.log('✅ Initial service item created:', initialServiceItem);
 
                 // Load service items (this will clear container and recreate)
                 loadServiceItems([initialServiceItem]);
@@ -3734,11 +2964,15 @@
                 updateQuoteTotals();
 
                 // Show modal
-                console.log('🚀 Opening quote modal (new quote), itemCounter:', itemCounter);
                 openModal('quoteModal');
                 
+                // Load photos for service items if this is an existing quote
+                if (currentQuoteData && currentQuoteData.quoteId) {
+                    setTimeout(() => loadQuotePhotos(), 100);
+                }
+                
             } catch (error) {
-                console.error('❌ Error in loadNewQuote:', error);
+                console.error('Error in loadNewQuote:', error);
                 showNotification('Error loading new quote', 'error');
             }
         }
@@ -3803,6 +3037,18 @@
                             </div>
                         </div>
                     </div>
+                    <div class="item-photos-section">
+                        <div class="photos-header">
+                            <span class="photos-label">Photos:</span>
+                            <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                                <i class="fas fa-camera"></i> Add Photo
+                            </button>
+                        </div>
+                        <div class="photos-container">
+                            <!-- Photos will be displayed here -->
+                        </div>
+                        <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+                    </div>
                 `;
 
                 container.appendChild(newItem);
@@ -3857,6 +3103,18 @@
                         </div>
                     </div>
                 </div>
+                <div class="item-photos-section">
+                    <div class="photos-header">
+                        <span class="photos-label">Photos:</span>
+                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                            <i class="fas fa-camera"></i> Add Photo
+                        </button>
+                    </div>
+                    <div class="photos-container">
+                        <!-- Photos will be displayed here -->
+                    </div>
+                    <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+                </div>
             `;
 
             container.appendChild(newItem);
@@ -3904,9 +3162,6 @@
         function updateQuoteTotals() {
             let subtotal = 0;
             const items = document.querySelectorAll('.service-item');
-            
-            console.log('🔄 updateQuoteTotals called');
-            console.log('Found service items in DOM:', items.length);
 
             items.forEach((item, index) => {
                 const qtyInput = item.querySelector('.item-qty-input');
@@ -3917,15 +3172,6 @@
                 const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
                 const itemTotal = qty * price;
                 
-                console.log(`📦 Service Item ${index + 1}:`, {
-                    description: item.querySelector('.item-desc-input')?.value || 'No description',
-                    quantity: qty,
-                    price: price,
-                    itemTotal: itemTotal,
-                    qtyInputValue: qtyInput.value,
-                    priceInputValue: priceInput.value
-                });
-                
                 subtotal += itemTotal;
             });
 
@@ -3933,14 +3179,6 @@
             const taxRate = 0.05; // 5%
             const tax = taxToggle.checked ? subtotal * taxRate : 0;
             const total = subtotal + tax;
-
-            console.log('🧮 Quote Totals Calculation:', {
-                subtotal: subtotal,
-                tax: tax,
-                total: total,
-                taxEnabled: taxToggle.checked,
-                taxRate: taxRate
-            });
 
             // Format numbers with proper decimal places
             document.getElementById('subtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
@@ -3950,13 +3188,329 @@
             // Show/hide tax row
             const taxRow = document.getElementById('taxRow');
             taxRow.style.display = taxToggle.checked ? 'flex' : 'none';
-            
-            console.log('✅ Quote totals updated successfully');
         }
 
         // Toggle Tax
         function toggleTax() {
             updateQuoteTotals();
+        }
+
+        // Service Item Photo Management Functions
+        
+        // Add photo button click handler
+        function addPhotoToServiceItem(button) {
+            const serviceItem = button.closest('.service-item');
+            const fileInput = serviceItem.querySelector('.photo-upload-input');
+            fileInput.click();
+        }
+
+        // Handle photo upload - Store files temporarily, don't upload to server yet
+        function handlePhotoUpload(fileInput) {
+            const serviceItem = fileInput.closest('.service-item');
+            const files = fileInput.files;
+            
+            if (!files || files.length === 0) return;
+            
+            // Store files temporarily in the service item
+            const tempPhotos = Array.from(files).map(file => ({
+                file: file,
+                preview: URL.createObjectURL(file),
+                name: file.name
+            }));
+            
+            // Store temp photos in the service item data
+            if (!serviceItem.tempPhotos) {
+                serviceItem.tempPhotos = [];
+            }
+            serviceItem.tempPhotos.push(...tempPhotos);
+            
+            // Display temp photos
+            displayTempPhotos(serviceItem);
+            
+            // Clear the file input
+            fileInput.value = '';
+            
+            showNotification(`${tempPhotos.length} photos added (will be saved with quote)`, 'info');
+        }
+
+        // Display temporary photos (not yet uploaded) - preserves existing saved photos
+        function displayTempPhotos(serviceItem) {
+            const photosContainer = serviceItem.querySelector('.photos-container');
+            
+            // Don't clear the container - preserve existing saved photos
+            // Just add the new temp photos at the end
+            
+            if (!serviceItem.tempPhotos || serviceItem.tempPhotos.length === 0) {
+                // If no temp photos, don't change anything
+                return;
+            }
+
+            // Add temp photos to the existing container
+            serviceItem.tempPhotos.forEach((tempPhoto, index) => {
+                const photoElement = document.createElement('div');
+                photoElement.className = 'photo-item temp-photo';
+                photoElement.innerHTML = `
+                    <img src="${tempPhoto.preview}" alt="Service item photo" onclick="showPhotoModal('${tempPhoto.preview}')">
+                    <button type="button" class="delete-photo-btn" onclick="removeTempPhoto(${index}, this)">
+                        🗑️
+                    </button>
+                    <div class="temp-photo-label">Pending</div>
+                `;
+                photosContainer.appendChild(photoElement);
+            });
+        }
+
+        // Remove temporary photo
+        function removeTempPhoto(index, button) {
+            const serviceItem = button.closest('.service-item');
+            const photoElement = button.closest('.photo-item');
+            
+            // Revoke object URL to free memory
+            const img = photoElement.querySelector('img');
+            if (img && img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+            
+            // Remove from temp photos array
+            serviceItem.tempPhotos.splice(index, 1);
+            
+            // Remove just this temp photo element from DOM
+            photoElement.remove();
+            
+            // If no temp photos left and no saved photos, show "no photos" message
+            const photosContainer = serviceItem.querySelector('.photos-container');
+            const tempPhotos = photosContainer.querySelectorAll('.temp-photo');
+            const savedPhotos = photosContainer.querySelectorAll('.photo-item:not(.temp-photo)');
+            
+            if (tempPhotos.length === 0 && savedPhotos.length === 0) {
+                photosContainer.innerHTML = '<span class="no-photos">No photos added yet</span>';
+            }
+        }
+
+        // Load photos for a service item
+        async function loadServiceItemPhotos(serviceItem, quoteId, itemId) {
+            try {
+                const response = await fetch(`/api/service-item-photos/${quoteId}/${itemId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayServiceItemPhotos(serviceItem, result.photos, quoteId, itemId);
+                }
+            } catch (error) {
+                console.error('Error loading photos:', error);
+            }
+        }
+
+        // Display photos for a service item - preserves existing temp photos
+        function displayServiceItemPhotos(serviceItem, photos, quoteId, itemId) {
+            const photosContainer = serviceItem.querySelector('.photos-container');
+            
+            // Store any existing temp photos
+            const existingTempPhotos = photosContainer.querySelectorAll('.temp-photo');
+            const tempPhotosHTML = Array.from(existingTempPhotos).map(el => el.outerHTML);
+            
+            // Clear container and reload saved photos
+            photosContainer.innerHTML = '';
+
+            if (photos.length === 0 && tempPhotosHTML.length === 0) {
+                photosContainer.innerHTML = '<span class="no-photos">No photos added yet</span>';
+                return;
+            }
+
+            // Display saved photos first
+            photos.forEach((photoPath, index) => {
+                const photoElement = document.createElement('div');
+                photoElement.className = 'photo-item';
+                photoElement.innerHTML = `
+                    <img src="${photoPath}" alt="Service item photo" onclick="showPhotoModal('${photoPath}')">
+                    <button type="button" class="delete-photo-btn" onclick="deleteServiceItemPhoto('${quoteId}', '${itemId}', '${photoPath.split('/').pop()}', this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                photosContainer.appendChild(photoElement);
+            });
+            
+            // Restore temp photos after saved photos
+            tempPhotosHTML.forEach(html => {
+                photosContainer.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Delete a photo from a service item
+        async function deleteServiceItemPhoto(quoteId, itemId, imageId, button) {
+            try {
+                console.log(`Deleting photo: quoteId=${quoteId}, itemId=${itemId}, imageId=${imageId}`);
+                
+                const response = await fetch(`/api/service-item-photos/${quoteId}/${itemId}/${imageId}`, {
+                    method: 'DELETE'
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response result:', result);
+                
+                // Check if response is ok and has success property
+                if (response.ok && result.success) {
+                    showNotification('Photo deleted successfully!', 'success');
+                    // Remove the photo element from DOM
+                    button.closest('.photo-item').remove();
+                    
+                    // If no photos left (saved or temp), show "no photos" message
+                    const photosContainer = button.closest('.photos-container');
+                    const remainingPhotos = photosContainer.querySelectorAll('.photo-item');
+                    if (remainingPhotos.length === 0) {
+                        photosContainer.innerHTML = '<span class="no-photos">No photos added yet</span>';
+                    }
+                } else if (response.ok && !result.success) {
+                    // Server returned success but result.success is false
+                    showNotification('Failed to delete photo: ' + (result.error || 'Unknown error'), 'error');
+                } else {
+                    // HTTP error status
+                    showNotification('Failed to delete photo: HTTP ' + response.status, 'error');
+                }
+            } catch (error) {
+                // console.error('Error deleting photo:', error);
+                // showNotification('Error deleting photo. Please try again.', 'error');
+            }
+        }
+
+        // Load photos when quote modal is opened
+        async function loadQuotePhotos() {
+            if (!currentQuoteData || !currentQuoteData.quoteId) return;
+            
+            const serviceItems = document.querySelectorAll('.service-item');
+            serviceItems.forEach(async (item) => {
+                const itemId = item.getAttribute('data-item-id');
+                await loadServiceItemPhotos(item, currentQuoteData.quoteId, itemId);
+            });
+        }
+
+        // Load photos when invoice modal is opened
+        async function loadInvoicePhotos(quoteId) {
+            if (!quoteId) return;
+            
+            const serviceItems = document.querySelectorAll('#invoiceServiceItems .service-item');
+            serviceItems.forEach(async (item) => {
+                const itemId = item.getAttribute('data-item-id');
+                await loadServiceItemPhotos(item, quoteId, itemId);
+            });
+        }
+
+        // Upload temporary photos to server
+        async function uploadTemporaryPhotos() {
+            if (!currentQuoteData || !currentQuoteData.quoteId) {
+                console.log('No quote ID, skipping photo upload');
+                return;
+            }
+
+            const serviceItems = document.querySelectorAll('.service-item');
+            let hasPhotos = false;
+
+            for (const serviceItem of serviceItems) {
+                if (serviceItem.tempPhotos && serviceItem.tempPhotos.length > 0) {
+                    hasPhotos = true;
+                    const itemId = serviceItem.getAttribute('data-item-id');
+                    const itemIndex = Array.from(serviceItem.parentNode.children).indexOf(serviceItem);
+                    
+                    // Create FormData for upload
+                    const formData = new FormData();
+                    serviceItem.tempPhotos.forEach(tempPhoto => {
+                        formData.append('photos', tempPhoto.file);
+                    });
+                    formData.append('itemIndex', itemIndex);
+
+                    try {
+                        console.log(`Uploading ${serviceItem.tempPhotos.length} photos for item ${itemId}`);
+                        
+                        const response = await fetch(`/api/service-item-photos/${currentQuoteData.quoteId}/${itemId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            console.log(`✅ Photos uploaded successfully for item ${itemId}`);
+                            // Clear temp photos after successful upload
+                            serviceItem.tempPhotos = [];
+                            // Load the actual photos from server
+                            await loadServiceItemPhotos(serviceItem, currentQuoteData.quoteId, itemId);
+                        } else {
+                            throw new Error(result.error || 'Failed to upload photos');
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error uploading photos for item ${itemId}:`, error);
+                        throw error;
+                    }
+                }
+            }
+
+            if (hasPhotos) {
+                showNotification('Photos uploaded successfully!', 'success');
+            }
+        }
+
+        // Upload temporary photos for invoice
+        async function uploadInvoiceTemporaryPhotos() {
+            if (!currentInvoiceData || !currentInvoiceData.quoteId) {
+                console.log('No quote ID for invoice, skipping photo upload');
+                return;
+            }
+
+            const serviceItems = document.querySelectorAll('#invoiceServiceItems .service-item');
+            let hasPhotos = false;
+
+            for (const serviceItem of serviceItems) {
+                if (serviceItem.tempPhotos && serviceItem.tempPhotos.length > 0) {
+                    hasPhotos = true;
+                    const itemId = serviceItem.getAttribute('data-item-id');
+                    const itemIndex = Array.from(serviceItem.parentNode.children).indexOf(serviceItem);
+                    
+                    // Create FormData for upload
+                    const formData = new FormData();
+                    serviceItem.tempPhotos.forEach(tempPhoto => {
+                        formData.append('photos', tempPhoto.file);
+                    });
+                    formData.append('itemIndex', itemIndex);
+
+                    try {
+                        console.log(`Uploading ${serviceItem.tempPhotos.length} photos for invoice item ${itemId}`);
+                        
+                        const response = await fetch(`/api/service-item-photos/${currentInvoiceData.quoteId}/${itemId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            console.log(`✅ Photos uploaded successfully for invoice item ${itemId}`);
+                            // Clear temp photos after successful upload
+                            serviceItem.tempPhotos = [];
+                            // Load the actual photos from server
+                            await loadServiceItemPhotos(serviceItem, currentInvoiceData.quoteId, itemId);
+                        } else {
+                            throw new Error(result.error || 'Failed to upload photos');
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error uploading photos for invoice item ${itemId}:`, error);
+                        throw error;
+                    }
+                }
+            }
+
+            if (hasPhotos) {
+                showNotification('Invoice photos uploaded successfully!', 'success');
+            }
+        }
+
+        // Show photo in modal
+        function showPhotoModal(photoPath) {
+            const modalPhoto = document.getElementById('modalPhoto');
+            if (modalPhoto) {
+                modalPhoto.src = photoPath;
+                openModal('photoModal');
+            }
         }
 
         // Setup initial event listeners
@@ -3971,7 +3525,7 @@
         });
 
         // Save Quote to Database
-        function generateQuote() {
+        async function generateQuote() {
             // Validate form
             const requiredFields = ['quoteClientName', 'quoteClientPhone', 'quoteClientAddress', 'quoteClientEmail', 'quoteDate'];
             for (const fieldId of requiredFields) {
@@ -3990,10 +3544,11 @@
                 return;
             }
 
+            // Photos will be uploaded after the quote is saved and we have a quote ID
+
             // Collect service items
             const serviceItems = [];
             const serviceItemElements = document.querySelectorAll('.service-item');
-            console.log('Found service item elements:', serviceItemElements.length);
             
             serviceItemElements.forEach((item, index) => {
                 const description = item.querySelector('.item-desc-input').value.trim();
@@ -4003,8 +3558,6 @@
                 const quantity = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
                 const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
                 const total = quantity * price;
-
-                console.log(`Service item ${index + 1}:`, { description, quantity, price, total });
 
                 // Save all items with a description, even if price is 0
                 if (description && quantity > 0) {
@@ -4082,6 +3635,14 @@
                         currentQuoteData = { bookingId: quoteData.booking_id };
                     }
                     currentQuoteData.quoteId = result.quote_id || currentQuoteData.quoteId;
+                    
+                    // Now upload any temporary photos since we have a quote ID
+                    try {
+                        await uploadTemporaryPhotos();
+                    } catch (error) {
+                        console.error('Error uploading photos after quote save:', error);
+                        showNotification('Quote saved but photos failed to upload. Please try uploading photos again.', 'warning');
+                    }
                     
                     // Generate quote preview
                     generateQuotePreview(serviceItems, result.quote_id);
@@ -4237,6 +3798,16 @@ stellartmanagement@outlook.com</span>
             `;
 
             document.getElementById('quotePreviewContent').innerHTML = quoteHTML;
+            
+            // Update the Send Quote button with the correct booking ID
+            const sendQuoteBtn = document.querySelector('#quotePreviewModal .action-btn.confirm');
+            if (sendQuoteBtn && currentQuoteData && currentQuoteData.bookingId) {
+                sendQuoteBtn.onclick = () => {
+                    sendQuoteToCustomer(currentQuoteData.bookingId);
+                    closeModal('quotePreviewModal');
+                };
+            }
+            
             closeModal('quoteModal');
             openModal('quotePreviewModal');
         }
@@ -4503,10 +4074,10 @@ stellartmanagement@outlook.com</span>
             printQuote();
         }
 
-        // Send Quote Email
+        // Send Quote
         async function sendQuoteEmail(event) {
             if (!currentQuoteData || !currentQuoteData.quoteId) {
-                showNotification('No quote data available to send email', 'error');
+                showNotification('No quote data available to send', 'error');
                 return;
             }
 
@@ -4516,7 +4087,6 @@ stellartmanagement@outlook.com</span>
                 if (!sendButton || !sendButton.tagName || sendButton.tagName !== 'BUTTON') {
                     // Fallback: find the button by its onclick attribute
                     sendButton = document.querySelector('button[onclick*="sendQuoteEmail"]');
-                    console.log('Fallback button selection:', sendButton);
                 }
                 
                 if (!sendButton) {
@@ -4533,7 +4103,8 @@ stellartmanagement@outlook.com</span>
                 const response = await fetch(`/api/quotes/${currentQuoteData.quoteId}/email`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     }
                 });
 
@@ -4541,31 +4112,35 @@ stellartmanagement@outlook.com</span>
                     const result = await response.json();
                     
                     // Show success message
-                    showNotification('Quote email sent successfully!', 'success');
+                    showNotification('Quote sent successfully! Status updated to Quote Sent.', 'success');
+                    
+                    // Update the booking status to 'quote-sent' if we have a booking ID
+                    if (currentQuoteData.bookingId) {
+                        try {
+                            await updateBookingStatus(currentQuoteData.bookingId, 'quote-sent');
+                        } catch (statusError) {
+                            console.warn('Could not update booking status:', statusError);
+                            // Don't fail the whole operation if status update fails
+                        }
+                    }
                     
                     // Close the quote modal after a short delay to ensure notification is visible
-                    console.log('Attempting to close quote modal after successful email send');
                     setTimeout(() => {
                         forceCloseModal('quoteModal');
                     }, 500);
                     
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || 'Failed to send quote email', 'error');
+                    showNotification(error.error || 'Failed to send quote', 'error');
                 }
             } catch (error) {
-                console.error('Error sending quote email:', error);
-                showNotification('Network error sending quote email', 'error');
+                console.error('Error sending quote:', error);
+                showNotification('Network error sending quote', 'error');
             } finally {
                 // Restore button state
-                console.log('Restoring button state, sendButton:', sendButton);
                 if (sendButton) {
-                    console.log('Restoring button to:', originalText);
                     sendButton.innerHTML = originalText;
                     sendButton.disabled = false;
-                    console.log('Button state restored');
-                } else {
-                    console.error('No sendButton found in finally block');
                 }
             }
         }
@@ -4676,6 +4251,102 @@ stellartmanagement@outlook.com</span>
             try {
                 console.log('showInvoiceModalFromBooking called with bookingId:', bookingId);
                 
+                // First, check if there's an existing invoice for this booking
+                const invoiceResponse = await fetch(`/api/invoices/booking/${bookingId}`);
+                console.log('Invoice response status:', invoiceResponse.status);
+                
+                let existingInvoice = null;
+                if (invoiceResponse.ok) {
+                    const invoices = await invoiceResponse.json();
+                    console.log('Invoices received:', invoices);
+                    
+                    if (invoices && invoices.length > 0) {
+                        // Use the most recent invoice
+                        existingInvoice = invoices[0];
+                        console.log('Found existing invoice:', existingInvoice);
+                    }
+                }
+                
+                if (existingInvoice) {
+                    // Load existing invoice data
+                    console.log('Loading existing invoice data');
+                    await loadExistingInvoiceData(existingInvoice, bookingId);
+                } else {
+                    // No existing invoice, create from quote
+                    console.log('No existing invoice, creating from quote');
+                    await createInvoiceFromQuote(bookingId);
+                }
+                
+            } catch (error) {
+                console.error('Error fetching data for invoice modal:', error);
+                showNotification('Failed to load invoice data. Please try again.', 'error');
+            }
+        }
+
+        // Load existing invoice data into the modal
+        async function loadExistingInvoiceData(invoice, bookingId) {
+            try {
+                // Fetch the booking data
+                const bookingResponse = await fetch(`/api/bookings/${bookingId}`);
+                if (!bookingResponse.ok) {
+                    throw new Error('Failed to fetch booking data');
+                }
+                
+                const booking = await bookingResponse.json();
+                console.log('Booking received:', booking);
+                
+                // Set current invoice data
+                currentInvoiceData = {
+                    invoiceId: invoice.invoice_id,
+                    quoteId: invoice.quote_id,
+                    bookingId: bookingId,
+                    service: booking.service,
+                    date: booking.date,
+                    time: booking.time,
+                    name: booking.name,
+                    email: booking.email,
+                    phone: booking.phone,
+                    address: booking.address,
+                    notes: booking.notes
+                };
+                
+                console.log('currentInvoiceData set to:', currentInvoiceData);
+                
+                // Pre-fill client information from existing invoice
+                document.getElementById('invoiceClientName').value = invoice.client_name || booking.name || '';
+                document.getElementById('invoiceClientPhone').value = invoice.client_phone || booking.phone || '';
+                document.getElementById('invoiceClientAddress').value = invoice.client_address || booking.address || '';
+                document.getElementById('invoiceClientEmail').value = invoice.client_email || booking.email || '';
+                document.getElementById('invoiceDate').value = invoice.invoice_date || new Date().toISOString().split('T')[0];
+                
+                // Populate service items from existing invoice
+                populateInvoiceServiceItems(invoice.service_items);
+                
+                // Set tax toggle to match the existing invoice
+                document.getElementById('invoiceTaxToggle').checked = invoice.tax_enabled || false;
+                
+                // Update totals based on current service items
+                updateInvoiceTotals();
+                
+                // Show modal
+                console.log('About to call openModal with invoiceModal');
+                openModal('invoiceModal');
+                console.log('openModal called');
+                
+                // Load photos for service items if this is an existing invoice
+                if (invoice && invoice.invoice_id) {
+                    setTimeout(() => loadInvoicePhotos(invoice.quote_id), 100);
+                }
+                
+            } catch (error) {
+                console.error('Error loading existing invoice data:', error);
+                showNotification('Failed to load existing invoice data. Please try again.', 'error');
+            }
+        }
+
+        // Create invoice from quote data
+        async function createInvoiceFromQuote(bookingId) {
+            try {
                 // Fetch the latest quote for this booking
                 const response = await fetch(`/api/quotes/booking/${bookingId}`);
                 console.log('Quote response status:', response.status);
@@ -4711,8 +4382,8 @@ stellartmanagement@outlook.com</span>
                 showInvoiceModal(quote, booking);
                 
             } catch (error) {
-                console.error('Error fetching data for invoice modal:', error);
-                showNotification('Failed to load invoice data. Please try again.', 'error');
+                console.error('Error creating invoice from quote:', error);
+                showNotification('Failed to create invoice from quote. Please try again.', 'error');
             }
         }
 
@@ -4769,7 +4440,8 @@ stellartmanagement@outlook.com</span>
                 const createResponse = await fetch('/api/invoices', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     },
                     body: JSON.stringify(invoiceData)
                 });
@@ -4788,7 +4460,8 @@ stellartmanagement@outlook.com</span>
                 const emailResponse = await fetch(`/api/invoices/${invoiceId}/email`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     }
                 });
                 
@@ -4865,71 +4538,21 @@ stellartmanagement@outlook.com</span>
             // Set tax toggle to match the original quote
             document.getElementById('invoiceTaxToggle').checked = quote.tax_enabled || false;
 
-            // Update totals to match the original quote exactly
-            updateInvoiceTotalsFromQuote(quote);
+            // Update totals based on current service items
+            updateInvoiceTotals();
 
             // Show modal
             console.log('About to call openModal with invoiceModal');
             openModal('invoiceModal');
             console.log('openModal called');
-        }
-
-        // Update Invoice Totals to match the original quote exactly
-        function updateInvoiceTotalsFromQuote(quote) {
-            // Use the original quote totals to ensure consistency
-            const subtotal = quote.subtotal || 0;
-            const tax = quote.tax_amount || 0;
-            const total = quote.total_amount || 0;
-
-            console.log('Setting invoice totals to match quote:', { subtotal, tax, total });
-
-            document.getElementById('invoiceSubtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
-            document.getElementById('invoiceTaxAmount').textContent = `$${tax.toFixed(2)}`;
-            document.getElementById('invoiceGrandTotalAmount').textContent = `$${total.toFixed(2)}`;
-
-            // Show/hide tax row based on original quote
-            const taxRow = document.getElementById('invoiceTaxRow');
-            taxRow.style.display = quote.tax_enabled ? 'flex' : 'none';
-
-            // Verify that the service items add up to the expected subtotal
-            verifyInvoiceTotals(quote);
-        }
-
-        // Verify that the invoice totals match the quote totals
-        function verifyInvoiceTotals(quote) {
-            const serviceItems = document.querySelectorAll('#invoiceServiceItems .service-item');
-            let calculatedSubtotal = 0;
-
-            serviceItems.forEach(item => {
-                const qty = parseFloat(item.querySelector('.item-qty-input').value) || 0;
-                const price = parseFloat(item.querySelector('.item-price-input').value) || 0;
-                calculatedSubtotal += qty * price;
-            });
-
-            const expectedSubtotal = quote.subtotal || 0;
-            const difference = Math.abs(calculatedSubtotal - expectedSubtotal);
-
-            console.log('Invoice totals verification:', {
-                calculatedSubtotal,
-                expectedSubtotal,
-                difference,
-                serviceItemsCount: serviceItems.length
-            });
-
-            // If there's a significant difference, show a warning
-            if (difference > 0.01) { // Allow for small floating point differences
-                console.warn('⚠️ WARNING: Invoice subtotal does not match quote subtotal!', {
-                    calculated: calculatedSubtotal,
-                    expected: expectedSubtotal,
-                    difference: difference
-                });
-                
-                // Show a notification to the user
-                showNotification(`Warning: Invoice subtotal ($${calculatedSubtotal.toFixed(2)}) does not match quote subtotal ($${expectedSubtotal.toFixed(2)}). Using quote totals to ensure consistency.`, 'warning');
-            } else {
-                console.log('✅ Invoice totals match quote totals perfectly!');
+            
+            // Load photos for service items if this is an existing quote
+            if (quote && quote.quote_id) {
+                setTimeout(() => loadInvoicePhotos(quote.quote_id), 100);
             }
         }
+
+
 
         // Populate Invoice Service Items
         function populateInvoiceServiceItems(serviceItems) {
@@ -4961,14 +4584,14 @@ stellartmanagement@outlook.com</span>
                 itemDiv.innerHTML = `
                     <div class="item-row">
                         <div class="item-description">
-                            <input type="text" class="item-desc-input" value="${item.description}" readonly>
+                            <input type="text" class="item-desc-input" value="${item.description}" placeholder="Service or item description">
                         </div>
                         <div class="item-controls">
                             <div class="item-quantity">
-                                <input type="number" class="item-qty-input" value="${item.quantity}" min="1" readonly>
+                                <input type="number" class="item-qty-input" value="${item.quantity}" min="1" placeholder="Qty">
                             </div>
                             <div class="item-price">
-                                <input type="number" class="item-price-input" value="${item.price}" min="0" step="0.01" readonly>
+                                <input type="number" class="item-price-input" value="${item.price}" min="0" step="0.01" placeholder="Price">
                             </div>
                         </div>
                         <div class="item-footer">
@@ -4976,17 +4599,121 @@ stellartmanagement@outlook.com</span>
                                 <span class="item-total-amount">$${item.total.toFixed(2)}</span>
                             </div>
                             <div class="item-actions">
-                                <!-- No remove button for invoices -->
+                                <button type="button" class="remove-item-btn" onclick="removeInvoiceServiceItem(this)" aria-label="Remove item">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
+                    </div>
+                    <div class="item-photos-section">
+                        <div class="photos-header">
+                            <span class="photos-label">Photos:</span>
+                            <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                                <i class="fas fa-camera"></i> Add Photo
+                            </button>
+                        </div>
+                        <div class="photos-container">
+                            <!-- Photos will be displayed here -->
+                        </div>
+                        <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
                     </div>
                 `;
 
                 container.appendChild(itemDiv);
+                setupInvoiceItemEventListeners(itemDiv);
             });
 
             // Log the final populated items for verification
             console.log('Final populated invoice service items count:', container.children.length);
+        }
+
+        // Add Invoice Service Item
+        function addInvoiceServiceItem() {
+            console.log('addInvoiceServiceItem called');
+            const container = document.getElementById('invoiceServiceItems');
+            const itemCounter = container.children.length + 1;
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'service-item';
+            newItem.setAttribute('data-item-id', itemCounter);
+
+            newItem.innerHTML = `
+                <div class="item-row">
+                    <div class="item-description">
+                        <input type="text" class="item-desc-input" placeholder="Service or item description">
+                    </div>
+                    <div class="item-controls">
+                        <div class="item-quantity">
+                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                        </div>
+                        <div class="item-price">
+                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                        </div>
+                    </div>
+                    <div class="item-footer">
+                        <div class="item-total">
+                            <span class="item-total-amount">$0.00</span>
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" class="remove-item-btn" onclick="removeInvoiceServiceItem(this)" aria-label="Remove item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="item-photos-section">
+                    <div class="photos-header">
+                        <span class="photos-label">Photos:</span>
+                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                            <i class="fas fa-camera"></i> Add Photo
+                        </button>
+                    </div>
+                    <div class="photos-container">
+                        <!-- Photos will be displayed here -->
+                    </div>
+                    <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+                </div>
+            `;
+
+            container.appendChild(newItem);
+            setupInvoiceItemEventListeners(newItem);
+        }
+
+        // Remove Invoice Service Item
+        function removeInvoiceServiceItem(button) {
+            const serviceItem = button.closest('.service-item');
+            if (document.querySelectorAll('#invoiceServiceItems .service-item').length > 1) {
+                serviceItem.remove();
+                updateInvoiceTotals();
+            } else {
+                showNotification('At least one service item is required', 'warning');
+            }
+        }
+
+        // Setup Event Listeners for Invoice Service Items
+        function setupInvoiceItemEventListeners(item) {
+            const qtyInput = item.querySelector('.item-qty-input');
+            const priceInput = item.querySelector('.item-price-input');
+
+            // Remove existing listeners to prevent duplicates
+            qtyInput.removeEventListener('input', updateInvoiceItemTotal);
+            priceInput.removeEventListener('input', updateInvoiceItemTotal);
+
+            qtyInput.addEventListener('input', updateInvoiceItemTotal);
+            priceInput.addEventListener('input', updateInvoiceItemTotal);
+
+            function updateInvoiceItemTotal() {
+                // Handle empty values properly
+                const qty = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
+                const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
+                const total = qty * price;
+                const totalSpan = item.querySelector('.item-total-amount');
+                totalSpan.textContent = `$${total.toFixed(2)}`;
+                updateInvoiceTotals();
+            }
+
+            // Initialize the total for this item
+            updateInvoiceItemTotal();
         }
 
         // Update Invoice Totals
@@ -5012,6 +4739,8 @@ stellartmanagement@outlook.com</span>
             // Show/hide tax row
             const taxRow = document.getElementById('invoiceTaxRow');
             taxRow.style.display = taxToggle.checked ? 'flex' : 'none';
+
+            console.log('Invoice totals updated:', { subtotal, tax, total });
         }
 
         // Toggle Invoice Tax
@@ -5020,7 +4749,7 @@ stellartmanagement@outlook.com</span>
         }
 
         // Create Invoice from Saved Quote
-        function generateInvoice() {
+        async function generateInvoice() {
             // Ensure we have current invoice context
             if (!currentInvoiceData || !currentInvoiceData.bookingId) {
                 showNotification('No booking selected. Please open the invoice from a saved quote.', 'error');
@@ -5037,6 +4766,15 @@ stellartmanagement@outlook.com</span>
                     field.focus();
                     return;
                 }
+            }
+
+            // Upload any temporary photos before saving the invoice
+            try {
+                await uploadInvoiceTemporaryPhotos();
+            } catch (error) {
+                console.error('Error uploading photos:', error);
+                showNotification('Error uploading photos. Please try again.', 'error');
+                return;
             }
 
             // Collect service items
@@ -5067,7 +4805,7 @@ stellartmanagement@outlook.com</span>
                 return;
             }
 
-            // Save invoice to database
+            // Save invoice to database with current totals
             saveInvoice(serviceItems);
         }
 
@@ -5080,24 +4818,12 @@ stellartmanagement@outlook.com</span>
             const invoiceDate = document.getElementById('invoiceDate').value;
             const taxEnabled = document.getElementById('invoiceTaxToggle').checked;
 
-            // Use the original quote totals to ensure consistency
-            let subtotal, tax, total;
+            // Calculate current totals from service items (allowing for modifications)
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
             
-            if (currentInvoiceData && currentInvoiceData.originalQuoteTotals) {
-                // Use the original quote totals exactly
-                subtotal = currentInvoiceData.originalQuoteTotals.subtotal || 0;
-                tax = currentInvoiceData.originalQuoteTotals.tax_amount || 0;
-                total = currentInvoiceData.originalQuoteTotals.total_amount || 0;
-                
-                console.log('Using original quote totals:', { subtotal, tax, total });
-            } else {
-                // Fallback to calculated totals if original not available
-                subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
-                tax = taxEnabled ? subtotal * 0.05 : 0;
-                total = subtotal + tax;
-                
-                console.log('Using calculated totals (fallback):', { subtotal, tax, total });
-            }
+            console.log('Using current calculated totals:', { subtotal, tax, total });
 
             // Guard against missing booking context
             if (!currentInvoiceData || !currentInvoiceData.bookingId) {
@@ -5124,23 +4850,49 @@ stellartmanagement@outlook.com</span>
             console.log('Saving invoice with data:', invoiceData);
 
             try {
-                const response = await fetch('/api/invoices', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(invoiceData)
-                });
+                let response;
+                let result;
+                
+                if (currentInvoiceData.invoiceId) {
+                    // Update existing invoice
+                    console.log('Updating existing invoice:', currentInvoiceData.invoiceId);
+                    response = await fetch(`/api/invoices/${currentInvoiceData.invoiceId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...getAuthHeaders()
+                        },
+                        body: JSON.stringify(invoiceData)
+                    });
+                    
+                    if (response.ok) {
+                        result = await response.json();
+                        showNotification('Invoice updated successfully!', 'success');
+                    }
+                } else {
+                    // Create new invoice
+                    console.log('Creating new invoice');
+                    response = await fetch('/api/invoices', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...getAuthHeaders()
+                        },
+                        body: JSON.stringify(invoiceData)
+                    });
+                    
+                    if (response.ok) {
+                        result = await response.json();
+                        showNotification('Invoice saved successfully!', 'success');
+                        
+                        // Store the invoice ID for later use
+                        currentInvoiceData.invoiceId = result.invoice_id;
+                    }
+                }
 
                 if (response.ok) {
-                    const result = await response.json();
-                    showNotification('Invoice saved successfully!', 'success');
-                    
-                    // Store the invoice ID for later use
-                    currentInvoiceData.invoiceId = result.invoice_id;
-                    
                     // Generate invoice preview
-                    generateInvoicePreview(serviceItems, result.invoice_id);
+                    generateInvoicePreview(serviceItems, currentInvoiceData.invoiceId || result.invoice_id);
                 } else {
                     const error = await response.json();
                     showNotification(error.error || 'Failed to save invoice', 'error');
@@ -5182,24 +4934,12 @@ stellartmanagement@outlook.com</span>
             const invoiceDate = document.getElementById('invoiceDate').value;
             const taxEnabled = document.getElementById('invoiceTaxToggle').checked;
 
-            // Use the original quote totals to ensure consistency
-            let subtotal, tax, total;
+            // Use current calculated totals (allowing for modifications)
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
             
-            if (currentInvoiceData && currentInvoiceData.originalQuoteTotals) {
-                // Use the original quote totals exactly
-                subtotal = currentInvoiceData.originalQuoteTotals.subtotal || 0;
-                tax = currentInvoiceData.originalQuoteTotals.tax_amount || 0;
-                total = currentInvoiceData.originalQuoteTotals.total_amount || 0;
-                
-                console.log('Invoice preview using original quote totals:', { subtotal, tax, total });
-            } else {
-                // Fallback to calculated totals if original not available
-                subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
-                tax = taxEnabled ? subtotal * 0.05 : 0;
-                total = subtotal + tax;
-                
-                console.log('Invoice preview using calculated totals (fallback):', { subtotal, tax, total });
-            }
+            console.log('Invoice preview using current calculated totals:', { subtotal, tax, total });
 
             const invoiceNumber = invoiceId || generateInvoiceNumber();
             const formattedDate = new Date(invoiceDate).toLocaleDateString('en-US', {
@@ -5624,7 +5364,8 @@ stellartmanagement@outlook.com</span>
                 const response = await fetch(`/api/invoices/${currentInvoiceData.invoiceId}/email`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
                     }
                 });
 
@@ -5660,210 +5401,7 @@ stellartmanagement@outlook.com</span>
             }
         }
 
-        // Customer Management Functions
-
-        // Recalculate all customer totals
-        async function recalculateCustomerTotals() {
-            if (!confirm('This will recalculate the total spent for all customers. This may take a moment. Continue?')) {
-                return;
-            }
-            
-            try {
-                showNotification('Recalculating customer totals...', 'info');
-                
-                const response = await fetch('/api/customers/recalculate-totals', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    showNotification(result.message, 'success');
-                    
-                    // Reload customers to show updated totals
-                    await loadCustomers();
-                } else {
-                    showNotification('Failed to recalculate totals', 'error');
-                }
-            } catch (error) {
-                console.error('Error recalculating totals:', error);
-                showNotification('Network error during recalculation', 'error');
-            }
-        }
-
-        // Refresh customer data
-        async function refreshCustomerData() {
-            try {
-                showNotification('Refreshing customer data...', 'info');
-                await loadCustomers();
-                showNotification('Customer data refreshed successfully', 'success');
-            } catch (error) {
-                console.error('Error refreshing customer data:', error);
-                showNotification('Network error refreshing customer data', 'error');
-            }
-        }
-
-        // Recalculate specific customer total
-        async function recalculateCustomerTotal(customerId) {
-            try {
-                showNotification('Recalculating customer total...', 'info');
-                
-                const response = await fetch(`/api/customers/${customerId}/recalculate-total`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    showNotification(result.message, 'success');
-                    
-                    // Refresh the customer details view
-                    await showCustomerDetails(customerId);
-                } else {
-                    const error = await response.json();
-                    showNotification(error.error || 'Failed to recalculate customer total', 'error');
-                }
-            } catch (error) {
-                console.error('Error recalculating customer total:', error);
-                showNotification('Network error recalculating customer total', 'error');
-            }
-        }
-
-        // Load customers from API
-        async function loadCustomers() {
-            try {
-                const response = await fetch('/api/customers', {
-                    headers: getAuthHeaders()
-                });
-                if (response.ok) {
-                    allCustomers = await response.json();
-                    renderCustomers();
-                } else if (response.status === 401 || response.status === 403) {
-                    showNotification('Session expired. Please log in again.', 'error');
-                    setTimeout(() => logout(), 2000);
-                } else {
-                    showNotification('Failed to load customers', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading customers:', error);
-                showNotification('Network error loading customers', 'error');
-            }
-        }
-
-        // Render customers grid
-        function renderCustomers() {
-            const grid = document.getElementById('customersGrid');
-            
-            if (allCustomers.length === 0) {
-                grid.innerHTML = '<div class="empty-state">No customers found</div>';
-                return;
-            }
-
-            grid.innerHTML = allCustomers.map(customer => {
-                return `
-                    <div class="customer-card" onclick="showCustomerDetails('${customer.customer_id}')">
-                        <div class="customer-header">
-                            <div>
-                                <div class="customer-name">${customer.name}</div>
-                                <div class="customer-id">${customer.customer_id}</div>
-                            </div>
-                        </div>
-                        <div class="customer-contact">
-                            <div class="contact-item">
-                                <i class="fas fa-envelope"></i>
-                                <span class="contact-label">Email:</span>
-                                <span class="contact-value">${customer.email}</span>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <span class="contact-label">Phone:</span>
-                                <span class="contact-value">${customer.phone}</span>
-                            </div>
-                            ${customer.address ? `
-                                <div class="contact-item">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span class="contact-label">Address:</span>
-                                    <span class="contact-value">${customer.address}</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="customer-stats">
-                            <div class="stat-item">
-                                <div class="stat-number">${customer.total_bookings || 0}</div>
-                                <div class="stat-label">Bookings</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">$${(customer.total_spent || 0).toFixed(2)}</div>
-                                <div class="stat-label">Total Spent</div>
-                            </div>
-                        </div>
-                        <div class="customer-actions-card" onclick="event.stopPropagation();">
-                            <button class="customer-action-btn view" onclick="showCustomerDetails('${customer.customer_id}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                            <button class="customer-action-btn edit" onclick="editCustomer('${customer.customer_id}')">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="customer-action-btn delete" onclick="deleteCustomer('${customer.customer_id}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Search customers
-        async function searchCustomers() {
-            const query = document.getElementById('customerSearchInput').value.trim();
-            
-            if (!query) {
-                loadCustomers();
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/customers/search/${encodeURIComponent(query)}`);
-                if (response.ok) {
-                    allCustomers = await response.json();
-                    renderCustomers();
-                } else {
-                    showNotification('Failed to search customers', 'error');
-                }
-            } catch (error) {
-                console.error('Error searching customers:', error);
-                showNotification('Network error searching customers', 'error');
-            }
-        }
-
-        // Show add customer modal
-        function showAddCustomerModal() {
-            currentCustomerId = null;
-            document.getElementById('customerModalTitle').textContent = 'Add Customer';
-            document.getElementById('customerForm').reset();
-            openModal('customerModal');
-        }
-
-        // Show customer details
-        async function showCustomerDetails(customerId) {
-            try {
-                const response = await fetch(`/api/customers/${customerId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    renderCustomerDetails(data);
-                    openModal('customerDetailsModal');
-                } else {
-                    showNotification('Failed to load customer details', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading customer details:', error);
-                showNotification('Network error loading customer details', 'error');
-            }
-        }
+        // Customer Management Functions - REMOVED
 
         // Render customer details
         function renderCustomerDetails(data) {
@@ -6162,7 +5700,8 @@ stellartmanagement@outlook.com</span>
 
             try {
                 const response = await fetch(`/api/customers/${customerId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
 
                 if (response.ok) {
@@ -6185,7 +5724,8 @@ stellartmanagement@outlook.com</span>
                         if (forceDelete) {
                             try {
                                 const forceResponse = await fetch(`/api/customers/${customerId}?force=true`, {
-                                    method: 'DELETE'
+                                    method: 'DELETE',
+                                    headers: getAuthHeaders()
                                 });
                                 
                                 if (forceResponse.ok) {
@@ -6219,7 +5759,8 @@ stellartmanagement@outlook.com</span>
 
             try {
                 const response = await fetch('/api/customers/migrate', {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: getAuthHeaders()
                 });
 
                 if (response.ok) {
@@ -6262,6 +5803,92 @@ stellartmanagement@outlook.com</span>
             document.body.classList.remove('modal-open');
         }
 
+        // Customer Message Modal Functions
+        function showCustomerMessageModal(bookingId, customerName, customerEmail) {
+            // Populate the modal with customer information
+            document.getElementById('messageCustomerName').textContent = customerName;
+            document.getElementById('messageCustomerEmail').textContent = customerEmail;
+            document.getElementById('messageBookingId').textContent = bookingId;
+            
+            // Clear previous message content
+            document.getElementById('messageContent').value = '';
+            
+            // Open the modal
+            openModal('customerMessageModal');
+        }
+
+        function closeCustomerMessageModal() {
+            closeModal('customerMessageModal');
+        }
+
+        async function sendCustomerMessage() {
+            const customerName = document.getElementById('messageCustomerName').textContent;
+            const customerEmail = document.getElementById('messageCustomerEmail').textContent;
+            const bookingId = document.getElementById('messageBookingId').textContent;
+            const subject = document.getElementById('messageSubject').value;
+            const messageContent = document.getElementById('messageContent').value;
+
+            if (!messageContent.trim()) {
+                showNotification('Please enter a message', 'error');
+                return;
+            }
+
+            // Get the send button and store original text before any operations
+            const sendButton = document.querySelector('#customerMessageModal .btn-primary');
+            if (!sendButton) {
+                showNotification('Error: Send button not found', 'error');
+                return;
+            }
+            const originalText = sendButton.innerHTML;
+
+            try {
+                // Show loading state
+                sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                sendButton.disabled = true;
+
+                const response = await fetch('/api/bookings/send-customer-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        bookingId: bookingId,
+                        customerName: customerName,
+                        customerEmail: customerEmail,
+                        subject: subject,
+                        message: messageContent
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Message sent successfully!', 'success');
+                    closeCustomerMessageModal();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to send message: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error sending customer message:', error);
+                let errorMessage = 'Failed to send message. Please try again.';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message) {
+                    errorMessage = `Error: ${error.message}`;
+                }
+                
+                showNotification(errorMessage, 'error');
+            } finally {
+                // Reset button state
+                if (sendButton) {
+                    sendButton.innerHTML = originalText;
+                    sendButton.disabled = false;
+                }
+            }
+        }
+
         // Smooth filter tab click handler
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('filter-tab')) {
@@ -6298,7 +5925,7 @@ stellartmanagement@outlook.com</span>
                 sectionTitle.style.transform = 'translateY(-5px)';
                 
                 // Hide all views smoothly first
-                const views = ['activeBookingsGrid', 'calendarView', 'customerView'];
+                const views = ['activeBookingsGrid', 'calendarView'];
                 views.forEach(viewId => {
                     const view = document.getElementById(viewId);
                     view.classList.add('view-hidden');
@@ -6323,12 +5950,8 @@ stellartmanagement@outlook.com</span>
                     if (filter === 'calendar') {
                         targetView = document.getElementById('calendarView');
                         targetView.style.display = 'block';
-                        if (!blockedDates.length) loadBlockedDates();
-                        renderCalendar();
-                    } else if (filter === 'customers') {
-                        targetView = document.getElementById('customerView');
-                        targetView.style.display = 'block';
-                        loadCustomers();
+                        if (!window.adminCalendar.blockedDates.length) window.adminCalendar.loadBlockedDates();
+                        window.adminCalendar.renderCalendar();
                     } else {
                         targetView = document.getElementById('activeBookingsGrid');
                         targetView.style.display = 'grid';
@@ -6464,7 +6087,7 @@ stellartmanagement@outlook.com</span>
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else {
                     const errorText = await response.text();
@@ -6505,7 +6128,7 @@ stellartmanagement@outlook.com</span>
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        renderCalendar();
+                        window.adminCalendar.renderCalendar();
                     }
                 } else {
                     const error = await response.json();
@@ -6523,7 +6146,9 @@ stellartmanagement@outlook.com</span>
                 // First check if there's an existing quote for this booking
                 let quoteData = null;
                 try {
-                    const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
+                    const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`, {
+                        headers: getAuthHeaders()
+                    });
                     if (quoteResponse.ok) {
                         const quotes = await quoteResponse.json();
                         if (quotes.length > 0) {
@@ -6720,175 +6345,9 @@ Check console for detailed analysis.
             alert(message);
         }
 
-        // Debug function to troubleshoot quote totals discrepancy
-        function debugQuoteTotals() {
-            console.log('🔍 === QUOTE TOTALS DEBUG ===');
-            
-            const serviceItems = document.querySelectorAll('.service-item');
-            console.log('Total service items found:', serviceItems.length);
-            
-            let calculatedSubtotal = 0;
-            let itemDetails = [];
-            
-            serviceItems.forEach((item, index) => {
-                const description = item.querySelector('.item-desc-input')?.value || 'No description';
-                const qtyInput = item.querySelector('.item-qty-input');
-                const priceInput = item.querySelector('.item-price-input');
-                
-                const quantity = parseFloat(qtyInput?.value) || 0;
-                const price = parseFloat(priceInput?.value) || 0;
-                const itemTotal = quantity * price;
-                
-                calculatedSubtotal += itemTotal;
-                
-                const itemDetail = {
-                    index: index + 1,
-                    description: description,
-                    quantity: quantity,
-                    price: price,
-                    itemTotal: itemTotal,
-                    qtyInputValue: qtyInput?.value || 'N/A',
-                    priceInputValue: priceInput?.value || 'N/A'
-                };
-                
-                itemDetails.push(itemDetail);
-                
-                console.log(`📦 Item ${index + 1}:`, itemDetail);
-            });
-            
-            const taxToggle = document.getElementById('taxToggle');
-            const taxEnabled = taxToggle?.checked || false;
-            const taxRate = 0.05;
-            const calculatedTax = taxEnabled ? calculatedSubtotal * taxRate : 0;
-            const calculatedTotal = calculatedSubtotal + calculatedTax;
-            
-            const displayedSubtotal = document.getElementById('subtotalAmount')?.textContent || 'N/A';
-            const displayedTax = document.getElementById('taxAmount')?.textContent || 'N/A';
-            const displayedTotal = document.getElementById('grandTotalAmount')?.textContent || 'N/A';
-            
-            console.log('🧮 CALCULATIONS:', {
-                calculatedSubtotal: calculatedSubtotal,
-                calculatedTax: calculatedTax,
-                calculatedTotal: calculatedTotal,
-                taxEnabled: taxEnabled,
-                taxRate: taxRate
-            });
-            
-            console.log('📺 DISPLAYED VALUES:', {
-                displayedSubtotal: displayedSubtotal,
-                displayedTax: displayedTax,
-                displayedTotal: displayedTotal
-            });
-            
-            // Check for discrepancies
-            const subtotalMatch = Math.abs(calculatedSubtotal - parseFloat(displayedSubtotal.replace('$', '') || 0)) < 0.01;
-            const totalMatch = Math.abs(calculatedTotal - parseFloat(displayedTotal.replace('$', '') || 0)) < 0.01;
-            
-            console.log('✅ VERIFICATION:', {
-                subtotalMatch: subtotalMatch,
-                totalMatch: totalMatch
-            });
-            
-            if (!subtotalMatch || !totalMatch) {
-                console.error('❌ DISCREPANCY DETECTED!');
-                console.error('The displayed totals do not match the calculated totals.');
-                console.error('This could indicate:');
-                console.error('1. Duplicate service items');
-                console.error('2. Service items not being updated properly');
-                console.error('3. Event listener issues');
-                console.error('4. DOM manipulation problems');
-            }
-            
-            // Show results to user
-            const message = `
-Quote Totals Debug Results:
 
-Service Items Found: ${serviceItems.length}
 
-Calculated Totals:
-- Subtotal: $${calculatedSubtotal.toFixed(2)}
-- Tax: $${calculatedTax.toFixed(2)}
-- Total: $${calculatedTotal.toFixed(2)}
 
-Displayed Totals:
-- Subtotal: ${displayedSubtotal}
-- Tax: ${displayedTax}
-- Total: ${displayedTotal}
-
-Verification:
-- Subtotal Match: ${subtotalMatch ? '✅' : '❌'}
-- Total Match: ${totalMatch ? '✅' : '❌'}
-
-Check console for detailed analysis.
-            `;
-            
-            alert(message);
-            
-            console.log('🔍 === END DEBUG ===');
-        }
-
-        // Check for duplicate service items that might be causing incorrect totals
-        function checkForDuplicateServiceItems() {
-            console.log('🔍 === DUPLICATE SERVICE ITEMS CHECK ===');
-            
-            const serviceItems = document.querySelectorAll('.service-item');
-            const itemDescriptions = [];
-            const duplicates = [];
-            
-            serviceItems.forEach((item, index) => {
-                const description = item.querySelector('.item-desc-input')?.value || 'No description';
-                const qtyInput = item.querySelector('.item-qty-input');
-                const priceInput = item.querySelector('.item-price-input');
-                
-                const quantity = parseFloat(qtyInput?.value) || 0;
-                const price = parseFloat(priceInput?.value) || 0;
-                const itemTotal = quantity * price;
-                
-                const itemInfo = {
-                    index: index + 1,
-                    description: description,
-                    quantity: quantity,
-                    price: price,
-                    itemTotal: itemTotal,
-                    element: item
-                };
-                
-                itemDescriptions.push(itemInfo);
-                
-                // Check if this description already exists
-                const existingItems = itemDescriptions.filter(item => 
-                    item.description === description && item.description !== 'No description'
-                );
-                
-                if (existingItems.length > 1) {
-                    duplicates.push(...existingItems);
-                }
-            });
-            
-            console.log('📋 All Service Items:', itemDescriptions);
-            
-            if (duplicates.length > 0) {
-                console.error('❌ DUPLICATE SERVICE ITEMS FOUND!');
-                console.error('This could be causing the incorrect totals:');
-                duplicates.forEach(duplicate => {
-                    console.error(`Duplicate: ${duplicate.description} - Qty: ${duplicate.quantity}, Price: $${duplicate.price}, Total: $${duplicate.itemTotal}`);
-                });
-                
-                // Show warning to user
-                showNotification(`Warning: Found ${duplicates.length} duplicate service items. This may cause incorrect totals.`, 'warning');
-                
-                // Highlight duplicate items
-                duplicates.forEach(duplicate => {
-                    duplicate.element.style.border = '2px solid red';
-                    duplicate.element.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-                });
-                
-                return true;
-            } else {
-                console.log('✅ No duplicate service items found');
-                return false;
-            }
-        }
 
         // Debug function to troubleshoot quote totals discrepancy
     </script>
@@ -6924,16 +6383,9 @@ Check console for detailed analysis.
                         <label for="recommendedTime">Recommended Time</label>
                         <select id="recommendedTime" name="recommendedTime" required>
                             <option value="">Select time</option>
-                            <option value="08:00">8:00 AM</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
+                            <option value="17:30">5:30 PM</option>
+                            <option value="18:30">6:30 PM</option>
+                            <option value="19:30">7:30 PM</option>
                         </select>
                     </div>
                 </form>
@@ -7004,6 +6456,18 @@ Check console for detailed analysis.
                                         </div>
                                     </div>
                                 </div>
+                                <div class="item-photos-section">
+                                    <div class="photos-header">
+                                        <span class="photos-label">Photos:</span>
+                                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                                            <i class="fas fa-camera"></i> Add Photo
+                                        </button>
+                                    </div>
+                                    <div class="photos-container">
+                                        <!-- Photos will be displayed here -->
+                                    </div>
+                                    <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+                                </div>
                             </div>
                         </div>
                         <button type="button" class="add-item-btn" onclick="addServiceItem()">
@@ -7040,12 +6504,6 @@ Check console for detailed analysis.
                         <button type="button" class="btn-secondary" onclick="closeModal('quoteModal')">
                             <i class="fas fa-times"></i> Cancel
                         </button>
-                        <button type="button" class="btn-secondary" onclick="checkForDuplicateServiceItems()" title="Check for Duplicate Service Items">
-                            <i class="fas fa-search"></i> Check Duplicates
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="debugQuoteTotals()" title="Debug Quote Totals">
-                            <i class="fas fa-bug"></i> Debug Totals
-                        </button>
                         <button type="button" class="btn-primary" onclick="generateQuote()">
                             <i class="fas fa-save"></i> Save Quote
                         </button>
@@ -7078,8 +6536,8 @@ Check console for detailed analysis.
                     <button type="button" class="btn-success" onclick="downloadQuotePDF()">
                         <i class="fas fa-download"></i> Download PDF
                     </button>
-                                            <button type="button" class="btn-info" onclick="sendQuoteEmail(event)">
-                            <i class="fas fa-envelope"></i> Send Email
+                        <button class="action-btn confirm">
+                            <i class="fas fa-paper-plane"></i> Send Quote
                         </button>
                 </div>
             </div>
@@ -7130,6 +6588,11 @@ Check console for detailed analysis.
                         <div id="invoiceServiceItems" class="service-items-container">
                             <!-- Service items will be populated from quote -->
                         </div>
+                        <div class="add-item-container">
+                            <button type="button" class="add-item-btn" onclick="addInvoiceServiceItem()">
+                                <i class="fas fa-plus"></i> Add Service Item
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Tax and Total Section -->
@@ -7162,7 +6625,7 @@ Check console for detailed analysis.
                             <i class="fas fa-times"></i> Cancel
                         </button>
                         <button type="button" class="btn-primary" onclick="generateInvoice()">
-                            <i class="fas fa-file-invoice"></i> Invoice
+                            <i class="fas fa-save"></i> Save Invoice
                         </button>
                     </div>
                 </div>
@@ -7211,12 +6674,186 @@ Check console for detailed analysis.
         </div>
     </div>
 
+    <!-- Photo Modal -->
+    <div id="photoModal" class="modal">
+        <div class="modal-content photo-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-image"></i> Photo View</h3>
+                <button class="modal-close" onclick="closeModal('photoModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="photo-display">
+                    <img id="modalPhoto" src="" alt="Service item photo" style="max-width: 100%; height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Image verification functions removed - now using improved storage system
     </script>
 
     <style>
         /* Image verification styles removed - using improved storage system */
+        
+        /* Service Item Photo Styles */
+        .item-photos-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .photos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .photos-label {
+            font-weight: 600;
+            color: #2a2a2a;
+            font-size: 14px;
+        }
+        
+        .add-photo-btn {
+            background: #fd7e14;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .add-photo-btn:hover {
+            background: #ff8c42;
+            transform: translateY(-1px);
+        }
+        
+        .photos-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            min-height: 40px;
+        }
+        
+        .photo-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .photo-item img:hover {
+            transform: scale(1.05);
+        }
+        
+        .delete-photo-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .delete-photo-btn:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+        
+        .no-photos {
+            color: #6c757d;
+            font-size: 12px;
+            font-style: italic;
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 10px;
+        }
+
+        /* Temporary photo styling */
+        .temp-photo {
+            position: relative;
+        }
+        
+        .temp-photo-label {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #856404;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .temp-photo img {
+            opacity: 0.8;
+            border: 2px dashed #ffc107;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .photos-container {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+            
+            .photo-item img {
+                height: 60px;
+            }
+            
+            .add-photo-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* Photo Modal Styles */
+        .photo-modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        
+        .photo-display {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .photo-display img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </body>
 </html> 

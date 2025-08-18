@@ -54,7 +54,7 @@ Customer Receives Quote
 - **Purpose**: Interactive calendar for customers to select job date and time
 - **Features**:
   - Interactive calendar with availability indicators
-  - Time slot selection (8:00 AM, 1:00 PM, 4:00 PM)
+  - Time slot selection (5:30 PM, 6:30 PM, 7:30 PM)
   - Real-time availability checking
   - Mobile-responsive design
   - Form validation and confirmation
@@ -121,7 +121,7 @@ POST /api/bookings/:bookingId/book-job
 ```json
 {
   "jobDate": "2024-12-20",
-  "jobTime": "1:00 PM",
+  "jobTime": "6:30 PM",
   "additionalNotes": "Optional additional notes"
 }
 ```
@@ -130,7 +130,7 @@ POST /api/bookings/:bookingId/book-job
 {
   "message": "Job booking submitted successfully",
   "jobDate": "2024-12-20",
-  "jobTime": "1:00 PM"
+  "jobTime": "6:30 PM"
 }
 ```
 
@@ -149,7 +149,7 @@ PATCH /api/bookings/:bookingId/status
 
 ### Bookings Collection
 - **`job_date`**: Date when the job is scheduled (YYYY-MM-DD)
-- **`job_time`**: Time when the job is scheduled (e.g., "1:00 PM")
+- **`job_time`**: Time when the job is scheduled (e.g., "6:30 PM")
 - **`status`**: Current booking status
   - `quote-accepted`: Customer accepted quote, ready to schedule
   - `pending-booking`: Job scheduled, awaiting admin confirmation
@@ -195,7 +195,7 @@ PATCH /api/bookings/:bookingId/status
 
 ### Scheduling Constraints
 - **Working Days**: Monday to Friday only
-- **Time Slots**: 8:00 AM, 1:00 PM, 4:00 PM
+- **Time Slots**: 5:30 PM, 6:30 PM, 7:30 PM
 - **Availability**: Maximum 1 booking per time slot
 - **Advance Booking**: Up to 3 months in advance
 - **Weekend Restrictions**: Weekends blocked by default

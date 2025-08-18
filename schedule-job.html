@@ -1062,9 +1062,7 @@
                         <button class="nav-btn" onclick="clearCalendarSelection()" style="margin-left: 0.5rem; background: var(--light-gray); color: var(--secondary-color);">
                             <i class="fas fa-times"></i> Clear
                         </button>
-                        <button class="nav-btn" onclick="testAvailabilityLogic()" style="margin-left: 0.5rem; background: var(--info-color); color: white;">
-                            <i class="fas fa-bug"></i> Debug
-                        </button>
+
                     </div>
                 </div>
                 <div class="calendar-grid" id="calendar-grid">
@@ -1199,7 +1197,7 @@
         // Business configuration - match the main booking system
         const businessHours = {
             maxBookingsPerTimeSlot: 1,
-            timeSlots: ['8:00 AM', '1:00 PM', '4:00 PM']
+            timeSlots: ['5:30 PM', '6:30 PM', '7:30 PM']
         };
 
         // Load booking details when page loads
@@ -1235,12 +1233,70 @@
                 }
 
                 const booking = await response.json();
-                console.log('Booking data received:', booking);
+                console.log('📋 Booking data received:', booking);
+                console.log('💰 Booking cost fields:', {
+                    estimated_cost: booking.estimated_cost,
+                    work_description: booking.work_description,
+                    notes: booking.notes
+                });
                 
                 // Check if booking status allows scheduling
                 if (booking.status !== 'quote-accepted') {
                     showError('This booking is not ready for scheduling. Please contact us for assistance.');
                     return;
+                }
+
+                // Try to fetch quote information to get the actual cost
+                try {
+                    console.log('🔍 Fetching quote information for booking:', bookingId);
+                    const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
+                    console.log('📡 Quote response status:', quoteResponse.status);
+                    
+                    if (quoteResponse.ok) {
+                        const quotes = await quoteResponse.json();
+                        console.log('📋 Quotes received:', quotes);
+                        
+                        if (quotes.length > 0) {
+                            // Get the most recent quote
+                            const latestQuote = quotes[0];
+                            console.log('📋 Latest quote data:', latestQuote);
+                            
+                            // Try to get cost from total_amount first
+                            if (latestQuote.total_amount) {
+                                booking.estimated_cost = latestQuote.total_amount;
+                                console.log('✅ Quote cost found from total_amount:', latestQuote.total_amount);
+                            }
+                            // Fallback: try to calculate from service items
+                            else if (latestQuote.service_items && latestQuote.service_items.length > 0) {
+                                let calculatedTotal = 0;
+                                latestQuote.service_items.forEach(item => {
+                                    const quantity = parseFloat(item.quantity) || 0;
+                                    const price = parseFloat(item.price) || 0;
+                                    calculatedTotal += quantity * price;
+                                });
+                                if (calculatedTotal > 0) {
+                                    booking.estimated_cost = calculatedTotal.toFixed(2);
+                                    console.log('✅ Quote cost calculated from service items:', calculatedTotal.toFixed(2));
+                                }
+                            }
+                            // Fallback: try subtotal
+                            else if (latestQuote.subtotal) {
+                                booking.estimated_cost = latestQuote.subtotal;
+                                console.log('✅ Quote cost found from subtotal:', latestQuote.subtotal);
+                            }
+                            
+                            if (!booking.estimated_cost) {
+                                console.log('⚠️ Quote found but no cost information available');
+                            }
+                        } else {
+                            console.log('⚠️ No quotes found for this booking');
+                        }
+                    } else {
+                        console.log('❌ Quote API request failed with status:', quoteResponse.status);
+                    }
+                } catch (quoteError) {
+                    console.error('❌ Error fetching quote information:', quoteError);
+                    console.log('Using booking data only');
                 }
 
                 bookingData = booking;
@@ -1280,7 +1336,8 @@
                     </div>
                     <div class="summary-content">
                         <h4>Estimated Cost</h4>
-                        <p>$${booking.estimated_cost || 'TBD'}</p>
+                        <p>${booking.estimated_cost ? `$${parseFloat(booking.estimated_cost).toFixed(2)}` : 'Quote being prepared'}</p>
+                        ${!booking.estimated_cost ? '<small style="color: #666; font-style: italic;">Cost will be available once your quote is prepared</small>' : ''}
                     </div>
                 </div>
                 <div class="summary-item">
@@ -1332,7 +1389,7 @@
 
         // Load availability data - use the same endpoint as the main booking system
         // Database structure includes:
-        // - availability data with time slots (e.g., '8:00 AM': 1 for 1 booking)
+        // - availability data with time slots (e.g., '5:30 PM': 1 for 1 booking)
         // - separate "blocked dates" collection with:
         //   - date: "2025-08-16"
         //   - reason: "unblocked_weekend" or "blocked_date"
@@ -1442,34 +1499,34 @@
                     // Second day if it's a weekend - explicitly unblocked
                     availabilityData[dateString] = {
                         unblocked: true,
-                        '8:00 AM': 0,
-                        '1:00 PM': 0,
-                        '4:00 PM': 0
+                        '5:30 PM': 0,
+                        '6:30 PM': 0,
+                        '7:30 PM': 0
                     };
                     unblockedWeekendCount++;
                 } else if (i === 2) {
                     // Third day - fully booked
                     availabilityData[dateString] = {
-                        '8:00 AM': 1,
-                        '1:00 PM': 1,
-                        '4:00 PM': 1
+                        '5:30 PM': 1,
+                        '6:30 PM': 1,
+                        '7:30 PM': 1
                     };
                     bookedCount++;
                 } else if (i === 3) {
                     // Fourth day - partially booked
                     availabilityData[dateString] = {
-                        '8:00 AM': 1,
-                        '1:00 PM': 0,
-                        '4:00 PM': 1
+                        '5:30 PM': 1,
+                        '6:30 PM': 0,
+                        '7:30 PM': 1
                     };
                     partiallyBookedCount++;
                 } else if (i === 4) {
                     // Fifth day - available (weekday only)
                     if (!isWeekend) {
                         availabilityData[dateString] = {
-                            '8:00 AM': 0,
-                            '1:00 PM': 0,
-                            '4:00 PM': 0
+                            '5:30 PM': 0,
+                            '6:30 PM': 0,
+                            '7:30 PM': 0
                         };
                         availableCount++;
                     }
@@ -1484,33 +1541,33 @@
                         // 10% chance of weekend being explicitly unblocked
                         availabilityData[dateString] = {
                             unblocked: true,
-                            '8:00 AM': 0,
-                            '1:00 PM': 0,
-                            '4:00 PM': 0
+                            '5:30 PM': 0,
+                            '6:30 PM': 0,
+                            '7:30 PM': 0
                         };
                         unblockedWeekendCount++;
                     } else if (random < 0.45 && !isWeekend) {
                         // 20% chance of weekday being fully booked
                         availabilityData[dateString] = {
-                            '8:00 AM': 1,
-                            '1:00 PM': 1,
-                            '4:00 PM': 1
+                            '5:30 PM': 1,
+                            '6:30 PM': 1,
+                            '7:30 PM': 1
                         };
                         bookedCount++;
                     } else if (random < 0.65 && !isWeekend) {
                         // 20% chance of weekday being partially booked
                         availabilityData[dateString] = {
-                            '8:00 AM': 1,
-                            '1:00 PM': 0,
-                            '4:00 PM': 1
+                            '5:30 PM': 1,
+                            '6:30 PM': 0,
+                            '7:30 PM': 1
                         };
                         partiallyBookedCount++;
                     } else if (!isWeekend) {
                         // Remaining weekdays are available
                         availabilityData[dateString] = {
-                            '8:00 AM': 0,
-                            '1:00 PM': 0,
-                            '4:00 PM': 0
+                            '5:30 PM': 0,
+                            '6:30 PM': 0,
+                            '7:30 PM': 0
                         };
                         availableCount++;
                     }
@@ -1604,9 +1661,9 @@
                     const isWeekend = currentDateObj.getDay() === 0 || currentDateObj.getDay() === 6; // Sunday or Saturday
                     
                     // Check if the date has availability data (time slots) - this means it's available
-                    const hasAvailabilityData = dayBookings['8:00 AM'] !== undefined || 
-                                             dayBookings['1:00 PM'] !== undefined || 
-                                             dayBookings['4:00 PM'] !== undefined;
+                    const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined || 
+                                             dayBookings['6:30 PM'] !== undefined || 
+                                             dayBookings['7:30 PM'] !== undefined;
                     
                     // Date is blocked if: explicitly blocked OR (weekend AND not explicitly unblocked)
                     const isBlocked = isExplicitlyBlocked || (isWeekend && !isExplicitlyUnblocked);
@@ -1676,53 +1733,7 @@
         }
 
         // Debug function to test availability logic
-        function debugAvailabilityLogic(date) {
-            const dateString = date.toISOString().split('T')[0];
-            const dayBookings = availabilityData[dateString] || {};
-            const blockedDateReason = blockedDatesData[dateString];
-            const dayOfWeek = date.getDay();
-            const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
-            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-            const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
-            const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
-            
-            console.log(`🔍 Debug for ${dateString} (${dayName}):`);
-            console.log(`  - Day of week: ${dayOfWeek}`);
-            console.log(`  - Is weekend: ${isWeekend}`);
-            console.log(`  - Blocked date reason: ${blockedDateReason || 'none'}`);
-            console.log(`  - Day bookings:`, dayBookings);
-            console.log(`  - Time slots:`, businessHours.timeSlots);
-            
-            if (isExplicitlyBlocked) {
-                console.log(`  - Status: BLOCKED (explicitly blocked by admin)`);
-            } else if (isWeekend && !isExplicitlyUnblocked) {
-                console.log(`  - Status: BLOCKED (weekend - blocked by default)`);
-            } else if (isWeekend && isExplicitlyUnblocked) {
-                console.log(`  - Status: AVAILABLE (weekend - explicitly unblocked by admin)`);
-            } else {
-                // Check booking status
-                const timeSlots = businessHours.timeSlots;
-                let totalBookings = 0;
-                let bookedTimeSlots = [];
-                
-                timeSlots.forEach(time => {
-                    const bookingCount = dayBookings[time] || 0;
-                    totalBookings += bookingCount;
-                    console.log(`    - ${time}: ${bookingCount}/${businessHours.maxBookingsPerTimeSlot} bookings`);
-                    if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
-                        bookedTimeSlots.push(time);
-                    }
-                });
-                
-                if (bookedTimeSlots.length === timeSlots.length) {
-                    console.log(`  - Status: BOOKED (all slots full)`);
-                } else if (bookedTimeSlots.length > 0) {
-                    console.log(`  - Status: PARTIALLY BOOKED (${bookedTimeSlots.length}/${timeSlots.length} slots full)`);
-                } else {
-                    console.log(`  - Status: AVAILABLE (all slots open)`);
-                }
-            }
-        }
+       
 
         // Test function to debug availability logic
         function testAvailabilityLogic() {
@@ -1780,9 +1791,9 @@
             const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
             const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            const hasAvailabilityData = dayBookings['8:00 AM'] !== undefined || 
-                                      dayBookings['1:00 PM'] !== undefined || 
-                                      dayBookings['4:00 PM'] !== undefined;
+            const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined || 
+                                      dayBookings['6:30 PM'] !== undefined || 
+                                      dayBookings['7:30 PM'] !== undefined;
             
             const infoContainer = document.getElementById('calendar-info');
             const infoContent = document.getElementById('calendar-info-content');

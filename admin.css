@@ -800,6 +800,17 @@
             color: white;
         }
 
+        .action-btn.message {
+            background: #007bff;
+            color: white;
+        }
+
+        .action-btn.message:hover {
+            background: #0056b3;
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
         /* Booking Images */
         .booking-images {
             margin-top: 0.5rem;
@@ -1137,17 +1148,19 @@
         }
 
         .detail-popup-actions {
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.6rem;
             margin-top: 0.75rem;
         }
 
         .detail-popup-actions .action-btn {
-            padding: 0.3rem 0.6rem;
+            padding: 0.4rem 0.6rem;
             font-size: 0.7rem;
-            min-height: 32px;
-            min-width: 32px;
+            min-height: 36px;
+            min-width: 110px;
+            justify-content: center;
+            text-align: center;
         }
 
         /* Enhanced Mobile Responsiveness */
@@ -1795,20 +1808,20 @@
             }
 
             .detail-popup-actions {
-                gap: 0.5rem;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 0.75rem;
                 margin-top: 1rem;
-                flex-wrap: wrap;
-                justify-content: flex-start;
             }
 
             .detail-popup-actions .action-btn {
-                padding: 0.3rem 0.6rem;
+                padding: 0.4rem 0.6rem;
                 font-size: 0.7rem;
-                min-height: 32px;
-                flex: 1;
-                min-width: 100px;
-                max-width: 150px;
+                min-height: 36px;
+                min-width: 120px;
                 border-radius: 6px;
+                justify-content: center;
+                text-align: center;
             }
 
             /* Move Booking Modal */
@@ -1816,6 +1829,72 @@
                 width: 95%;
                 max-width: 450px;
                 max-height: 90vh;
+            }
+
+            /* Customer Message Modal */
+            .customer-message-modal {
+                width: 95%;
+                max-width: 500px;
+                max-height: 90vh;
+            }
+
+            .message-customer-info {
+                margin-bottom: 1.5rem;
+            }
+
+            .message-compose-section {
+                background: white;
+                border-radius: 12px;
+                padding: 1.25rem;
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .message-compose-section h4 {
+                font-size: 1rem;
+                margin-bottom: 1rem;
+                color: var(--admin-primary);
+                font-weight: 600;
+            }
+
+            .message-compose-section .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .message-compose-section .form-group:last-child {
+                margin-bottom: 0;
+            }
+
+            .message-compose-section label {
+                display: block;
+                font-size: 0.9rem;
+                font-weight: 500;
+                color: var(--admin-primary);
+                margin-bottom: 0.5rem;
+            }
+
+            .message-compose-section input,
+            .message-compose-section textarea {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid var(--admin-border);
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-family: inherit;
+                background: white;
+                transition: border-color 0.2s ease;
+            }
+
+            .message-compose-section input:focus,
+            .message-compose-section textarea:focus {
+                outline: none;
+                border-color: var(--admin-accent);
+                box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+            }
+
+            .message-compose-section textarea {
+                resize: vertical;
+                min-height: 120px;
             }
 
             .info-card {
@@ -2838,6 +2917,73 @@
             width: 95%;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        /* Customer Message Modal Styles */
+        .customer-message-modal {
+            max-width: 600px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .message-customer-info {
+            margin-bottom: 2rem;
+        }
+
+        .message-compose-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-compose-section h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            color: var(--admin-primary);
+            font-weight: 600;
+        }
+
+        .message-compose-section .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .message-compose-section .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-compose-section label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--admin-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .message-compose-section input,
+        .message-compose-section textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .message-compose-section input:focus,
+        .message-compose-section textarea:focus {
+            outline: none;
+            border-color: var(--admin-accent);
+            box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+        }
+
+        .message-compose-section textarea {
+            resize: vertical;
+            min-height: 150px;
         }
 
         .move-booking-info {

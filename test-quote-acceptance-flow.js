@@ -35,7 +35,7 @@ const testQuoteAcceptanceFlow = async () => {
             },
             body: JSON.stringify({
                 jobDate: '2024-12-20',
-                jobTime: '1:00 PM'
+                jobTime: '6:30 PM'
             })
         });
         

@@ -214,17 +214,20 @@ app.get('/api/bookings/date/:date', (req, res) => {
 function normalizeTimeFormat(time) {
     // Handle "Full Day" format (old format)
     if (time === 'Full Day') {
-        return '8:00 AM'; // Default to morning slot
+        return '5:30 PM'; // Default to evening slot
     }
     
-    // Handle 24-hour format (e.g., "14:00", "15:00", "16:00")
+    // Handle 24-hour format (e.g., "17:30", "18:30", "19:30")
     if (time.includes(':')) {
         const [hours, minutes] = time.split(':').map(Number);
-        if (hours === 8) return '8:00 AM';
-        if (hours === 13) return '1:00 PM';
-        if (hours === 16) return '4:00 PM';
-        if (hours === 14) return '1:00 PM'; // 14:00 = 2 PM, but we'll map to 1 PM
-        if (hours === 15) return '4:00 PM'; // 15:00 = 3 PM, but we'll map to 4 PM
+        if (hours === 17 && minutes === 30) return '5:30 PM';
+        if (hours === 18 && minutes === 30) return '6:30 PM';
+        if (hours === 19 && minutes === 30) return '7:30 PM';
+        // Handle legacy time formats for backward compatibility
+        if (hours === 8) return '5:30 PM';
+        if (hours === 16) return '7:30 PM';
+        if (hours === 14) return '6:30 PM'; // 14:00 = 2 PM, but we'll map to 6:30 PM
+        if (hours === 15) return '7:30 PM'; // 15:00 = 3 PM, but we'll map to 7:30 PM
     }
     
     // Return as-is if it's already in 12-hour format

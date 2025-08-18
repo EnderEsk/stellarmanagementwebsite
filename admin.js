@@ -5,9 +5,7 @@ let currentYear = new Date().getFullYear();
 let blockedDates = [];
 let selectedDate = null;
 
-// Customer Management Variables
-let allCustomers = [];
-let currentCustomerId = null;
+// Customer Management Variables - REMOVED
 
 // Helper function to format date without timezone issues
 function formatBookingDate(dateString) {
@@ -242,9 +240,7 @@ async function loadBookings() {
                 renderCalendar();
             }
             
-            if (document.getElementById('customerView').classList.contains('active')) {
-                loadCustomers();
-            }
+            // Customer management view - REMOVED
             
         } else if (response.status === 401 || response.status === 403) {
             showNotification('Session expired. Please log in again.', 'error');
@@ -466,9 +462,8 @@ document.addEventListener('click', function(e) {
 
         if (view === 'calendar') {
             loadBlockedDates().then(() => renderCalendar());
-        } else if (view === 'customers') {
-            loadCustomers();
         }
+        // Customer management view - REMOVED
     }
 
     if (filterTab) {
@@ -1309,20 +1304,13 @@ async function sendInvoiceFromBooking(bookingId) {
     }
 }
 
-function showAddCustomerModal() { console.log('showAddCustomerModal'); }
-function migrateCustomers() { console.log('migrateCustomers'); }
-function recalculateCustomerTotals() { console.log('recalculateCustomerTotals'); }
-function refreshCustomerData() { console.log('refreshCustomerData'); }
-function searchCustomers() { console.log('searchCustomers'); }
-function saveCustomer() { console.log('saveCustomer'); }
-function editCustomer() { console.log('editCustomer'); }
+// Customer management functions - REMOVED
 function moveBooking() { console.log('moveBooking'); }
 function changeMoveMonth(month) { console.log('changeMoveMonth', month); }
 function renderMoveCalendar() { console.log('renderMoveCalendar'); }
 function toggleDateBlock() { console.log('toggleDateBlock'); }
 function unblockDate() { console.log('unblockDate'); }
 function showBookingDetailsPopup(bookingId) { console.log('showBookingDetailsPopup', bookingId); }
-function loadCustomers() { console.log('loadCustomers'); }
 
 // Debug: Verify functions are available globally
 console.log('Admin.js loaded. Available functions:', {

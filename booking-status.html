@@ -507,12 +507,97 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
             padding: 1rem;
             border-radius: 12px;
             background: var(--light-gray);
             transition: all 0.3s ease;
             user-select: none;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn:hover {
+            background: #7ab32f;
+            transform: scale(1.05);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        .refresh-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .refresh-btn.refreshing i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+
+
+        /* Message Notifications */
+        .message-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+            max-width: 350px;
+        }
+
+        .message-notification.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .message-notification.error {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .message-notification .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .message-notification .notification-content i {
+            font-size: 1.2rem;
         }
 
         .quote-preview-header:hover {
@@ -1175,7 +1260,7 @@
                         </div>
                         <div class="timeline-content">
                             <h4>Quote Accepted</h4>
-                            <p>Thank you for accepting our quote! We'll contact you soon to schedule your job.</p>
+                            <p>Thank you for accepting our quote! You're now being redirected to schedule your job.</p>
                         </div>
                     </div>
                     <div class="timeline-item" id="confirmed-timeline" style="display: none;">
@@ -1192,8 +1277,8 @@
                             <i class="fas fa-calendar-plus"></i>
                         </div>
                         <div class="timeline-content">
-                            <h4>Job Booked</h4>
-                            <p>Your booking request has been submitted and is being reviewed by our team.</p>
+                            <h4>Job Scheduled</h4>
+                            <p>Your job has been scheduled and is being reviewed by our team.</p>
                         </div>
                     </div>
                     <div class="timeline-item" id="completed-timeline" style="display: none;">
@@ -1356,9 +1441,16 @@
                 <!-- Invoice Preview Section -->
                 <div id="invoice-preview-section" style="display: none;">
                     <div class="quote-preview-container">
-                        <div class="quote-preview-header" onclick="toggleInvoicePreview()">
-                            <h3><i class="fas fa-file-invoice"></i> Invoice Preview</h3>
-                            <i class="fas fa-chevron-down toggle-icon" id="invoice-toggle-icon"></i>
+                        <div class="quote-preview-header">
+                            <div class="header-left" onclick="toggleInvoicePreview()">
+                                <h3><i class="fas fa-file-invoice"></i> Invoice Preview</h3>
+                                <i class="fas fa-chevron-down toggle-icon" id="invoice-toggle-icon"></i>
+                            </div>
+                            <div class="header-right">
+                                <button class="refresh-btn" onclick="refreshInvoicePreview(window.currentBookingData?.booking_id)" title="Refresh Invoice">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="quote-preview-content" id="invoice-preview-content">
                             <div class="quote-document">
@@ -1527,6 +1619,12 @@
                 return queryParamId;
             }
             
+            // Try to get from 'booking' parameter (for quote emails)
+            const bookingParamId = urlParams.get('booking');
+            if (bookingParamId) {
+                return bookingParamId;
+            }
+            
             // Try to get from localStorage as final fallback (for local file navigation)
             const localStorageId = localStorage.getItem('currentBookingId');
             if (localStorageId) {
@@ -1602,13 +1700,21 @@
 
             // Update status badge
             const statusBadge = document.getElementById('status-badge');
-            statusBadge.textContent = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
-            statusBadge.className = `status-badge ${booking.status}`;
+            let displayStatus = booking.status;
+            
+            // For customer view, treat 'completed' as 'invoice-ready'
+            if (booking.status === 'completed') {
+                displayStatus = 'invoice-ready';
+            }
+            
+            statusBadge.textContent = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).replace('-', ' ');
+            statusBadge.className = `status-badge ${displayStatus}`;
             console.log('🏷️ Status badge updated:', statusBadge.textContent, statusBadge.className);
+            console.log('🔍 Original status:', booking.status, 'Display status:', displayStatus);
 
             // Update timeline based on status
             console.log('🔄 Calling updateTimeline with status:', booking.status);
-            updateTimeline(booking.status);
+            updateTimeline(displayStatus);
 
             // Update action buttons
             updateActionButtons(booking);
@@ -1618,6 +1724,11 @@
             showInvoicePreview();
             
             console.log('✅ Booking details display complete');
+            console.log('🔍 Final status check - Status:', booking.status, 'Type:', typeof booking.status);
+            console.log('🔍 Status comparison tests:');
+            console.log('  - invoice-ready ===', booking.status === 'invoice-ready');
+            console.log('  - invoice-sent ===', booking.status === 'invoice-sent');
+            console.log('  - completed ===', booking.status === 'completed');
         }
 
         // Update timeline based on booking status
@@ -1686,10 +1797,14 @@
                 console.log('✅ Completed timeline shown');
             }
 
-            if (status === 'invoice-ready' || status === 'invoice-sent') {
+            if (status === 'completed' || status === 'invoice-ready' || status === 'invoice-sent') {
                 invoiceReadyTimeline.style.display = 'flex';
-                console.log('✅ Invoice Ready timeline shown');
+                console.log('✅ Invoice Ready timeline shown (including completed status)');
             }
+            
+            console.log('🔍 Timeline status checks:');
+            console.log('  - completedTimeline display:', completedTimeline.style.display);
+            console.log('  - invoiceReadyTimeline display:', invoiceReadyTimeline.style.display);
 
             if (status === 'invoice-sent') {
                 invoiceSentTimeline.style.display = 'flex';
@@ -1703,6 +1818,10 @@
         function updateActionButtons(booking) {
             const actionButtons = document.getElementById('action-buttons');
             let buttons = '';
+            
+            console.log('🔍 updateActionButtons called with status:', booking.status);
+            console.log('🔍 Status type:', typeof booking.status);
+            console.log('🔍 Status length:', booking.status ? booking.status.length : 'undefined');
 
             if (booking.status === 'pending') {
                 buttons = `
@@ -1721,11 +1840,11 @@
                     <div class="quote-details">
                         <h3>📋 Your Quote is Ready!</h3>
                         <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">
-                            Please review the detailed quote information below. If you're satisfied with the service and pricing, click "Accept Quote" to proceed.
+                            Please review the detailed quote information below. If you're satisfied with the service and pricing, click "Accept Quote and Schedule Job" to proceed.
                         </p>
                         <div class="action-buttons">
                             <button class="btn btn-primary" onclick="acceptQuote('${booking.booking_id}')">
-                                <i class="fas fa-thumbs-up"></i> Accept Quote
+                                <i class="fas fa-thumbs-up"></i> Accept Quote and Schedule Job
                             </button>
                             <button class="btn btn-secondary" onclick="contactUs()">
                                 <i class="fas fa-phone"></i> Contact Us
@@ -1741,8 +1860,8 @@
                     <div class="quote-accepted-details">
                         <h3>✅ Quote Accepted!</h3>
                         <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">
-                            Thank you for accepting our quote! Now it's time to schedule your job. 
-                            Click the button below to choose your preferred date and time.
+                            Thank you for accepting our quote! You should now be redirected to the job scheduling page. 
+                            If you're not redirected automatically, click the button below to schedule your job.
                         </p>
                         <div class="action-buttons">
                             <a href="schedule-job.html?booking_id=${booking.booking_id}" class="btn btn-primary">
@@ -1768,13 +1887,32 @@
                 `;
             } else if (booking.status === 'pending-booking') {
                 buttons = `
-                    <p>Your booking request has been submitted and is being reviewed by our team. We'll contact you soon!</p>
+                    <p>Your job has been scheduled and is being reviewed by our team. We'll contact you soon!</p>
                 `;
             } else if (booking.status === 'completed') {
+                console.log('🔍 Status condition: completed - treating as invoice-ready for customer view');
+                // Clear quote preview for completed jobs (treat as invoice-ready)
+                clearQuotePreview();
+                
                 buttons = `
-                    <p>Your tree service work has been completed successfully. Thank you for choosing Stellar Tree Management!</p>
+                    <div class="job-completion-notice">
+                        <h3>🎉 Job Completed Successfully!</h3>
+                        <p>Your tree service work has been finished. Thank you for choosing Stellar Tree Management!</p>
+                    </div>
+                   
                 `;
+                
+                // Show invoice preview for completed status (treat as invoice-ready)
+                console.log('🔍 Triggering invoice preview for completed status, booking data:', booking);
+                console.log('🔍 Key fields for invoice:', {
+                    name: booking.name,
+                    estimated_cost: booking.estimated_cost,
+                    work_description: booking.work_description,
+                    status: booking.status
+                });
+                setTimeout(() => loadInvoicePreview(booking.booking_id), 500);
             } else if (booking.status === 'invoice-ready') {
+                console.log('🔍 Status condition: invoice-ready');
                 // Clear quote preview for invoice stages
                 clearQuotePreview();
                 
@@ -1783,27 +1921,20 @@
                         <h3>🎉 Job Completed Successfully!</h3>
                         <p>Your tree service work has been finished. Thank you for choosing Stellar Tree Management!</p>
                     </div>
-                    <div class="invoice-details">
-                        <h3>📋 Your Invoice is Ready!</h3>
-                        <div class="invoice-info">
-                            <p><strong>Work Description:</strong> ${booking.work_description || 'Tree service as requested'}</p>
-                            <p><strong>Invoice Amount:</strong> $${booking.estimated_cost || '0.00'}</p>
-                            <p><strong>Status:</strong> <span style="color: var(--success-color); font-weight: bold;">✅ Job Completed - Invoice Ready</span></p>
-                        </div>
-                        <div class="invoice-actions">
-                            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--secondary-color);">
-                                The invoice is now ready for payment. Please review and submit payment to complete the process.
-                            </p>
-                            <button class="btn btn-primary" onclick="viewInvoice('${booking.booking_id}')">
-                                <i class="fas fa-file-invoice"></i> View Invoice
-                            </button>
-                            <button class="btn btn-secondary" onclick="contactUs()">
-                                <i class="fas fa-phone"></i> Contact Us
-                            </button>
-                        </div>
-                    </div>
+                   
                 `;
+                
+                // Show invoice preview for invoice-ready status
+                console.log('🔍 Triggering invoice preview for invoice-ready status, booking data:', booking);
+                console.log('🔍 Key fields for invoice:', {
+                    name: booking.name,
+                    estimated_cost: booking.estimated_cost,
+                    work_description: booking.work_description,
+                    status: booking.status
+                });
+                setTimeout(() => loadInvoicePreview(booking.booking_id), 500);
             } else if (booking.status === 'invoice-sent') {
+                console.log('🔍 Status condition: invoice-sent');
                 // Clear quote preview for invoice stages
                 clearQuotePreview();
                 
@@ -1812,26 +1943,18 @@
                         <h3>🎉 Job Completed Successfully!</h3>
                         <p>Your tree service work has been finished. Thank you for choosing Stellar Tree Management!</p>
                     </div>
-                    <div class="invoice-sent-details">
-                        <h3>📧 Invoice Sent - Awaiting Payment</h3>
-                        <div class="invoice-info">
-                            <p><strong>Work Description:</strong> ${booking.work_description || 'Tree service as requested'}</p>
-                            <p><strong>Invoice Amount:</strong> $${booking.estimated_cost || '0.00'}</p>
-                            <p><strong>Status:</strong> <span style="color: var(--success-color); font-weight: bold;">✅ Job Completed - Payment Required</span></p>
-                        </div>
-                        <div class="invoice-actions">
-                            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--secondary-color);">
-                                Please review the invoice and submit payment to complete the process.
-                            </p>
-                            <button class="btn btn-primary" onclick="viewInvoice('${booking.booking_id}')">
-                                <i class="fas fa-file-invoice"></i> View Invoice
-                            </button>
-                            <button class="btn btn-secondary" onclick="contactUs()">
-                                <i class="fas fa-phone"></i> Contact Us
-                            </button>
-                        </div>
-                    </div>
+                    
                 `;
+                
+                // Show invoice preview for invoice-sent status
+                console.log('🔍 Triggering invoice preview for invoice-sent status, booking data:', booking);
+                console.log('🔍 Key fields for invoice:', {
+                    name: booking.name,
+                    estimated_cost: booking.estimated_cost,
+                    work_description: booking.work_description,
+                    status: booking.status
+                });
+                setTimeout(() => loadInvoicePreview(booking.booking_id), 500);
             } else if (booking.status === 'cancelled') {
                 buttons = `
                     <p>This booking has been cancelled. Please contact us if you have any questions.</p>
@@ -1865,7 +1988,7 @@
             }
         }
 
-        // Accept quote
+        // Accept quote and redirect to scheduling
         async function acceptQuote(bookingId) {
             try {
                 const response = await fetch(`/api/bookings/${bookingId}/accept-quote`, {
@@ -1876,9 +1999,11 @@
                 });
 
                 if (response.ok) {
-                    showSuccess('Quote accepted successfully! We\'ll contact you soon to schedule your job.');
-                    // Reload booking details to update status
-                    setTimeout(() => loadBookingDetails(), 1000);
+                    showSuccess('Quote accepted successfully! Redirecting to job scheduling...');
+                    // Redirect to scheduling page after a short delay
+                    setTimeout(() => {
+                        window.location.href = `schedule-job.html?booking_id=${bookingId}`;
+                    }, 1500);
                 } else {
                     const error = await response.json();
                     showError(error.error || 'Failed to accept quote');
@@ -1995,6 +2120,11 @@
 
                 const quoteData = await response.json();
                 console.log('📋 Quote data received:', quoteData);
+                
+                // Store quote data globally for invoice preview to use
+                window.currentQuoteData = quoteData;
+                console.log('💾 Quote data stored globally for invoice preview');
+                
                 populateQuotePreview(quoteData);
                 showQuotePreview();
             } catch (error) {
@@ -2125,12 +2255,15 @@
         function showQuotePreview() {
             // Check if we have a current booking and if it's in an invoice stage
             const currentBooking = window.currentBookingData; // We'll need to store this globally
-            if (currentBooking && (currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+            if (currentBooking && (currentBooking.status === 'completed' || currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
                 // Hide quote preview for invoice stages - job is done, no quote needed
                 document.getElementById('quote-preview-section').style.display = 'none';
                 console.log('✅ Quote preview hidden for invoice stage - job completed');
                 return;
             }
+            
+            // Clear invoice preview when showing quote preview
+            clearInvoicePreview();
             
             document.getElementById('quote-preview-section').style.display = 'block';
             // Ensure quote preview starts collapsed
@@ -2146,10 +2279,13 @@
         // Show invoice preview section
         function showInvoicePreview() {
             const currentBooking = window.currentBookingData;
-            if (currentBooking && (currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+            if (currentBooking && (currentBooking.status === 'completed' || currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+                // Clear quote preview when showing invoice preview
+                clearQuotePreview();
+                
                 // Load and show invoice preview
                 loadInvoicePreview(currentBooking.booking_id);
-                console.log('✅ Invoice preview shown for invoice stage');
+                console.log('✅ Invoice preview shown for invoice stage (including completed status)');
             } else {
                 // Hide invoice preview for non-invoice stages
                 document.getElementById('invoice-preview-section').style.display = 'none';
@@ -2161,6 +2297,12 @@
         function clearQuotePreview() {
             document.getElementById('quote-preview-section').style.display = 'none';
             console.log('✅ Quote preview section cleared');
+        }
+        
+        // Clear invoice preview section
+        function clearInvoicePreview() {
+            document.getElementById('invoice-preview-section').style.display = 'none';
+            console.log('✅ Invoice preview section cleared');
         }
 
         // Toggle quote preview content
@@ -2799,7 +2941,13 @@
             console.log('📍 Current URL:', window.location.href);
             console.log('📍 Current Pathname:', window.location.pathname);
             
+            // Initialize preview sections to be hidden by default
+            document.getElementById('quote-preview-section').style.display = 'none';
+            document.getElementById('invoice-preview-section').style.display = 'none';
+            
             loadBookingDetails();
+            
+
         });
 
         // Utility function to format dates
@@ -2837,30 +2985,153 @@
             }
         }
 
+
+
+
+
+
+
+
+
+        // Show success message
+        function showSuccessMessage(message) {
+            const notification = document.createElement('div');
+            notification.className = 'message-notification success';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Show error message
+        function showErrorMessage(message) {
+            const notification = document.createElement('div');
+            notification.className = 'message-notification error';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 4000);
+        }
+
+
+
+        // Refresh invoice data and update preview
+        async function refreshInvoicePreview(bookingId) {
+            if (!bookingId) {
+                console.log('❌ No booking ID provided for refresh');
+                return;
+            }
+            
+            console.log('🔄 Refreshing invoice preview for booking:', bookingId);
+            
+            // Show refresh button in refreshing state
+            const refreshBtn = document.querySelector('.refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.classList.add('refreshing');
+                refreshBtn.disabled = true;
+            }
+            
+            try {
+                // First try to refresh quote data if available
+                if (window.currentQuoteData) {
+                    console.log('🔄 Refreshing quote data for invoice...');
+                    await fetchQuoteDetails(bookingId);
+                }
+                
+                // Then refresh invoice preview
+                await loadInvoicePreview(bookingId);
+                console.log('✅ Invoice preview refreshed successfully');
+                
+                // Show success message for manual refresh
+                showSuccessMessage('Invoice refreshed successfully!');
+            } catch (error) {
+                console.error('❌ Error refreshing invoice preview:', error);
+                showErrorMessage('Failed to refresh invoice. Please try again.');
+            } finally {
+                // Remove refreshing state
+                if (refreshBtn) {
+                    refreshBtn.classList.remove('refreshing');
+                    refreshBtn.disabled = false;
+                }
+            }
+        }
+
         // Load invoice data and populate preview
         async function loadInvoicePreview(bookingId) {
             try {
                 console.log('📋 Loading invoice for booking:', bookingId);
-                const response = await fetch(`/api/invoices/booking/${bookingId}`);
                 
-                if (response.ok) {
-                    const invoices = await response.json();
-                    if (invoices.length > 0) {
-                        const invoice = invoices[invoices.length - 1]; // Get most recent invoice
-                        populateInvoicePreview(invoice);
-                        document.getElementById('invoice-preview-section').style.display = 'block';
-                        console.log('✅ Invoice preview loaded');
+                // First, try to fetch the actual invoice data from the database
+                try {
+                    console.log('📋 Attempting to fetch invoice from database...');
+                    const response = await fetch(`/api/invoices/booking/${bookingId}`);
+                    
+                    if (response.ok) {
+                        const invoices = await response.json();
+                        console.log('📋 Fetched invoices from database:', invoices);
+                        
+                        if (invoices && invoices.length > 0) {
+                            // Use the most recent invoice
+                            const latestInvoice = invoices[0];
+                            console.log('📋 Using latest invoice from database:', latestInvoice);
+                            
+                            // Populate invoice preview with actual database data
+                            populateInvoicePreview(latestInvoice);
+                            document.getElementById('invoice-preview-section').style.display = 'block';
+                            
+                            // Ensure it starts collapsed
+                            const content = document.getElementById('invoice-preview-content');
+                            const icon = document.getElementById('invoice-toggle-icon');
+                            const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+                            if (content) content.classList.remove('expanded');
+                            if (icon) icon.classList.remove('rotated');
+                            if (header) header.classList.remove('expanded');
+                            
+                            console.log('✅ Invoice preview populated from database data');
+                            return;
+                        } else {
+                            console.log('📋 No invoices found in database for this booking');
+                        }
                     } else {
-                        console.log('ℹ️ No invoices found for this booking');
-                        document.getElementById('invoice-preview-section').style.display = 'none';
+                        console.log('📋 Failed to fetch invoices from database:', response.status);
                     }
-                } else {
-                    console.log('ℹ️ No invoices found for this booking');
-                    document.getElementById('invoice-preview-section').style.display = 'none';
+                } catch (dbError) {
+                    console.log('📋 Database fetch failed, falling back to other methods:', dbError);
                 }
+                
+                // For completed jobs, create invoice preview from current booking data
+                const currentBooking = window.currentBookingData;
+                if (currentBooking && (currentBooking.status === 'completed' || currentBooking.status === 'invoice-ready' || currentBooking.status === 'invoice-sent')) {
+                    console.log('📋 Creating invoice preview from booking data');
+                    await createInvoiceFromQuote(bookingId);
+                    return;
+                }
+                
+                console.log('ℹ️ Not in invoice stage - no invoice preview needed');
             } catch (error) {
                 console.error('Error loading invoice:', error);
-                document.getElementById('invoice-preview-section').style.display = 'none';
+                console.log('📋 Using fallback invoice preview due to error');
+                createInvoiceFromBookingData(bookingId);
             }
         }
 
@@ -2895,16 +3166,32 @@
             const servicesBody = document.getElementById('invoice-services-body');
             servicesBody.innerHTML = '';
             
-            if (invoice.service_items && invoice.service_items.length > 0) {
-                invoice.service_items.forEach((item, index) => {
+            console.log('📋 Invoice data for service items:', invoice);
+            console.log('📋 Service items array:', invoice.service_items);
+            console.log('📋 Services array (alternative):', invoice.services);
+            
+            // Try multiple possible service item structures
+            let serviceItems = invoice.service_items || invoice.services || [];
+            
+            if (serviceItems && serviceItems.length > 0) {
+                console.log('📋 Found service items:', serviceItems);
+                serviceItems.forEach((item, index) => {
+                    console.log('📋 Processing service item:', item);
                     const row = document.createElement('div');
                     row.className = 'table-row';
+                    
+                    // Handle different service item structures
+                    const description = item.description || item.service_description || 'Service';
+                    const quantity = item.quantity || item.qty || 1;
+                    const price = item.price || item.unit_price || item.unitPrice || 0;
+                    const total = item.total || item.line_total || item.lineTotal || (price * quantity);
+                    
                     row.innerHTML = `
                         <div class="table-cell">${index + 1}</div>
-                        <div class="table-cell description">${item.description}</div>
-                        <div class="table-cell quantity">${item.quantity}</div>
-                        <div class="table-cell price">$${parseFloat(item.price).toFixed(2)}</div>
-                        <div class="table-cell total">$${parseFloat(item.total).toFixed(2)}</div>
+                        <div class="table-cell description">${description}</div>
+                        <div class="table-cell quantity">${quantity}</div>
+                        <div class="table-cell price">$${parseFloat(price).toFixed(2)}</div>
+                        <div class="table-cell total">$${parseFloat(total).toFixed(2)}</div>
                     `;
                     servicesBody.appendChild(row);
                 });
@@ -2922,6 +3209,324 @@
                 `;
                 servicesBody.appendChild(row);
             }
+        }
+
+        // Create invoice preview from quote data
+        async function createInvoiceFromQuote(bookingId) {
+            try {
+                console.log('📋 Creating invoice from quote data for booking:', bookingId);
+                
+                // First try to use stored quote data if available
+                console.log('🔍 Available data sources for invoice:');
+                console.log('  - window.currentQuoteData:', window.currentQuoteData);
+                console.log('  - window.currentBookingData:', window.currentBookingData);
+                
+                if (window.currentQuoteData) {
+                    console.log('📋 Using stored quote data for invoice:', window.currentQuoteData);
+                    
+                    const quoteData = window.currentQuoteData;
+                    const invoiceData = {
+                        invoice_id: `INV-${bookingId}`,
+                        invoice_date: new Date().toISOString(),
+                        client_name: quoteData.client_name || quoteData.name || 'N/A',
+                        client_phone: quoteData.client_phone || quoteData.phone || 'N/A',
+                        client_email: quoteData.client_email || quoteData.email || 'N/A',
+                        client_address: quoteData.client_address || quoteData.address || 'N/A',
+                        subtotal: quoteData.subtotal || quoteData.estimated_cost || 0,
+                        total_amount: quoteData.total || quoteData.estimated_cost || 0,
+                        tax_amount: quoteData.tax || 0,
+                        tax_enabled: quoteData.tax_enabled || false,
+                        service_items: quoteData.services || [],
+                        services: quoteData.services || []
+                    };
+                    
+                    console.log('📋 Created invoice data from quote:', invoiceData);
+                    
+                    // Populate invoice preview with converted data
+                    populateInvoicePreview(invoiceData);
+                    document.getElementById('invoice-preview-section').style.display = 'block';
+                    
+                    // Ensure it starts collapsed
+                    const content = document.getElementById('invoice-preview-content');
+                    const icon = document.getElementById('invoice-toggle-icon');
+                    const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+                    content.classList.remove('expanded');
+                    icon.classList.remove('rotated');
+                    header.classList.remove('expanded');
+                    
+                    console.log('✅ Invoice preview created from quote data');
+                    return;
+                }
+                
+                // Try to extract quote data from displayed quote preview
+                const extractedQuoteData = extractQuoteDataFromDisplay();
+                if (extractedQuoteData) {
+                    console.log('📋 Using extracted quote data from display:', extractedQuoteData);
+                    
+                    const invoiceData = {
+                        invoice_id: `INV-${bookingId}`,
+                        invoice_date: new Date().toISOString(),
+                        client_name: extractedQuoteData.client_name || 'N/A',
+                        client_phone: extractedQuoteData.client_phone || 'N/A',
+                        client_email: extractedQuoteData.client_email || 'N/A',
+                        client_address: extractedQuoteData.client_address || 'N/A',
+                        subtotal: extractedQuoteData.subtotal || 0,
+                        total_amount: extractedQuoteData.total || 0,
+                        tax_amount: extractedQuoteData.tax || 0,
+                        tax_enabled: extractedQuoteData.tax_enabled || false,
+                        service_items: extractedQuoteData.services || [],
+                        services: extractedQuoteData.services || []
+                    };
+                    
+                    console.log('📋 Created invoice data from extracted quote:', invoiceData);
+                    
+                    // Populate invoice preview with converted data
+                    populateInvoicePreview(invoiceData);
+                    document.getElementById('invoice-preview-section').style.display = 'block';
+                    
+                    // Ensure it starts collapsed
+                    const content = document.getElementById('invoice-preview-content');
+                    const icon = document.getElementById('invoice-toggle-icon');
+                    const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+                    content.classList.remove('expanded');
+                    icon.classList.remove('rotated');
+                    header.classList.remove('expanded');
+                    
+                    console.log('✅ Invoice preview created from extracted quote data');
+                    return;
+                }
+                
+                // Fallback to current booking data if no quote data available
+                const currentBooking = window.currentBookingData;
+                if (!currentBooking) {
+                    console.log('❌ No current booking data available');
+                    createInvoiceFromBookingData(bookingId);
+                    return;
+                }
+                
+                console.log('📋 Using current booking data for invoice (fallback):', currentBooking);
+                
+                // Create invoice data from current booking
+                const invoiceData = {
+                    invoice_id: `INV-${bookingId}`,
+                    invoice_date: new Date().toISOString(),
+                    client_name: currentBooking.name || 'N/A',
+                    client_phone: currentBooking.phone || 'N/A',
+                    client_email: currentBooking.email || 'N/A',
+                    client_address: currentBooking.address || 'N/A',
+                    subtotal: currentBooking.estimated_cost || 0,
+                    total_amount: currentBooking.estimated_cost || 0,
+                    tax_amount: 0,
+                    tax_enabled: false,
+                    service_items: [],
+                    services: [{
+                        description: currentBooking.work_description || 'Tree Service',
+                        quantity: 1,
+                        unit_price: currentBooking.estimated_cost || 0,
+                        total: currentBooking.estimated_cost || 0
+                    }]
+                };
+                
+                console.log('📋 Created invoice data from booking (fallback):', invoiceData);
+                
+                // Populate invoice preview with converted data
+                populateInvoicePreview(invoiceData);
+                document.getElementById('invoice-preview-section').style.display = 'block';
+                
+                // Ensure it starts collapsed
+                const content = document.getElementById('invoice-preview-content');
+                const icon = document.getElementById('invoice-toggle-icon');
+                const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+                content.classList.remove('expanded');
+                icon.classList.remove('rotated');
+                header.classList.remove('expanded');
+                
+                console.log('✅ Invoice preview created from booking data (fallback)');
+            } catch (error) {
+                console.error('Error creating invoice from quote:', error);
+                console.log('📋 Using booking data fallback due to error');
+                createInvoiceFromBookingData(bookingId);
+            }
+        }
+
+        // Extract quote data from the displayed quote preview
+        function extractQuoteDataFromDisplay() {
+            try {
+                console.log('🔍 Attempting to extract quote data from displayed quote preview...');
+                
+                // Check if quote preview section is visible
+                const quoteSection = document.getElementById('quote-preview-section');
+                if (!quoteSection || quoteSection.style.display === 'none') {
+                    console.log('❌ Quote preview section not visible');
+                    return null;
+                }
+                
+                // Extract client information
+                const clientName = document.getElementById('quote-client-name')?.textContent || 'N/A';
+                const clientPhone = document.getElementById('quote-client-phone')?.textContent || 'N/A';
+                const clientEmail = document.getElementById('quote-client-email')?.textContent || 'N/A';
+                const clientAddress = document.getElementById('quote-client-address')?.textContent || 'N/A';
+                
+                // Extract totals
+                const subtotal = document.getElementById('quote-subtotal')?.textContent?.replace('$', '') || '0';
+                const total = document.getElementById('quote-total')?.textContent?.replace('$', '') || '0';
+                
+                // Extract services from the displayed table
+                const services = [];
+                const serviceRows = document.querySelectorAll('#quote-services-body .table-row');
+                
+                if (serviceRows.length > 0) {
+                    console.log('📋 Found service rows:', serviceRows.length);
+                    serviceRows.forEach((row, index) => {
+                        const cells = row.querySelectorAll('.table-cell');
+                        if (cells.length >= 5) {
+                            const service = {
+                                description: cells[1]?.textContent || 'Service',
+                                quantity: parseFloat(cells[2]?.textContent) || 1,
+                                unit_price: parseFloat(cells[3]?.textContent?.replace('$', '')) || 0,
+                                total: parseFloat(cells[4]?.textContent?.replace('$', '')) || 0
+                            };
+                            services.push(service);
+                            console.log('📋 Extracted service:', service);
+                        }
+                    });
+                }
+                
+                if (services.length === 0) {
+                    console.log('❌ No services found in quote preview');
+                    return null;
+                }
+                
+                const quoteData = {
+                    client_name: clientName,
+                    client_phone: clientPhone,
+                    client_email: clientEmail,
+                    client_address: clientAddress,
+                    subtotal: parseFloat(subtotal),
+                    total: parseFloat(total),
+                    tax: 0,
+                    tax_enabled: false,
+                    services: services
+                };
+                
+                console.log('✅ Successfully extracted quote data:', quoteData);
+                return quoteData;
+                
+            } catch (error) {
+                console.error('❌ Error extracting quote data from display:', error);
+                return null;
+            }
+        }
+
+        // Create invoice preview from current booking data
+        function createInvoiceFromBookingData(bookingId) {
+            console.log('📋 Creating invoice from booking data for booking:', bookingId);
+            
+            // Get current booking data
+            const currentBooking = window.currentBookingData;
+            if (!currentBooking) {
+                console.log('❌ No current booking data available');
+                showFallbackInvoicePreview(bookingId);
+                return;
+            }
+            
+            console.log('📋 Using booking data for invoice:', currentBooking);
+            
+            // Create invoice data from booking
+            const invoiceData = {
+                invoice_id: `INV-${bookingId}`,
+                invoice_date: new Date().toISOString(),
+                client_name: currentBooking.name || 'N/A',
+                client_phone: currentBooking.phone || 'N/A',
+                client_email: currentBooking.email || 'N/A',
+                client_address: currentBooking.address || 'N/A',
+                subtotal: currentBooking.estimated_cost || 0,
+                total_amount: currentBooking.estimated_cost || 0,
+                tax_amount: 0,
+                tax_enabled: false,
+                service_items: [],
+                services: [{
+                    description: currentBooking.work_description || 'Tree Service',
+                    quantity: 1,
+                    unit_price: currentBooking.estimated_cost || 0,
+                    total: currentBooking.estimated_cost || 0
+                }]
+            };
+            
+            console.log('📋 Created invoice data from booking:', invoiceData);
+            
+            // Populate invoice preview
+            populateInvoicePreview(invoiceData);
+            document.getElementById('invoice-preview-section').style.display = 'block';
+            
+            // Ensure it starts collapsed
+            const content = document.getElementById('invoice-preview-content');
+            const icon = document.getElementById('invoice-toggle-icon');
+            const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+            content.classList.remove('expanded');
+            icon.classList.remove('rotated');
+            header.classList.remove('expanded');
+            
+            console.log('✅ Invoice preview created from booking data');
+        }
+
+        // Show fallback invoice preview for completed jobs without invoices
+        function showFallbackInvoicePreview(bookingId) {
+            console.log('📋 Showing fallback invoice preview for booking:', bookingId);
+            
+            // Get current booking data
+            const currentBooking = window.currentBookingData;
+            if (!currentBooking) {
+                console.log('❌ No current booking data available');
+                return;
+            }
+            
+            // Populate fallback invoice data
+            document.getElementById('invoice-number').textContent = `INV-${currentBooking.booking_id}`;
+            document.getElementById('invoice-date').textContent = formatDate(new Date());
+            document.getElementById('invoice-client-name').textContent = currentBooking.name || 'N/A';
+            document.getElementById('invoice-client-phone').textContent = currentBooking.phone || 'N/A';
+            document.getElementById('invoice-client-email').textContent = currentBooking.email || 'N/A';
+            document.getElementById('invoice-client-address').textContent = currentBooking.address || 'N/A';
+            document.getElementById('invoice-bill-name').textContent = currentBooking.name || 'N/A';
+            document.getElementById('invoice-bill-address').textContent = currentBooking.address || 'N/A';
+            
+            // Set totals (use estimated cost if available)
+            const totalAmount = currentBooking.estimated_cost || 0;
+            document.getElementById('invoice-subtotal').textContent = `$${parseFloat(totalAmount).toFixed(2)}`;
+            document.getElementById('invoice-total').textContent = `$${parseFloat(totalAmount).toFixed(2)}`;
+            
+            // Hide tax row for fallback
+            const taxRow = document.getElementById('invoice-tax-row');
+            taxRow.style.display = 'none';
+            
+            // Populate service items with fallback data
+            const servicesBody = document.getElementById('invoice-services-body');
+            servicesBody.innerHTML = '';
+            
+            const row = document.createElement('div');
+            row.className = 'table-row';
+            row.innerHTML = `
+                <div class="table-cell">1</div>
+                <div class="table-cell description">${currentBooking.work_description || 'Tree Service'}</div>
+                <div class="table-cell quantity">1</div>
+                <div class="table-cell price">$${parseFloat(totalAmount).toFixed(2)}</div>
+                <div class="table-cell total">$${parseFloat(totalAmount).toFixed(2)}</div>
+            `;
+            servicesBody.appendChild(row);
+            
+            // Show the invoice preview section
+            document.getElementById('invoice-preview-section').style.display = 'block';
+            
+            // Ensure it starts collapsed
+            const content = document.getElementById('invoice-preview-content');
+            const icon = document.getElementById('invoice-toggle-icon');
+            const header = document.querySelector('#invoice-preview-section .quote-preview-header');
+            content.classList.remove('expanded');
+            icon.classList.remove('rotated');
+            header.classList.remove('expanded');
+            
+            console.log('✅ Fallback invoice preview shown');
         }
 
         // Download invoice

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Service Item Photos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .service-item {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .item-photos-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .photos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .photos-label {
+            font-weight: 600;
+            color: #2a2a2a;
+            font-size: 14px;
+        }
+        .add-photo-btn {
+            background: #fd7e14;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .add-photo-btn:hover {
+            background: #ff8c42;
+            transform: translateY(-1px);
+        }
+        .photos-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            min-height: 40px;
+        }
+        .photo-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .photo-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .photo-item img:hover {
+            transform: scale(1.05);
+        }
+        .delete-photo-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .delete-photo-btn:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+        .no-photos {
+            color: #6c757d;
+            font-size: 12px;
+            font-style: italic;
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 10px;
+        }
+        .test-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Service Item Photo Functionality Test</h1>
+    
+    <div class="test-info">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click "Add Photo" on any service item to test photo upload</li>
+            <li>Photos will be stored in the database and displayed below each service item</li>
+            <li>Click on photos to view them in full size</li>
+            <li>Use the delete button to remove photos</li>
+            <li>Photos are saved per service item and will persist in the database</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Service Items</h2>
+        
+        <div class="service-item" data-item-id="1">
+            <div class="item-row">
+                <h3>Tree Trimming Service</h3>
+                <p>Professional tree trimming and maintenance</p>
+            </div>
+            <div class="item-photos-section">
+                <div class="photos-header">
+                    <span class="photos-label">Photos:</span>
+                    <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                        📷 Add Photo
+                    </button>
+                </div>
+                <div class="photos-container">
+                    <span class="no-photos">No photos added yet</span>
+                </div>
+                <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+            </div>
+        </div>
+
+        <div class="service-item" data-item-id="2">
+            <div class="item-row">
+                <h3>Stump Removal</h3>
+                <p>Complete stump grinding and removal service</p>
+            </div>
+            <div class="item-photos-section">
+                <div class="photos-header">
+                    <span class="photos-label">Photos:</span>
+                    <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
+                        📷 Add Photo
+                    </button>
+                </div>
+                <div class="photos-container">
+                    <span class="no-photos">No photos added yet</span>
+                </div>
+                <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>API Endpoints Test</h2>
+        <p>Test the following endpoints:</p>
+        <ul>
+            <li><strong>POST /api/service-item-photos/:quoteId/:itemId</strong> - Upload photos</li>
+            <li><strong>GET /api/service-item-photos/:quoteId/:itemId</strong> - Get photos</li>
+            <li><strong>DELETE /api/service-item-photos/:quoteId/:itemId/:imageId</strong> - Delete photo</li>
+        </ul>
+    </div>
+
+    <script>
+        // Mock quote ID for testing
+        const testQuoteId = 'TEST_QUOTE_001';
+        
+        // Add photo button click handler
+        function addPhotoToServiceItem(button) {
+            const serviceItem = button.closest('.service-item');
+            const fileInput = serviceItem.querySelector('.photo-upload-input');
+            fileInput.click();
+        }
+
+        // Handle photo upload
+        async function handlePhotoUpload(fileInput) {
+            const serviceItem = fileInput.closest('.service-item');
+            const files = fileInput.files;
+            
+            if (!files || files.length === 0) return;
+            
+            const itemId = serviceItem.getAttribute('data-item-id');
+            const itemIndex = Array.from(serviceItem.parentNode.children).indexOf(serviceItem);
+            
+            // Create FormData for upload
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('photos', files[i]);
+            }
+            formData.append('itemIndex', itemIndex);
+
+            try {
+                console.log('Uploading photos...');
+                
+                const response = await fetch(`/api/service-item-photos/${testQuoteId}/${itemId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`${result.imagePaths.length} photos uploaded successfully!`);
+                    // Refresh photos display
+                    await loadServiceItemPhotos(serviceItem, testQuoteId, itemId);
+                } else {
+                    console.error('Failed to upload photos:', result.error);
+                }
+            } catch (error) {
+                console.error('Error uploading photos:', error);
+            }
+
+            // Clear the file input
+            fileInput.value = '';
+        }
+
+        // Load photos for a service item
+        async function loadServiceItemPhotos(serviceItem, quoteId, itemId) {
+            try {
+                const response = await fetch(`/api/service-item-photos/${quoteId}/${itemId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayServiceItemPhotos(serviceItem, result.photos, quoteId, itemId);
+                }
+            } catch (error) {
+                console.error('Error loading photos:', error);
+            }
+        }
+
+        // Display photos for a service item
+        function displayServiceItemPhotos(serviceItem, photos, quoteId, itemId) {
+            const photosContainer = serviceItem.querySelector('.photos-container');
+            photosContainer.innerHTML = '';
+
+            if (photos.length === 0) {
+                photosContainer.innerHTML = '<span class="no-photos">No photos added yet</span>';
+                return;
+            }
+
+            photos.forEach((photoPath, index) => {
+                const photoElement = document.createElement('div');
+                photoElement.className = 'photo-item';
+                photoElement.innerHTML = `
+                    <img src="${photoPath}" alt="Service item photo" onclick="showPhotoModal('${photoPath}')">
+                    <button type="button" class="delete-photo-btn" onclick="deleteServiceItemPhoto('${quoteId}', '${itemId}', '${photoPath.split('/').pop()}', this)">
+                        🗑️
+                    </button>
+                `;
+                photosContainer.appendChild(photoElement);
+            });
+        }
+
+        // Delete a photo from a service item
+        async function deleteServiceItemPhoto(quoteId, itemId, imageId, button) {
+            if (!confirm('Are you sure you want to delete this photo?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/service-item-photos/${quoteId}/${itemId}/${imageId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('Photo deleted successfully!');
+                    // Remove the photo element from DOM
+                    button.closest('.photo-item').remove();
+                    
+                    // If no photos left, show "no photos" message
+                    const photosContainer = button.closest('.photos-container');
+                    if (photosContainer.children.length === 0) {
+                        photosContainer.innerHTML = '<span class="no-photos">No photos added yet</span>';
+                    }
+                } else {
+                    console.error('Failed to delete photo:', result.error);
+                }
+            } catch (error) {
+                console.error('Error deleting photo:', error);
+            }
+        }
+
+        // Show photo in modal (simple alert for testing)
+        function showPhotoModal(photoPath) {
+            alert(`Photo clicked: ${photoPath}\n\nIn the real admin panel, this would open a photo modal.`);
+        }
+
+        // Load photos when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceItems = document.querySelectorAll('.service-item');
+            serviceItems.forEach(async (item) => {
+                const itemId = item.getAttribute('data-item-id');
+                await loadServiceItemPhotos(item, testQuoteId, itemId);
+            });
+        });
+    </script>
+</body>
+</html>
+
+

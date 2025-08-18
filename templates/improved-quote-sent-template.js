@@ -325,19 +325,21 @@ function generateImprovedQuoteSentTemplate(bookingId, service, estimatedCost, wo
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Estimated Cost:</div>
-                            <div class="detail-value">$${estimatedCost}</div>
+                            <div class="detail-value">${estimatedCost === 'TBD' ? 'Quote being prepared' : `$${estimatedCost}`}</div>
                         </div>
+                        ${workDescription && workDescription.trim() !== 't' && workDescription.trim().length > 1 ? `
                         <div class="detail-row">
                             <div class="detail-label">Work Description:</div>
                             <div class="detail-value">${workDescription}</div>
                         </div>
-                        ${address ? `
+                        ` : ''}
+                        ${address && address.trim() !== 't' && address.trim().length > 1 ? `
                         <div class="detail-row">
                             <div class="detail-label">Address:</div>
                             <div class="detail-value">${address}</div>
                         </div>
                         ` : ''}
-                        ${notes ? `
+                        ${notes && notes.trim() !== 't' && notes.trim().length > 1 ? `
                         <div class="detail-row">
                             <div class="detail-label">Notes:</div>
                             <div class="detail-value">${notes}</div>
@@ -397,10 +399,10 @@ Great news! We've completed our assessment and prepared your quote for tree serv
 📋 Quote Details:
 - Booking ID: ${bookingId}
 - Service: ${service}
-- Estimated Cost: $${estimatedCost}
-- Work Description: ${workDescription}
-${address ? `- Address: ${address}` : ''}
-${notes ? `- Notes: ${notes}` : ''}
+- Estimated Cost: ${estimatedCost === 'TBD' ? 'Quote being prepared' : `$${estimatedCost}`}
+${workDescription && workDescription.trim() !== 't' && workDescription.trim().length > 1 ? `- Work Description: ${workDescription}` : ''}
+${address && address.trim() !== 't' && address.trim().length > 1 ? `- Address: ${address}` : ''}
+${notes && notes.trim() !== 't' && notes.trim().length > 1 ? `- Notes: ${notes}` : ''}
 
 📝 Review & Confirm Your Quote
 

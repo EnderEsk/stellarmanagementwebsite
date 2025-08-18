@@ -1,0 +1,71 @@
+/* Admin Modal Styles - Extracted from admin.html */
+
+/* Ensure quote modal is always visible when shown */
+#quoteModal.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Loading state for quote button */
+.action-btn.quote.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.quote.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Fix modal backdrop and ensure proper visibility */
+.modal.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Ensure modal content is properly positioned and visible */
+.modal.show .modal-content {
+    position: relative !important;
+    z-index: 10000 !important;
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+/* Remove the problematic ::before pseudo-element */
+.modal.show::before {
+    display: none !important;
+}

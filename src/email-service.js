@@ -31,7 +31,7 @@ class EmailService {
         }
     }
 
-    async sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems) {
+    async sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems, bookingId = null) {
         const subject = `Your Quote from Stellar Tree Management - ${quoteId}`;
         
         // Format service items for email
