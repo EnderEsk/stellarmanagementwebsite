@@ -3085,14 +3085,15 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
         const emailService = new EmailService();
         
         // Send email using MailerSend
-        const result = await emailService.sendInvoiceEmail(
+        const result = await emailService.sendInvoiceEmailFromInvoice(
             invoice.client_email,
             invoice.invoice_id,
             invoice.client_name,
             invoice.invoice_date,
             invoice.total_amount,
             serviceItems,
-            invoice.serviceItemPhotos
+            invoice.serviceItemPhotos,
+            invoice.booking_id
         );
         
         if (result.success) {

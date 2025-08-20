@@ -53,7 +53,7 @@ async function testMailerSend() {
         
         // Test invoice email
         console.log('\n🧾 Testing invoice email...');
-        const invoiceResult = await emailService.sendInvoiceEmail(
+        const invoiceResult = await emailService.sendInvoiceEmailFromQuote(
             'endereeska@gmail.com', // Test email address
             'INV-2024-001',
             'John Doe',

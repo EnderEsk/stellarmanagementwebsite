@@ -555,7 +555,7 @@ class EmailService {
         return await this.sendEmail(email, subject, htmlContent, textContent);
     }
 
-    async sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems, serviceItemPhotos = null) {
+    async sendInvoiceEmailFromInvoice(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems, serviceItemPhotos = null, bookingId = null) {
         const subject = `Invoice from Stellar Tree Management - ${invoiceId}`;
         
         // Format service items for email with photos
@@ -637,16 +637,17 @@ class EmailService {
                     }
                     
                     .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #fd7e14;
+                        width: 80px;
+                        height: 80px;
+                        background: #ffffff;
                         border-radius: 50%;
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 24px;
-                        color: white;
-                        margin-bottom: 15px;
+                        display: inline-block;
+                        margin-bottom: 20px;
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                        border: 4px solid #fd7e14;
+                        text-align: center;
+                        line-height: 80px;
+                        font-size: 40px;
                     }
                     
                     .company-name { 
@@ -655,12 +656,13 @@ class EmailService {
                         font-weight: 700; 
                         margin: 0; 
                         color: white;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
                     }
                     
                     .invoice-badge {
-                        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                        background: #fd7e14;
                         color: white;
-                        padding: 8px 20px;
+                        padding: 8px 16px;
                         border-radius: 20px;
                         font-size: 14px;
                         font-weight: 600;
@@ -674,70 +676,70 @@ class EmailService {
                     }
                     
                     .greeting {
-                        font-size: 18px;
-                        color: #2a2a2a;
-                        margin-bottom: 20px;
+                        font-size: 22px;
                         font-weight: 600;
+                        color: #2a2a2a;
+                        margin-bottom: 15px;
                     }
                     
                     .intro-text {
-                        color: #5a5a5a;
-                        margin-bottom: 30px;
                         font-size: 16px;
-                        line-height: 1.7;
+                        color: #5a5a5a;
+                        margin-bottom: 25px;
+                        line-height: 1.6;
                     }
                     
-                    .invoice-details { 
-                        background: #f8f9fa; 
-                        padding: 25px; 
-                        margin: 30px 0; 
-                        border-radius: 12px; 
-                        border-left: 4px solid #dc3545;
+                    .invoice-details {
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin: 25px 0;
+                        border-left: 4px solid #fd7e14;
                     }
                     
-                    .invoice-meta {
+                    .invoice-details h3 {
+                        margin: 0 0 15px 0;
+                        color: #2a2a2a;
+                        font-size: 18px;
+                        font-weight: 600;
+                    }
+                    
+                    .detail-row {
                         display: flex;
                         justify-content: space-between;
-                        margin-bottom: 25px;
-                        flex-wrap: wrap;
-                        gap: 15px;
+                        margin-bottom: 8px;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #e9ecef;
                     }
                     
-                    .invoice-info {
-                        background: white;
-                        padding: 15px 20px;
-                        border-radius: 8px;
-                        border: 1px solid #e5e7eb;
-                        flex: 1;
-                        min-width: 200px;
+                    .detail-row:last-child {
+                        border-bottom: none;
                     }
                     
-                    .invoice-info-label {
-                        font-size: 12px;
-                        color: #dc3545;
+                    .detail-label {
                         font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        margin-bottom: 5px;
+                        color: #5a5a5a;
+                        font-size: 14px;
                     }
                     
-                    .invoice-info-value {
-                        font-size: 16px;
+                    .detail-value {
                         color: #2a2a2a;
-                        font-weight: 600;
+                        font-weight: 500;
+                        font-size: 14px;
                     }
                     
                     .services-table {
                         width: 100%;
                         border-collapse: collapse;
+                        margin: 25px 0;
                         background: white;
                         border-radius: 8px;
                         overflow: hidden;
-                        border: 1px solid #e5e7eb;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     }
                     
                     .services-table th {
-                        background: #2a2a2a;
+                        background: #fd7e14;
                         color: white;
                         padding: 15px 12px;
                         text-align: left;
@@ -745,113 +747,107 @@ class EmailService {
                         font-size: 14px;
                     }
                     
-                    .services-table th:last-child,
-                    .services-table td:last-child {
-                        text-align: right;
-                    }
-                    
-                    .total-section { 
-                        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); 
-                        color: white; 
-                        padding: 25px; 
-                        text-align: center; 
-                        font-size: 20px; 
-                        font-weight: 700; 
-                        margin: 30px 0;
-                        border-radius: 12px;
-                        box-shadow: 0 4px 20px rgba(220, 53, 69, 0.3);
-                    }
-                    
-                    .payment-notice {
-                        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-                        border: 1px solid #f0ad4e;
-                        padding: 25px;
-                        border-radius: 12px;
-                        margin: 30px 0;
-                        text-align: center;
-                    }
-                    
-                    .payment-notice-title {
-                        font-size: 18px;
-                        font-weight: 700;
-                        color: #856404;
-                        margin-bottom: 10px;
-                    }
-                    
-                    .payment-notice-text {
-                        color: #856404;
-                        margin: 0;
+                    .services-table td {
+                        padding: 12px;
+                        border-bottom: 1px solid #e5e7eb;
+                        color: #2a2a2a;
                         font-size: 14px;
-                        line-height: 1.6;
                     }
                     
-                    .cta-section {
-                        background: #f8f9fa;
-                        padding: 25px;
-                        border-radius: 12px;
-                        text-align: center;
-                        margin: 30px 0;
-                        border: 1px solid #e5e7eb;
-                    }
-                    
-                    .cta-button {
-                        background: #fd7e14;
+                    .total-section {
+                        background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
                         color: white;
-                        padding: 15px 30px;
+                        padding: 20px;
                         border-radius: 8px;
-                        text-decoration: none;
+                        text-align: center;
+                        margin: 25px 0;
+                        font-size: 18px;
                         font-weight: 600;
-                        display: inline-block;
-                        margin-top: 15px;
-                        transition: all 0.3s ease;
                     }
                     
-                    .footer { 
-                        background: #2a2a2a; 
-                        color: white; 
-                        padding: 30px; 
-                        text-align: center; 
+                    .footer {
+                        background: #2a2a2a;
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
                     }
                     
                     .footer-content {
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+                    
+                    .footer-title {
+                        font-size: 18px;
+                        font-weight: 600;
+                        margin-bottom: 15px;
+                        color: #fd7e14;
+                    }
+                    
+                    .footer-text {
+                        font-size: 14px;
+                        color: #b0b0b0;
+                        line-height: 1.6;
                         margin-bottom: 20px;
                     }
                     
                     .contact-info {
-                        display: flex;
-                        justify-content: center;
-                        gap: 30px;
-                        margin-bottom: 20px;
-                        flex-wrap: wrap;
-                    }
-                    
-                    .contact-item {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        color: rgba(255, 255, 255, 0.8);
                         font-size: 14px;
+                        color: #b0b0b0;
+                        line-height: 1.8;
                     }
                     
-                    .contact-icon {
+                    .contact-info strong {
                         color: #fd7e14;
-                        width: 16px;
                     }
                     
-                    .footer-note {
-                        color: rgba(255, 255, 255, 0.6);
-                        font-size: 12px;
-                        border-top: 1px solid rgba(255, 255, 255, 0.1);
-                        padding-top: 20px;
+                    .booking-status-link {
+                        text-align: center;
+                        margin: 30px 0;
+                        padding: 25px;
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                        border-radius: 16px;
+                        border: 2px solid #28a745;
+                    }
+                    
+                    .booking-status-link h4 {
+                        margin: 0 0 15px 0;
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: #2a2a2a;
+                    }
+                    
+                    .booking-status-link p {
+                        margin: 0 0 20px 0;
+                        color: #5a5a5a;
+                        line-height: 1.6;
+                    }
+                    
+                    .status-link {
+                        display: inline-block;
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        text-decoration: none;
+                        padding: 12px 24px;
+                        border-radius: 25px;
+                        font-weight: 600;
+                        font-size: 16px;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                    }
+                    
+                    .status-link:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
                     }
                     
                     @media (max-width: 600px) {
                         .email-container { margin: 0 15px; }
-                        .content { padding: 25px 20px; }
+                        .content { padding: 30px 20px; }
                         .header { padding: 30px 20px; }
-                        .invoice-meta { flex-direction: column; }
-                        .contact-info { flex-direction: column; gap: 15px; }
-                        .services-table th, .services-table td { padding: 10px 8px; font-size: 13px; }
+                        .detail-row { flex-direction: column; gap: 5px; }
+                        .services-table { font-size: 13px; }
+                        .services-table th, .services-table td { padding: 10px 8px; }
                     }
                 </style>
             </head>
@@ -863,7 +859,7 @@ class EmailService {
                                 <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
                             </div>
                             <h1 class="company-name">Stellar Tree Management</h1>
-                            <div class="invoice-badge">Payment Due</div>
+                            <div class="invoice-badge">Invoice Rendered</div>
                         </div>
                     </div>
                     
@@ -871,69 +867,67 @@ class EmailService {
                         <div class="greeting">Hello ${clientName},</div>
                         
                         <div class="intro-text">
-                            Thank you for choosing Stellar Tree Management! Please find your invoice details below for the services we've completed.
+                            Thank you for choosing Stellar Tree Management! Your tree services have been completed and 
+                            this invoice has been rendered for the work performed. Please review the details below.
                         </div>
                         
                         <div class="invoice-details">
-                            <div class="invoice-meta">
-                                <div class="invoice-info">
-                                    <div class="invoice-info-label">Invoice ID</div>
-                                    <div class="invoice-info-value">${invoiceId}</div>
-                                </div>
-                                <div class="invoice-info">
-                                    <div class="invoice-info-label">Invoice Date</div>
-                                    <div class="invoice-info-value">${invoiceDate}</div>
-                                </div>
+                            <h3>📋 Invoice Details</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Invoice ID:</div>
+                                <div class="detail-value">${invoiceId}</div>
                             </div>
-                            
-                            <table class="services-table">
-                                <thead>
-                                    <tr>
-                                        <th>Service Description</th>
-                                        <th style="text-align: center;">Qty</th>
-                                        <th style="text-align: right;">Price</th>
-                                        <th style="text-align: right;">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                ${serviceItemsList}
-                                </tbody>
-                            </table>
+                            <div class="detail-row">
+                                <div class="detail-label">Invoice Date:</div>
+                                <div class="detail-value">${invoiceDate}</div>
+                            </div>
                         </div>
+                        
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>Service Description</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Price</th>
+                                    <th style="text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${serviceItemsList}
+                            </tbody>
+                        </table>
                         
                         <div class="total-section">
                             Total Amount Due: $${totalAmount.toFixed(2)}
                         </div>
                         
-                        <div class="payment-notice">
-                            <div class="payment-notice-title">Payment Required</div>
-                            <p class="payment-notice-text">Please remit payment as soon as possible. We appreciate your prompt attention to this invoice and thank you for your business!</p>
-                        </div>
+                        <p style="color: #5a5a5a; margin-bottom: 0; text-align: center; font-size: 14px;">
+                            Payment is due within 30 days. Please contact us if you have any questions about payment arrangements.
+                        </p>
                         
-                        <div class="cta-section">
-                            <p style="margin: 0 0 10px 0; color: #2a2a2a; font-weight: 600;">Questions about this invoice?</p>
-                            <p style="margin: 0 0 15px 0; color: #5a5a5a; font-size: 14px;">Contact us if you have any questions about this invoice or need assistance with payment.</p>
-                            <a href="mailto:stellartmanagement@outlook.com?subject=Invoice ${invoiceId} - Payment Question" class="cta-button">Contact Us</a>
+                        <div class="booking-status-link">
+                            <h4>✅ Services Completed - Invoice Rendered</h4>
+                            <p>
+                                Your tree services have been completed and this invoice has been rendered. 
+                                You can track your booking history and view past services at any time:
+                            </p>
+                            <a href="https://stellartreemanagement.ca/booking-status.html?id=${bookingId || invoiceId}" class="status-link">
+                                View Booking Status & History
+                            </a>
                         </div>
-                        
-                        <p style="color: #5a5a5a; margin-bottom: 0;">Thank you for choosing Stellar Tree Management for your tree care needs. We look forward to serving you again!</p>
                     </div>
                     
                     <div class="footer">
                         <div class="footer-content">
+                            <h3 class="footer-title">Need Help?</h3>
+                            <p class="footer-text">
+                                Our team is ready to assist you with any questions about your invoice or payment.
+                            </p>
                             <div class="contact-info">
-                                <div class="contact-item">
-                                    <span class="contact-icon">📧</span>
-                                    <span>stellartmanagement@outlook.com</span>
-                                </div>
-                                <div class="contact-item">
-                                    <span class="contact-icon">🌐</span>
-                                    <span>www.stellartreemanagement.ca</span>
-                                </div>
+                                <strong>📧 Email:</strong> stellartmanagement@outlook.com<br>
+                                <strong>🌐 Website:</strong> www.stellartreemanagement.ca<br>
+                                <strong>📱 Phone:</strong> Available on request
                             </div>
-                        </div>
-                        <div class="footer-note">
-                            © 2024 Stellar Tree Management. Professional tree care services in Calgary.
                         </div>
                     </div>
                 </div>
@@ -942,28 +936,394 @@ class EmailService {
         `;
         
         const textContent = `
-            Dear ${clientName},
-            
-            Please find your invoice from Stellar Tree Management below:
-            
-            Invoice ID: ${invoiceId}
-            Date: ${invoiceDate}
-            
-            Service Items:
-            ${serviceItems.map(item => 
-                `- ${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`
-            ).join('\n')}
-            
-            Total Amount: $${totalAmount.toFixed(2)}
-            
-            Payment Required: Please remit payment as soon as possible. Thank you for your business!
-            
-            Best regards,
-            Stellar Tree Management Team
-            Email: stellartmanagement@outlook.com
+Invoice from Stellar Tree Management - ${invoiceId}
+
+Hello ${clientName},
+
+Thank you for choosing Stellar Tree Management! Your tree services have been completed. Please find your invoice below for the work performed.
+
+📋 Invoice Details:
+- Invoice ID: ${invoiceId}
+- Invoice Date: ${invoiceDate}
+
+Service Items:
+${serviceItems.map(item => `- ${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`).join('\n')}
+
+Total Amount Due: $${totalAmount.toFixed(2)}
+
+Payment is due within 30 days. Please contact us if you have any questions about payment arrangements.
+
+✅ Services Completed - Invoice Rendered
+Your tree services have been completed and this invoice has been rendered. 
+You can track your booking history and view past services at any time:
+https://stellartreemanagement.ca/booking-status.html?id=${bookingId || invoiceId}
+
+Need Help?
+Our team is ready to assist you with any questions about your invoice or payment.
+
+📧 Email: stellartmanagement@outlook.com
+🌐 Website: www.stellartreemanagement.ca
+📱 Phone: Available on request
+
+Best regards,
+The Stellar Tree Management Team
         `;
         
         return await this.sendEmail(email, subject, htmlContent, textContent);
+    }
+
+    async sendInvoiceEmailFromQuote(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems) {
+        const subject = `Invoice from Stellar Tree Management - ${invoiceId}`;
+        
+        // Format service items for email
+        const serviceItemsList = serviceItems.map(item => 
+            `<tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #2a2a2a;">${item.description}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #5a5a5a;">${item.quantity}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #5a5a5a;">$${item.price.toFixed(2)}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #2a2a2a;">$${item.total.toFixed(2)}</td>
+            </tr>`
+        ).join('');
+        
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Invoice - ${invoiceId}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+                    
+                    body { 
+                        margin: 0; 
+                        padding: 0; 
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                        line-height: 1.6; 
+                        color: #2a2a2a; 
+                        background-color: #f8f9fa; 
+                    }
+                    
+                    .email-container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background: #ffffff; 
+                        border-radius: 12px; 
+                        overflow: hidden; 
+                        box-shadow: 0 8px 32px rgba(42, 42, 42, 0.08);
+                    }
+                    
+                    .header { 
+                        background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%); 
+                        color: white; 
+                        padding: 40px 30px; 
+                        text-align: center; 
+                        position: relative;
+                    }
+                    
+                    .header::after {
+                        content: '';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 4px;
+                        background: #fd7e14;
+                    }
+                    
+                    .logo-section {
+                        margin-bottom: 20px;
+                    }
+                    
+                    .logo {
+                        width: 60px;
+                        height: 60px;
+                        background: #fd7e14;
+                        border-radius: 50%;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: white;
+                        margin-bottom: 15px;
+                        box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+                    }
+                    
+                    .company-name { 
+                        font-family: 'Poppins', sans-serif; 
+                        font-size: 28px; 
+                        font-weight: 700; 
+                        margin: 0; 
+                        color: white;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    }
+                    
+                    .invoice-badge {
+                        background: #fd7e14;
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-top: 15px;
+                        display: inline-block;
+                    }
+                    
+                    .content { 
+                        padding: 40px 30px; 
+                        background: #ffffff; 
+                    }
+                    
+                    .greeting {
+                        font-size: 22px;
+                        font-weight: 600;
+                        color: #2a2a2a;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .intro-text {
+                        font-size: 16px;
+                        color: #5a5a5a;
+                        margin-bottom: 25px;
+                        line-height: 1.6;
+                    }
+                    
+                    .invoice-details {
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin: 25px 0;
+                        border-left: 4px solid #fd7e14;
+                    }
+                    
+                    .invoice-details h3 {
+                        margin: 0 0 15px 0;
+                        color: #2a2a2a;
+                        font-size: 18px;
+                        font-weight: 600;
+                    }
+                    
+                    .detail-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 8px;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #e9ecef;
+                    }
+                    
+                    .detail-row:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .detail-label {
+                        font-weight: 600;
+                        color: #5a5a5a;
+                        font-size: 14px;
+                    }
+                    
+                    .detail-value {
+                        color: #2a2a2a;
+                        font-weight: 500;
+                        font-size: 14px;
+                    }
+                    
+                    .services-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 25px 0;
+                        background: white;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    
+                    .services-table th {
+                        background: #fd7e14;
+                        color: white;
+                        padding: 15px 12px;
+                        text-align: left;
+                        font-weight: 600;
+                        font-size: 14px;
+                    }
+                    
+                    .services-table td {
+                        padding: 12px;
+                        border-bottom: 1px solid #e5e7eb;
+                        color: #2a2a2a;
+                        font-size: 14px;
+                    }
+                    
+                    .total-section {
+                        background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        margin: 25px 0;
+                        font-size: 18px;
+                        font-weight: 600;
+                    }
+                    
+                    .footer {
+                        background: #2a2a2a;
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    
+                    .footer-content {
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+                    
+                    .footer-title {
+                        font-size: 18px;
+                        font-weight: 600;
+                        margin-bottom: 15px;
+                        color: #fd7e14;
+                    }
+                    
+                    .footer-text {
+                        font-size: 14px;
+                        color: #b0b0b0;
+                        line-height: 1.6;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .contact-info {
+                        font-size: 14px;
+                        color: #b0b0b0;
+                        line-height: 1.8;
+                    }
+                    
+                    .contact-info strong {
+                        color: #fd7e14;
+                    }
+                    
+                    @media (max-width: 600px) {
+                        .email-container { margin: 0 15px; }
+                        .content { padding: 30px 20px; }
+                        .header { padding: 30px 20px; }
+                        .detail-row { flex-direction: column; gap: 5px; }
+                        .services-table { font-size: 13px; }
+                        .services-table th, .services-table td { padding: 10px 8px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <div class="logo-section">
+                            <div class="logo">
+                                <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            </div>
+                            <h1 class="company-name">Stellar Tree Management</h1>
+                            <div class="invoice-badge">Invoice Rendered</div>
+                        </div>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="greeting">Hello ${clientName},</div>
+                        
+                        <div class="intro-text">
+                            Thank you for choosing Stellar Tree Management! Your tree services have been completed. 
+                            Please find your invoice below for the work performed.
+                        </div>
+                        
+                        <div class="invoice-details">
+                            <h3>📋 Invoice Details</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Invoice ID:</div>
+                                <div class="detail-value">${invoiceId}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Invoice Date:</div>
+                                <div class="detail-value">${invoiceDate}</div>
+                            </div>
+                        </div>
+                        
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>Service Description</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Price</th>
+                                    <th style="text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${serviceItemsList}
+                            </tbody>
+                        </table>
+                        
+                        <div class="total-section">
+                            Total Amount Due: $${totalAmount.toFixed(2)}
+                        </div>
+                        
+                        <p style="color: #5a5a5a; margin-bottom: 0; text-align: center; font-size: 14px;">
+                            Payment is due within 30 days. Please contact us if you have any questions about payment arrangements.
+                        </p>
+                    </div>
+                    
+                    <div class="footer">
+                        <div class="footer-content">
+                            <h3 class="footer-title">Need Help?</h3>
+                            <p class="footer-text">
+                                Our team is ready to assist you with any questions about your invoice or payment.
+                            </p>
+                            <div class="contact-info">
+                                <strong>📧 Email:</strong> stellartmanagement@outlook.com<br>
+                                <strong>🌐 Website:</strong> www.stellartreemanagement.ca<br>
+                                <strong>📱 Phone:</strong> Available on request
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        const textContent = `
+Invoice from Stellar Tree Management - ${invoiceId}
+
+Hello ${clientName},
+
+Thank you for choosing Stellar Tree Management! Your tree services have been completed. Please find your invoice below for the work performed.
+
+📋 Invoice Details:
+- Invoice ID: ${invoiceId}
+- Invoice Date: ${invoiceDate}
+
+Service Items:
+${serviceItems.map(item => `- ${item.description}: ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`).join('\n')}
+
+Total Amount Due: $${totalAmount.toFixed(2)}
+
+Payment is due within 30 days. Please contact us if you have any questions about payment arrangements.
+
+Need Help?
+Our team is ready to assist you with any questions about your invoice or payment.
+
+📧 Email: stellartmanagement@outlook.com
+🌐 Website: www.stellartreemanagement.ca
+📱 Phone: Available on request
+
+Best regards,
+The Stellar Tree Management Team
+        `;
+        
+        return await this.sendEmail(email, subject, htmlContent, textContent);
+    }
+
+    // Main method for sending invoice emails from bookings (uses improved template)
+    async sendInvoiceEmail(email, bookingId, service, totalAmount, workDescription, name, address, notes, serviceItems = []) {
+        try {
+            const template = generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDescription, name, address, notes, serviceItems);
+            return await this.sendEmail(email, template.subject, template.html, template.text);
+        } catch (error) {
+            console.error('Error sending invoice email:', error);
+            return { success: false, error: error.message };
+        }
     }
 
     async sendBookingConfirmationEmail(email, bookingId, service, date, time, name, address = '', notes = '') {
@@ -1419,16 +1779,6 @@ class EmailService {
         `;
         
         return await this.sendEmail(adminEmail, subject, htmlContent, textContent);
-    }
-
-    async sendInvoiceEmail(email, bookingId, service, totalAmount, workDescription, name, address, notes, serviceItems = []) {
-        try {
-            const template = generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDescription, name, address, notes, serviceItems);
-            return await this.sendEmail(email, template.subject, template.html, template.text);
-        } catch (error) {
-            console.error('Error sending invoice email:', error);
-            return { success: false, error: error.message };
-        }
     }
 }
 

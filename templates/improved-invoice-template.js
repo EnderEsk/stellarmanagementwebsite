@@ -5,6 +5,14 @@
 function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDescription, name, address, notes, serviceItems = []) {
     const subject = `Invoice for Tree Services - ${bookingId}`;
     
+    // Ensure all parameters are properly converted to strings and handle undefined values
+    const safeName = name ? String(name) : 'Valued Customer';
+    const safeService = service ? String(service) : 'Tree Service';
+    const safeWorkDescription = workDescription ? String(workDescription) : 'Tree maintenance and care';
+    const safeAddress = address ? String(address) : '';
+    const safeNotes = notes ? String(notes) : '';
+    const safeTotalAmount = totalAmount ? String(totalAmount) : '0.00';
+    
     const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -317,140 +325,140 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                     .detail-value {
                         font-size: 13px;
                     }
-                    
-                    .service-items {
-                        margin: 30px 0;
-                        background: #f8f9fa;
-                        border-radius: 12px;
-                        padding: 25px;
-                        border-left: 4px solid #e83e8c;
-                    }
-                    
-                    .service-items h3 {
-                        margin: 0 0 20px 0;
-                        color: #2a2a2a;
-                        font-size: 18px;
-                        font-weight: 600;
-                    }
-                    
-                    .items-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    
-                    .table-header {
-                        display: table;
-                        width: 100%;
-                        background: #e83e8c;
-                        color: white;
-                        font-weight: 600;
-                        border-radius: 8px 8px 0 0;
-                        overflow: hidden;
-                    }
-                    
-                    .header-item {
-                        display: table-cell;
-                        padding: 12px 8px;
-                        text-align: center;
-                        font-size: 14px;
-                    }
-                    
-                    .header-item:first-child {
-                        text-align: left;
-                        padding-left: 16px;
-                    }
-                    
-                    .header-item:last-child {
-                        text-align: right;
-                        padding-right: 16px;
-                    }
-                    
-                    .table-row {
-                        display: table;
-                        width: 100%;
-                        border-bottom: 1px solid #e9ecef;
-                    }
-                    
-                    .table-row:last-child {
-                        border-bottom: none;
-                    }
-                    
-                    .item-description {
-                        display: table-cell;
-                        padding: 12px 8px;
-                        color: #2a2a2a;
-                        font-weight: 500;
-                        font-size: 14px;
-                        width: 40%;
-                    }
-                    
-                    .item-quantity {
-                        display: table-cell;
-                        padding: 12px 8px;
-                        color: #5a5a5a;
-                        text-align: center;
-                        font-size: 14px;
-                        width: 15%;
-                    }
-                    
-                    .item-price {
-                        display: table-cell;
-                        padding: 12px 8px;
-                        color: #5a5a5a;
-                        text-align: center;
-                        font-size: 14px;
-                        width: 20%;
-                    }
-                    
-                    .item-total {
-                        display: table-cell;
-                        padding: 12px 8px;
-                        color: #2a2a2a;
-                        font-weight: 600;
-                        text-align: right;
-                        font-size: 14px;
-                        width: 25%;
-                    }
-                    
-                    .booking-status-link {
-                        text-align: center;
-                        margin: 30px 0;
-                        padding: 25px;
-                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                        border-radius: 16px;
-                        border: 2px solid #28a745;
-                    }
-                    
-                    .booking-status-link h4 {
-                        margin: 0 0 15px 0;
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: #2a2a2a;
-                    }
-                    
-                    .booking-status-link p {
-                        margin: 0 0 20px 0;
-                        color: #5a5a5a;
-                        line-height: 1.6;
-                    }
-                    
-                    .status-link {
-                        display: inline-block;
-                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        font-weight: 600;
-                        font-size: 16px;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-                    }
-                    
-                    .status-link:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-                    }
+                }
+                
+                .service-items {
+                    margin: 30px 0;
+                    background: #f8f9fa;
+                    border-radius: 12px;
+                    padding: 25px;
+                    border-left: 4px solid #e83e8c;
+                }
+                
+                .service-items h3 {
+                    margin: 0 0 20px 0;
+                    color: #2a2a2a;
+                    font-size: 18px;
+                    font-weight: 600;
+                }
+                
+                .items-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                
+                .table-header {
+                    display: table;
+                    width: 100%;
+                    background: #e83e8c;
+                    color: white;
+                    font-weight: 600;
+                    border-radius: 8px 8px 0 0;
+                    overflow: hidden;
+                }
+                
+                .header-item {
+                    display: table-cell;
+                    padding: 12px 8px;
+                    text-align: center;
+                    font-size: 14px;
+                }
+                
+                .header-item:first-child {
+                    text-align: left;
+                    padding-left: 16px;
+                }
+                
+                .header-item:last-child {
+                    text-align: right;
+                    padding-right: 16px;
+                }
+                
+                .table-row {
+                    display: table;
+                    width: 100%;
+                    border-bottom: 1px solid #e9ecef;
+                }
+                
+                .table-row:last-child {
+                    border-bottom: none;
+                }
+                
+                .item-description {
+                    display: table-cell;
+                    padding: 12px 8px;
+                    color: #2a2a2a;
+                    font-weight: 500;
+                    font-size: 14px;
+                    width: 40%;
+                }
+                
+                .item-quantity {
+                    display: table-cell;
+                    padding: 12px 8px;
+                    color: #5a5a5a;
+                    text-align: center;
+                    font-size: 14px;
+                    width: 15%;
+                }
+                
+                .item-price {
+                    display: table-cell;
+                    padding: 12px 8px;
+                    color: #5a5a5a;
+                    text-align: center;
+                    font-size: 14px;
+                    width: 20%;
+                }
+                
+                .item-total {
+                    display: table-cell;
+                    padding: 12px 8px;
+                    color: #2a2a2a;
+                    font-weight: 600;
+                    text-align: right;
+                    font-size: 14px;
+                    width: 25%;
+                }
+                
+                .booking-status-link {
+                    text-align: center;
+                    margin: 30px 0;
+                    padding: 25px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-radius: 16px;
+                    border: 2px solid #28a745;
+                }
+                
+                .booking-status-link h4 {
+                    margin: 0 0 15px 0;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #2a2a2a;
+                }
+                
+                .booking-status-link p {
+                    margin: 0 0 20px 0;
+                    color: #5a5a5a;
+                    line-height: 1.6;
+                }
+                
+                .status-link {
+                    display: inline-block;
+                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                    color: white;
+                    text-decoration: none;
+                    padding: 12px 24px;
+                    border-radius: 25px;
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                }
+                
+                .status-link:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
                 }
             </style>
         </head>
@@ -458,20 +466,20 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
             <div class="email-container">
                 <div class="header">
                     <div class="logo-section">
-                        <<div class="logo">
-    <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
-</div>
+                        <div class="logo">
+                            <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
                         <h1 class="company-name">Stellar Tree Management</h1>
                     </div>
                     <div class="invoice-badge">Invoice for Services Rendered</div>
                 </div>
                 
                 <div class="content">
-                    <h2 class="greeting">Hello ${name}! 📄</h2>
+                    <h2 class="greeting">Hello ${safeName}! 📄</h2>
                     
                     <p class="message">
-                        Thank you for choosing Stellar Tree Management! Your tree services have been completed. 
-                        Please find your invoice below for the work performed.
+                        Thank you for choosing Stellar Tree Management! Your tree services have been completed and 
+                        this invoice has been rendered for the work performed. Please review the details below.
                     </p>
                     
                     <div class="invoice-details">
@@ -482,22 +490,22 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Service:</div>
-                            <div class="detail-value">${service}</div>
+                            <div class="detail-value">${safeService}</div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Work Description:</div>
-                            <div class="detail-value">${workDescription}</div>
+                            <div class="detail-value">${safeWorkDescription}</div>
                         </div>
-                        ${address ? `
+                        ${safeAddress ? `
                         <div class="detail-row">
                             <div class="detail-label">Service Address:</div>
-                            <div class="detail-value">${address}</div>
+                            <div class="detail-value">${safeAddress}</div>
                         </div>
                         ` : ''}
-                        ${notes ? `
+                        ${safeNotes ? `
                         <div class="detail-row">
                             <div class="detail-label">Additional Notes:</div>
-                            <div class="detail-value">${notes}</div>
+                            <div class="detail-value">${safeNotes}</div>
                         </div>
                         ` : ''}
                     </div>
@@ -514,10 +522,10 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                             </div>
                             ${serviceItems.map(item => `
                                 <div class="table-row">
-                                    <div class="item-description">${item.description}</div>
-                                    <div class="item-quantity">${item.quantity}</div>
-                                    <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
-                                    <div class="item-total">$${parseFloat(item.total).toFixed(2)}</div>
+                                    <div class="item-description">${item.description || 'Service Item'}</div>
+                                    <div class="item-quantity">${item.quantity || '1'}</div>
+                                    <div class="item-price">$${parseFloat(item.price || 0).toFixed(2)}</div>
+                                    <div class="item-total">$${parseFloat(item.total || 0).toFixed(2)}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -526,7 +534,7 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                     
                     <div class="total-amount">
                         <h3>Total Amount Due</h3>
-                        <div class="amount">$${totalAmount}</div>
+                        <div class="amount">$${safeTotalAmount}</div>
                     </div>
                     
                     <div class="payment-section">
@@ -555,12 +563,13 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                     </div>
                     
                     <div class="booking-status-link">
-                        <h4>📱 Track Your Booking</h4>
+                        <h4>✅ Services Completed - Invoice Rendered</h4>
                         <p>
-                            View your booking status and track progress at any time:
+                            Your tree services have been completed and this invoice has been rendered. 
+                            You can track your booking history and view past services at any time:
                         </p>
                         <a href="https://stellartreemanagement.ca/booking-status.html?id=${bookingId}" class="status-link">
-                            View Booking Status
+                            View Booking Status & History
                         </a>
                     </div>
                     
@@ -591,35 +600,37 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
     const textContent = `
 Invoice for Tree Services - ${bookingId}
 
-Hello ${name}! 📄
+Hello ${safeName}! 📄
 
-Thank you for choosing Stellar Tree Management! Your tree services have been completed. Please find your invoice below for the work performed.
+Thank you for choosing Stellar Tree Management! Your tree services have been completed and 
+this invoice has been rendered for the work performed. Please review the details below.
 
 📋 Invoice Details:
 - Invoice ID: ${bookingId}
-- Service: ${service}
-- Work Description: ${workDescription}
-${address ? `- Service Address: ${address}` : ''}
-${notes ? `- Additional Notes: ${notes}` : ''}
+- Service: ${safeService}
+- Work Description: ${safeWorkDescription}
+${safeAddress ? `- Service Address: ${safeAddress}` : ''}
+${safeNotes ? `- Additional Notes: ${safeNotes}` : ''}
 
 ${serviceItems && serviceItems.length > 0 ? `
 📋 Service Items:
-${serviceItems.map(item => `- ${item.description}: ${item.quantity} x $${parseFloat(item.price).toFixed(2)} = $${parseFloat(item.total).toFixed(2)}`).join('\n')}
+${serviceItems.map(item => `- ${item.description || 'Service Item'}: ${item.quantity || '1'} x $${parseFloat(item.price || 0).toFixed(2)} = $${parseFloat(item.total || 0).toFixed(2)}`).join('\n')}
 ` : ''}
 
-Total Amount Due: $${totalAmount}
+Total Amount Due: $${safeTotalAmount}
 
 💳 Payment Options:
 We accept the following payment methods:
-- Check: Pay by check upon invoice
-- E-Transfer: Pay securely via e-transfer
+- Credit Card: Pay securely online
+- Bank Transfer: Direct bank deposit
 
 ⚠️ Payment Terms
 Payment is due within 30 days of invoice date. Please contact us if you have any questions about payment arrangements.
 
-📱 Track Your Booking:
-            View your booking status and track progress at any time:
-            https://stellartreemanagement.ca/booking-status.html?id=${bookingId}
+✅ Services Completed - Invoice Rendered
+Your tree services have been completed and this invoice has been rendered. 
+You can track your booking history and view past services at any time:
+https://stellartreemanagement.ca/booking-status.html?id=${bookingId}
 
 Thank you for your business! If you have any questions about this invoice or need to make payment arrangements, please don't hesitate to contact us.
 
