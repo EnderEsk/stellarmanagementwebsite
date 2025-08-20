@@ -116,86 +116,46 @@ function generateImprovedQuoteSentTemplate(bookingId, service, estimatedCost, wo
                     line-height: 1.7;
                 }
                 
-                .quote-details {
-                    background: #f8f9fa;
-                    border-radius: 12px;
-                    padding: 25px;
-                    margin: 30px 0;
-                    border-left: 4px solid #fd7e14;
-                }
-                
-                .quote-details h3 {
-                    margin: 0 0 20px 0;
-                    color: #2a2a2a;
-                    font-size: 18px;
-                    font-weight: 600;
-                }
-                
-                .detail-row {
-                    display: table;
-                    width: 100%;
-                    margin-bottom: 12px;
-                }
-                
-                .detail-row:last-child {
-                    margin-bottom: 0;
-                }
-                
-                .detail-label {
-                    display: table-cell;
-                    width: 120px;
-                    font-weight: 600;
-                    color: #5a5a5a;
-                    font-size: 14px;
-                }
-                
-                .detail-value {
-                    display: table-cell;
-                    color: #2a2a2a;
-                    font-weight: 500;
-                    font-size: 14px;
-                }
-                
-                .cta-section {
+                .success-section {
                     text-align: center;
                     margin: 40px 0;
                     padding: 30px;
-                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
                     border-radius: 16px;
-                    border: 2px solid #fd7e14;
+                    border: 2px solid #28a745;
                 }
                 
-                .cta-title {
+                .success-title {
                     font-size: 20px;
                     font-weight: 700;
-                    color: #2a2a2a;
+                    color: #155724;
                     margin-bottom: 15px;
                 }
                 
-                .cta-description {
+                .success-description {
                     font-size: 16px;
-                    color: #5a5a5a;
+                    color: #155724;
                     margin-bottom: 25px;
                     line-height: 1.6;
                 }
                 
-                .cta-button {
+                .success-button {
                     display: inline-block;
-                    background: linear-gradient(135deg, #fd7e14 0%, #ff8c42 100%);
+                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
                     color: white;
                     text-decoration: none;
                     padding: 16px 32px;
                     border-radius: 50px;
                     font-weight: 600;
                     font-size: 16px;
-                    box-shadow: 0 8px 24px rgba(253, 126, 20, 0.3);
+                    box-shadow: 0 8px 24px rgba(40, 167, 69, 0.3);
                     transition: all 0.3s ease;
                     margin: 10px;
                 }
                 
-                .cta-button:hover {
+                .success-button:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 12px 32px rgba(253, 126, 20, 0.4);
+                    box-shadow: 0 12px 32px rgba(40, 167, 69, 0.4);
                 }
                 
                 .important-note {
@@ -279,18 +239,9 @@ function generateImprovedQuoteSentTemplate(bookingId, service, estimatedCost, wo
                         font-size: 20px;
                     }
                     
-                    .cta-section {
+                    .success-section {
                         padding: 20px;
                         margin: 20px 0;
-                    }
-                    
-                    .detail-label {
-                        width: 100px;
-                        font-size: 13px;
-                    }
-                    
-                    .detail-value {
-                        font-size: 13px;
                     }
                 }
             </style>
@@ -310,50 +261,16 @@ function generateImprovedQuoteSentTemplate(bookingId, service, estimatedCost, wo
                     
                     <p class="message">
                         Great news! We've completed our assessment and prepared your quote for tree services. 
-                        Please review the details below and confirm if you'd like to proceed.
+                        Please review the details and confirm if you'd like to proceed.
                     </p>
                     
-                    <div class="quote-details">
-                        <h3>📋 Quote Details</h3>
-                        <div class="detail-row">
-                            <div class="detail-label">Booking ID:</div>
-                            <div class="detail-value">${bookingId}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Service:</div>
-                            <div class="detail-value">${service}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Estimated Cost:</div>
-                            <div class="detail-value">${estimatedCost === 'TBD' ? 'Quote being prepared' : `$${estimatedCost}`}</div>
-                        </div>
-                        ${workDescription && workDescription.trim() !== 't' && workDescription.trim().length > 1 ? `
-                        <div class="detail-row">
-                            <div class="detail-label">Work Description:</div>
-                            <div class="detail-value">${workDescription}</div>
-                        </div>
-                        ` : ''}
-                        ${address && address.trim() !== 't' && address.trim().length > 1 ? `
-                        <div class="detail-row">
-                            <div class="detail-label">Address:</div>
-                            <div class="detail-value">${address}</div>
-                        </div>
-                        ` : ''}
-                        ${notes && notes.trim() !== 't' && notes.trim().length > 1 ? `
-                        <div class="detail-row">
-                            <div class="detail-label">Notes:</div>
-                            <div class="detail-value">${notes}</div>
-                        </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div class="cta-section">
-                        <h3 class="cta-title">📝 Review & Confirm Your Quote</h3>
-                        <p class="cta-description">
-                            Click the button below to access your quote and confirm if you'd like to proceed:
+                    <div class="success-section">
+                        <h3 class="success-title">🎉 Your Quote is Ready!</h3>
+                        <p class="success-description">
+                            Click the button below to view your booking status and review your quote:
                         </p>
-                        <a href="${bookingStatusUrl}" class="cta-button">
-                            📋 Review Quote & Confirm
+                        <a href="${bookingStatusUrl}" class="success-button">
+                            📋 View Booking Status
                         </a>
                     </div>
                     
@@ -394,21 +311,13 @@ Your Quote is Ready - ${bookingId}
 
 Hello ${name}! 📋
 
-Great news! We've completed our assessment and prepared your quote for tree services. Please review the details below and confirm if you'd like to proceed.
+Great news! We've completed our assessment and prepared your quote for tree services. Please review the details and confirm if you'd like to proceed.
 
-📋 Quote Details:
-- Booking ID: ${bookingId}
-- Service: ${service}
-- Estimated Cost: ${estimatedCost === 'TBD' ? 'Quote being prepared' : `$${estimatedCost}`}
-${workDescription && workDescription.trim() !== 't' && workDescription.trim().length > 1 ? `- Work Description: ${workDescription}` : ''}
-${address && address.trim() !== 't' && address.trim().length > 1 ? `- Address: ${address}` : ''}
-${notes && notes.trim() !== 't' && notes.trim().length > 1 ? `- Notes: ${notes}` : ''}
+🎉 Your Quote is Ready!
 
-📝 Review & Confirm Your Quote
+Click the link below to view your booking status and review your quote:
 
-Click the link below to access your quote and confirm if you'd like to proceed:
-
-📋 Review Quote & Confirm: ${bookingStatusUrl}
+📋 View Booking Status: ${bookingStatusUrl}
 
 ⚠️ Action Required
 Please review and confirm your quote to proceed with scheduling your tree service. Once confirmed, you'll be able to choose your preferred date and time.

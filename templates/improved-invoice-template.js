@@ -458,7 +458,9 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
             <div class="email-container">
                 <div class="header">
                     <div class="logo-section">
-                        <div class="logo">🌳</div>
+                        <<div class="logo">
+    <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
                         <h1 class="company-name">Stellar Tree Management</h1>
                     </div>
                     <div class="invoice-badge">Invoice for Services Rendered</div>
@@ -541,10 +543,6 @@ function generateImprovedInvoiceTemplate(bookingId, service, totalAmount, workDe
                                 <h4>🏦 Bank Transfer</h4>
                                 <p>Direct bank deposit</p>
                             </div>
-                            <div class="payment-method">
-                                <h4>💵 Cash</h4>
-                                <p>Pay on completion</p>
-                            </div>
                         </div>
                     </div>
                     
@@ -613,9 +611,8 @@ Total Amount Due: $${totalAmount}
 
 💳 Payment Options:
 We accept the following payment methods:
-- Credit Card: Pay securely online
-- Bank Transfer: Direct bank deposit
-- Cash: Pay on completion
+- Check: Pay by check upon invoice
+- E-Transfer: Pay securely via e-transfer
 
 ⚠️ Payment Terms
 Payment is due within 30 days of invoice date. Please contact us if you have any questions about payment arrangements.

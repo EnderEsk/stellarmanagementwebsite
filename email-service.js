@@ -201,6 +201,31 @@ class EmailService {
                         margin: 0;
                         font-size: 16px;
                         line-height: 1.6;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .view-booking-btn {
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        display: inline-block;
+                        margin-top: 15px;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                        font-size: 14px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        border: 2px solid #28a745;
+                    }
+                    
+                    .view-booking-btn:hover {
+                        background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+                        border-color: #20c997;
                     }
                     
                     .quote-details { 
@@ -392,11 +417,11 @@ class EmailService {
                         .content { padding: 30px 20px; }
                         .header { padding: 40px 20px; }
                         .quote-meta { flex-direction: column; }
-                        .cta-section .cta-button,
-                        .cta-section .booking-status-link {
+                        .view-booking-btn {
                             display: block;
-                            margin: 10px 0;
-                            margin-left: 0;
+                            margin: 10px auto;
+                            text-align: center;
+                            max-width: 200px;
                         }
                     }
                 </style>
@@ -405,7 +430,9 @@ class EmailService {
                 <div class="email-container">
                     <div class="header">
                         <div class="logo-section">
-                            <div class="logo">🌲</div>
+                            <div class="logo">
+                                <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            </div>
                             <h1 class="company-name">Stellar Tree Management</h1>
                             <div class="quote-badge">Quote Ready</div>
                         </div>
@@ -422,6 +449,7 @@ class EmailService {
                             <div class="success-icon">📋</div>
                             <div class="success-title">Your Quote is Ready!</div>
                             <p class="success-text">Please review the details below and let us know if you'd like to proceed with scheduling.</p>
+                            ${bookingId ? `<a href="https://www.stellartreemanagement.ca/booking-status.html?id=${bookingId}" class="view-booking-btn">View Booking Status</a>` : ''}
                         </div>
                         
                         <div class="quote-details">
@@ -456,12 +484,6 @@ class EmailService {
                             Total Quote Amount: $${totalAmount.toFixed(2)}
                         </div>
                         
-                        <div class="cta-section">
-                            <p style="margin: 0 0 10px 0; color: #2a2a2a; font-weight: 600;">Ready to proceed?</p>
-                            <p style="margin: 0 0 15px 0; color: #5a5a5a; font-size: 14px;">Contact us to schedule your service or if you have any questions about this quote.</p>
-
-                            ${bookingId ? `<a href="https://www.stellartreemanagement.ca/booking-status.html?id=${bookingId}" class="booking-status-link">View Booking Status</a>` : ''}
-                        </div>
                         
                         <p style="color: #5a5a5a; margin-bottom: 0;">This quote is valid for 30 days. We're here to answer any questions you may have about our services.</p>
                     </div>
@@ -837,7 +859,9 @@ class EmailService {
                 <div class="email-container">
                     <div class="header">
                         <div class="logo-section">
-                            <div class="logo">🌲</div>
+                            <div class="logo">
+                                <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                            </div>
                             <h1 class="company-name">Stellar Tree Management</h1>
                             <div class="invoice-badge">Payment Due</div>
                         </div>
@@ -1288,7 +1312,9 @@ class EmailService {
                 <div class="email-container">
                     <div class="header">
                         <div class="logo-section">
-                            <div class="logo">🌲</div>
+                            <div class="logo">
+    <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
                             <h1 class="company-name">Stellar Tree Management</h1>
                             <div class="notification-badge">New Quote Request</div>
                         </div>

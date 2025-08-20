@@ -299,7 +299,9 @@ function generateImprovedQuoteConfirmationTemplate(bookingId, service, estimated
             <div class="email-container">
                 <div class="header">
                     <div class="logo-section">
-                        <div class="logo">🌳</div>
+                        <div class="logo">
+    <img src="https://www.stellartreemanagement.ca/images/logo.png" alt="Stellar Tree Management Logo" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
                         <h1 class="company-name">Stellar Tree Management</h1>
                     </div>
                     <div class="quote-badge">Quote Confirmed ✓</div>
