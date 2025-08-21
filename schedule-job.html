@@ -402,6 +402,26 @@
             font-size: 8px;
         }
 
+        .calendar-day.weekend {
+            background: rgba(23, 162, 184, 0.15);
+            border-color: #17a2b8;
+            color: #17a2b8;
+            font-weight: 600;
+        }
+
+        .calendar-day.weekend:hover {
+            background: rgba(23, 162, 184, 0.2);
+            transform: scale(1.05);
+        }
+
+        .calendar-day.weekend::after {
+            content: '🔵';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+
         /* Calendar day focus states for accessibility */
         .calendar-day:focus {
             outline: 2px solid var(--accent-color);
@@ -474,6 +494,42 @@
         .legend-indicator.blocked {
             background: rgba(108, 117, 125, 0.3);
             border-color: #6c757d;
+        }
+
+        .legend-indicator.weekend {
+            background: rgba(23, 162, 184, 0.3);
+            border-color: #17a2b8;
+        }
+
+        /* Weekend Booking Notice */
+        .weekend-booking-notice {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 15px;
+            border: 2px solid #2196f3;
+            margin: 1rem 0;
+        }
+
+        .weekend-notice-icon {
+            font-size: 3rem;
+            color: #2196f3;
+            flex-shrink: 0;
+        }
+
+        .weekend-notice-text h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1976d2;
+            font-size: 1.2rem;
+        }
+
+        .weekend-notice-text p {
+            margin: 0.5rem 0;
+            color: #1565c0;
+            font-size: 0.95rem;
+            line-height: 1.4;
         }
 
         /* Calendar Info Section */
@@ -1077,7 +1133,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-indicator partially-booked"></div>
-                        <span>Partially Booked</span>
+                        <span>Partially Booked (Weekdays)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-indicator booked"></div>
@@ -1085,7 +1141,11 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-indicator blocked"></div>
-                        <span>Blocked</span>
+                        <span>Blocked (Weekdays by default)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator weekend"></div>
+                        <span>Weekend (Full-day jobs)</span>
                     </div>
                 </div>
 
@@ -1496,40 +1556,35 @@
                     availabilityData[dateString] = { blocked: true };
                     blockedCount++;
                 } else if (i === 1 && isWeekend) {
-                    // Second day if it's a weekend - explicitly unblocked
+                    // Second day if it's a weekend - available for full-day booking
                     availabilityData[dateString] = {
-                        unblocked: true,
-                        '5:30 PM': 0,
-                        '6:30 PM': 0,
-                        '7:30 PM': 0
+                        weekendBooked: false
                     };
                     unblockedWeekendCount++;
-                } else if (i === 2) {
-                    // Third day - fully booked
+                } else if (i === 2 && !isWeekend) {
+                    // Third day - fully booked (weekday only)
                     availabilityData[dateString] = {
                         '5:30 PM': 1,
                         '6:30 PM': 1,
                         '7:30 PM': 1
                     };
                     bookedCount++;
-                } else if (i === 3) {
-                    // Fourth day - partially booked
+                } else if (i === 3 && !isWeekend) {
+                    // Fourth day - partially booked (weekday only)
                     availabilityData[dateString] = {
                         '5:30 PM': 1,
                         '6:30 PM': 0,
                         '7:30 PM': 1
                     };
                     partiallyBookedCount++;
-                } else if (i === 4) {
+                } else if (i === 4 && !isWeekend) {
                     // Fifth day - available (weekday only)
-                    if (!isWeekend) {
-                        availabilityData[dateString] = {
-                            '5:30 PM': 0,
-                            '6:30 PM': 0,
-                            '7:30 PM': 0
-                        };
-                        availableCount++;
-                    }
+                    availabilityData[dateString] = {
+                        '5:30 PM': 0,
+                        '6:30 PM': 0,
+                        '7:30 PM': 0
+                    };
+                    availableCount++;
                 } else {
                     // Random assignment for remaining days
                     const random = Math.random();
@@ -1537,16 +1592,14 @@
                         // 15% chance of weekday being explicitly blocked
                         availabilityData[dateString] = { blocked: true };
                         blockedCount++;
-                    } else if (random < 0.25 && isWeekend) {
-                        // 10% chance of weekend being explicitly unblocked
+                    } else if (random < 0.35 && isWeekend) {
+                        // 20% chance of weekend being booked
                         availabilityData[dateString] = {
-                            unblocked: true,
-                            '5:30 PM': 0,
-                            '6:30 PM': 0,
-                            '7:30 PM': 0
+                            weekendBooked: true
                         };
-                        unblockedWeekendCount++;
-                    } else if (random < 0.45 && !isWeekend) {
+                        bookedCount++;
+                        console.log(`📅 Weekend ${dateString} marked as booked`);
+                    } else if (random < 0.55 && !isWeekend) {
                         // 20% chance of weekday being fully booked
                         availabilityData[dateString] = {
                             '5:30 PM': 1,
@@ -1554,7 +1607,7 @@
                             '7:30 PM': 1
                         };
                         bookedCount++;
-                    } else if (random < 0.65 && !isWeekend) {
+                    } else if (random < 0.75 && !isWeekend) {
                         // 20% chance of weekday being partially booked
                         availabilityData[dateString] = {
                             '5:30 PM': 1,
@@ -1570,8 +1623,14 @@
                             '7:30 PM': 0
                         };
                         availableCount++;
+                    } else {
+                        // Remaining weekends are available for full-day booking
+                        availabilityData[dateString] = {
+                            weekendBooked: false
+                        };
+                        unblockedWeekendCount++;
+                        console.log(`📅 Weekend ${dateString} marked as available for full-day booking`);
                     }
-                    // Weekends without explicit unblocked status will be blocked by default
                 }
             }
         }
@@ -1657,7 +1716,7 @@
                     // Check blocked dates from database
                     const blockedDateReason = blockedDatesData[dateString];
                     const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
-                    const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
+                    const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekday';
                     const isWeekend = currentDateObj.getDay() === 0 || currentDateObj.getDay() === 6; // Sunday or Saturday
                     
                     // Check if the date has availability data (time slots) - this means it's available
@@ -1665,56 +1724,80 @@
                                              dayBookings['6:30 PM'] !== undefined || 
                                              dayBookings['7:30 PM'] !== undefined;
                     
-                    // Date is blocked if: explicitly blocked OR (weekend AND not explicitly unblocked)
-                    const isBlocked = isExplicitlyBlocked || (isWeekend && !isExplicitlyUnblocked);
+                    // Date is blocked if: explicitly blocked OR (weekday AND not explicitly unblocked)
+                    // Weekends are now available by default for job scheduling
+                    const isBlocked = isExplicitlyBlocked || (!isWeekend && !isExplicitlyUnblocked);
                     
                     if (isBlocked) {
                         if (isExplicitlyBlocked) {
                             dayElement.classList.add('blocked');
                             dayElement.textContent = currentDateObj.getDate();
                             dayElement.title = 'This day is explicitly blocked';
-                        } else if (isWeekend && !isExplicitlyUnblocked) {
+                        } else if (!isWeekend && !isExplicitlyUnblocked) {
                             dayElement.classList.add('blocked');
                             dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'Weekend - blocked by default';
+                            dayElement.title = 'Weekday - blocked by default';
                         }
                     } else {
-                        // Check booking status for this day
-                        const timeSlots = businessHours.timeSlots;
-                        let totalBookings = 0;
-                        let bookedTimeSlots = [];
+                                            // Check if this is a weekend (full-day booking) or weekday (time-slot booking)
+                    if (isWeekend) {
+                        // Weekend days are full-day bookings - no time slots
+                        const isWeekendBooked = dayBookings.weekendBooked || false;
                         
-                        // Count bookings for each time slot
-                        timeSlots.forEach(time => {
-                            const bookingCount = dayBookings[time] || 0;
-                            totalBookings += bookingCount;
-                            if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
-                                bookedTimeSlots.push(time);
-                            }
-                        });
+                        console.log(`📅 Rendering weekend ${dateString}: weekendBooked=${isWeekendBooked}`);
                         
-                        // Determine day status
-                        if (bookedTimeSlots.length === timeSlots.length) {
-                            // All time slots are booked
+                        if (isWeekendBooked) {
+                            // Weekend is fully booked
                             dayElement.classList.add('booked');
                             dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'All time slots are booked';
-                        } else if (bookedTimeSlots.length > 0) {
-                            // Some time slots are booked
-                            dayElement.classList.add('partially-booked');
-                            dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = `Some time slots booked: ${bookedTimeSlots.join(', ')}`;
-                            
-                            // Add click handler for partially booked days
-                            dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                            dayElement.title = 'Weekend - Fully booked for the day';
                         } else {
-                            // All time slots are available
-                            dayElement.classList.add('available');
+                            // Weekend is available for full-day booking
+                            dayElement.classList.add('weekend');
                             dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'Available for booking';
+                            dayElement.title = 'Weekend - Available for full-day job scheduling';
                             
-                            // Add click handler
-                            dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                            // Add click handler for weekend selection
+                            dayElement.addEventListener('click', () => selectWeekendDate(currentDateObj));
+                        }
+                        } else {
+                            // Weekday - check time slot availability
+                            const timeSlots = businessHours.timeSlots;
+                            let totalBookings = 0;
+                            let bookedTimeSlots = [];
+                            
+                            // Count bookings for each time slot
+                            timeSlots.forEach(time => {
+                                const bookingCount = dayBookings[time] || 0;
+                                totalBookings += bookingCount;
+                                if (bookingCount >= businessHours.maxBookingsPerTimeSlot) {
+                                    bookedTimeSlots.push(time);
+                                }
+                            });
+                            
+                            // Determine day status
+                            if (bookedTimeSlots.length === timeSlots.length) {
+                                // All time slots are booked
+                                dayElement.classList.add('booked');
+                                dayElement.textContent = currentDateObj.getDate();
+                                dayElement.title = 'All time slots are booked';
+                            } else if (bookedTimeSlots.length > 0) {
+                                // Some time slots are booked
+                                dayElement.classList.add('partially-booked');
+                                dayElement.textContent = currentDateObj.getDate();
+                                dayElement.title = `Some time slots booked: ${bookedTimeSlots.join(', ')}`;
+                                
+                                // Add click handler for partially booked days
+                                dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                            } else {
+                                // All time slots are available
+                                dayElement.classList.add('available');
+                                dayElement.textContent = currentDateObj.getDate();
+                                dayElement.title = 'Available for booking';
+                                
+                                // Add click handler
+                                dayElement.addEventListener('click', () => selectDate(currentDateObj));
+                            }
                         }
                     }
                 }
@@ -1789,7 +1872,7 @@
             const dayBookings = availabilityData[dateString] || {};
             const blockedDateReason = blockedDatesData[dateString];
             const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
-            const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekend';
+            const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekday';
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined || 
                                       dayBookings['6:30 PM'] !== undefined || 
@@ -1811,28 +1894,63 @@
                         <span class="info-value">This day is blocked by admin and unavailable for booking</span>
                     </div>
                 `;
-            } else if (isWeekend && !isExplicitlyUnblocked) {
+            } else if (!isWeekend && !isExplicitlyUnblocked) {
                 infoHTML = `
                     <div class="info-row">
                         <span class="info-label">Status:</span>
-                        <span class="info-value" style="color: #6c757d;">Weekend Blocked</span>
+                        <span class="info-value" style="color: #6c757d;">Weekday Blocked</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Reason:</span>
-                        <span class="info-value">Weekend - blocked by default (contact admin to unblock)</span>
+                        <span class="info-value">Weekday - blocked by default for job scheduling (contact admin to unblock)</span>
                     </div>
                 `;
-            } else if (isWeekend && isExplicitlyUnblocked) {
+            } else if (!isWeekend && isExplicitlyUnblocked) {
                 infoHTML = `
                     <div class="info-row">
                         <span class="info-label">Status:</span>
-                        <span class="info-value" style="color: #28a745;">Weekend Available</span>
+                        <span class="info-value" style="color: #28a745;">Weekday Available</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Reason:</span>
-                        <span class="info-value">Weekend - explicitly unblocked by admin (${blockedDateReason})</span>
+                        <span class="info-value">Weekday - explicitly unblocked by admin (${blockedDateReason})</span>
                     </div>
                 `;
+            } else if (isWeekend) {
+                // Weekend - check if it's booked for full-day
+                const isWeekendBooked = dayBookings.weekendBooked || false;
+                
+                if (isWeekendBooked) {
+                    infoHTML = `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #dc3545;">Weekend Fully Booked</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Booking Type:</span>
+                            <span class="info-value">Full-day job scheduling</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Reason:</span>
+                            <span class="info-value">This weekend is fully booked for a complete day job</span>
+                        </div>
+                    `;
+                } else {
+                    infoHTML = `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #28a745;">Weekend Available</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Booking Type:</span>
+                            <span class="info-value">Full-day job scheduling</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Reason:</span>
+                            <span class="info-value">Weekend available for full-day job scheduling (no time slots)</span>
+                        </div>
+                    `;
+                }
             } else {
                 // Check booking status for this day
                 const timeSlots = businessHours.timeSlots;
@@ -1920,44 +2038,74 @@
                 day: 'numeric'
             });
             
-            document.getElementById('selected-date-title').textContent = formattedDate;
-            document.getElementById('selected-date-subtitle').textContent = 'Choose a time slot below';
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             
-            // Populate time slots
-            const timeSlotsContainer = document.getElementById('time-slots');
-            timeSlotsContainer.innerHTML = '';
-            
-            businessHours.timeSlots.forEach(timeSlot => {
-                const slotElement = document.createElement('div');
-                slotElement.className = 'time-slot';
+            if (isWeekend) {
+                // Weekend - full-day booking, no time slots
+                document.getElementById('selected-date-title').textContent = formattedDate;
+                document.getElementById('selected-date-subtitle').textContent = 'Full-day job scheduling (no time slots)';
                 
-                // Check availability for this time slot
-                const isAvailable = checkTimeSlotAvailability(dateString, timeSlot);
-                
-                if (isAvailable) {
-                    slotElement.addEventListener('click', () => selectTimeSlot(timeSlot));
-                } else {
-                    slotElement.classList.add('unavailable');
-                }
-                
-                slotElement.innerHTML = `
-                    <div class="time-slot-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="time-slot-text">${timeSlot}</div>
-                    <div class="time-slot-status">
-                        ${isAvailable ? 'Available' : 'Booked'}
+                // Clear time slots container
+                const timeSlotsContainer = document.getElementById('time-slots');
+                timeSlotsContainer.innerHTML = `
+                    <div class="weekend-booking-notice">
+                        <div class="weekend-notice-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="weekend-notice-text">
+                            <h4>Full-Day Job Scheduling</h4>
+                            <p>Weekend bookings are for complete day jobs. No specific time slots are needed.</p>
+                            <p>Your job will be scheduled for the entire day on ${formattedDate}.</p>
+                        </div>
                     </div>
                 `;
                 
-                timeSlotsContainer.appendChild(slotElement);
-            });
-            
-            // Show time selection section
-            document.getElementById('time-selection').classList.add('show');
-            
-            // Hide booking form if it was shown
-            document.getElementById('booking-form').classList.remove('show');
+                // Show time selection section
+                document.getElementById('time-selection').classList.add('show');
+                
+                // Hide booking form if it was shown
+                document.getElementById('booking-form').classList.remove('show');
+            } else {
+                // Weekday - time slot selection
+                document.getElementById('selected-date-title').textContent = formattedDate;
+                document.getElementById('selected-date-subtitle').textContent = 'Choose a time slot below';
+                
+                // Populate time slots
+                const timeSlotsContainer = document.getElementById('time-slots');
+                timeSlotsContainer.innerHTML = '';
+                
+                businessHours.timeSlots.forEach(timeSlot => {
+                    const slotElement = document.createElement('div');
+                    slotElement.className = 'time-slot';
+                    
+                    // Check availability for this time slot
+                    const isAvailable = checkTimeSlotAvailability(dateString, timeSlot);
+                    
+                    if (isAvailable) {
+                        slotElement.addEventListener('click', () => selectTimeSlot(timeSlot));
+                    } else {
+                        slotElement.classList.add('unavailable');
+                    }
+                    
+                    slotElement.innerHTML = `
+                        <div class="time-slot-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="time-slot-text">${timeSlot}</div>
+                        <div class="time-slot-status">
+                            ${isAvailable ? 'Available' : 'Booked'}
+                        </div>
+                    `;
+                    
+                    timeSlotsContainer.appendChild(slotElement);
+                });
+                
+                // Show time selection section
+                document.getElementById('time-selection').classList.add('show');
+                
+                // Hide booking form if it was shown
+                document.getElementById('booking-form').classList.remove('show');
+            }
         }
 
         // Check time slot availability
@@ -1984,8 +2132,19 @@
             showBookingForm();
         }
 
+        // Select weekend date (no time slot needed)
+        function selectWeekendDate(date) {
+            selectedDate = date;
+            selectedTime = null; // No time slot for weekend bookings
+            
+            // Show booking form directly for weekend bookings
+            showBookingForm();
+        }
+
         // Show booking form
         function showBookingForm() {
+            const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
+            
             // Populate form fields
             document.getElementById('job-date').value = selectedDate.toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -1993,7 +2152,18 @@
                 month: 'long',
                 day: 'numeric'
             });
-            document.getElementById('job-time').value = selectedTime;
+            
+            // Handle weekend vs weekday time display
+            if (isWeekend) {
+                document.getElementById('job-time').value = 'Full-day (Weekend)';
+                // Update the time label for weekends
+                document.querySelector('label[for="job-time"]').textContent = 'Job Type';
+            } else {
+                document.getElementById('job-time').value = selectedTime;
+                // Reset the time label for weekdays
+                document.querySelector('label[for="job-time"]').textContent = 'Job Time';
+            }
+            
             document.getElementById('customer-name').value = bookingData.name;
             document.getElementById('customer-email').value = bookingData.email;
             document.getElementById('customer-phone').value = bookingData.phone || 'N/A';
@@ -2051,11 +2221,12 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        jobDate: selectedDate.toISOString().split('T')[0],
-                        jobTime: selectedTime,
-                        additionalNotes: document.getElementById('additional-notes').value
-                    })
+                                    body: JSON.stringify({
+                    jobDate: selectedDate.toISOString().split('T')[0],
+                    jobTime: selectedTime || 'Full-day (Weekend)', // Weekend bookings are full-day
+                    additionalNotes: document.getElementById('additional-notes').value,
+                    isWeekend: selectedDate.getDay() === 0 || selectedDate.getDay() === 6
+                })
                 });
                 
                 if (response.ok) {
@@ -2104,7 +2275,7 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Job Time:</span>
-                    <span class="detail-value">${selectedTime}</span>
+                    <span class="detail-value">${selectedTime || 'Full-day (Weekend)'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Status:</span>

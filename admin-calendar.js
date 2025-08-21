@@ -13,7 +13,7 @@
     let moveBookingData = null;
 
     // Calendar functions
-    function renderCalendar() {
+    function renderCalendar(bookings = []) {
         const grid = document.getElementById('calendarGrid');
         const monthDisplay = document.getElementById('calendarMonth');
         
@@ -30,14 +30,14 @@
         
         if (isMobile) {
             // Mobile-friendly calendar with weeks
-            renderMobileCalendar(grid);
+            renderMobileCalendar(grid, bookings);
         } else {
             // Desktop calendar (original grid layout)
-            renderDesktopCalendar(grid);
+            renderDesktopCalendar(grid, bookings);
         }
     }
 
-    function renderMobileCalendar(grid) {
+    function renderMobileCalendar(grid, bookings = []) {
         // Create vertical timeline container
         const timelineContainer = document.createElement('div');
         timelineContainer.className = 'timeline-container';
@@ -107,25 +107,63 @@
             const eventsColumn = document.createElement('div');
             eventsColumn.className = 'events-column';
             
-            // Check for bookings
-            const dayBookings = allBookings.filter(booking => 
+            // Check for bookings - look for both regular bookings and job bookings
+            const regularBookings = bookings.filter(booking => 
                 booking.date === dateString && 
                 (booking.status === 'confirmed' || booking.status === 'pending' || 
                  booking.status === 'quote-ready' || 
                  booking.status === 'pending-booking')
             );
             
-            if (dayBookings.length > 0) {
-                timelineDot.classList.add('booked');
+            const jobBookings = bookings.filter(booking => 
+                booking.job_date === dateString && 
+                (booking.status === 'pending-booking' || booking.status === 'confirmed' || 
+                 booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
+                 booking.status === 'completed')
+            );
+            
+            const allDayBookings = [...regularBookings, ...jobBookings];
+            
+            if (allDayBookings.length > 0) {
+                // Check if any of the bookings are weekend job bookings
+                const hasWeekendJob = jobBookings.some(booking => 
+                    booking.job_time === 'Full-day (Weekend)' || 
+                    (booking.job_time && booking.job_time.includes('Full-day'))
+                );
+                
+                if (hasWeekendJob) {
+                    timelineDot.classList.add('weekend-job');
+                } else {
+                    timelineDot.classList.add('booked');
+                }
                 
                 // Create booking events
-                dayBookings.forEach(booking => {
+                allDayBookings.forEach(booking => {
                     const eventBlock = document.createElement('div');
-                    eventBlock.className = `event-block ${booking.status}`;
-                    eventBlock.dataset.bookingId = booking.id;
+                    let eventClass = `event-block ${booking.status}`;
                     
-                    const timeSlot = booking.time || 'TBD';
-                    const customerName = booking.name || 'Unknown';
+                    // Add weekend-job class for weekend job bookings
+                    if (booking.job_date && (booking.job_time === 'Full-day (Weekend)' || 
+                        (booking.job_time && booking.job_time.includes('Full-day')))) {
+                        eventClass += ' weekend-job';
+                    }
+                    
+                    eventBlock.className = eventClass;
+                    eventBlock.dataset.bookingId = booking.id || booking.booking_id;
+                    
+                    // Handle weekend job bookings vs regular time-slot bookings
+                    let timeSlot, customerName;
+                    
+                    if (booking.job_date && (booking.job_time === 'Full-day (Weekend)' || 
+                        (booking.job_time && booking.job_time.includes('Full-day')))) {
+                        // Weekend job booking
+                        timeSlot = 'Full Day Job';
+                        customerName = booking.name || 'Unknown';
+                    } else {
+                        // Regular booking
+                        timeSlot = booking.time || booking.job_time || 'TBD';
+                        customerName = booking.name || 'Unknown';
+                    }
                     
                     eventBlock.innerHTML = `
                         <div class="event-time">${timeSlot}</div>
@@ -161,7 +199,7 @@
             }
             
             // Add click handler for day management
-            timelineItem.addEventListener('click', () => handleDayClick(currentDate, dayBookings));
+            timelineItem.addEventListener('click', () => handleDayClick(currentDate, allDayBookings));
             
             // Add drag and drop handlers
             timelineItem.addEventListener('dragover', handleCalendarDragOver);
@@ -180,7 +218,7 @@
         grid.appendChild(timelineContainer);
     }
 
-    function renderDesktopCalendar(grid) {
+    function renderDesktopCalendar(grid, bookings = []) {
         // Add day headers
         const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         dayHeaders.forEach(day => {
@@ -192,17 +230,17 @@
             grid.appendChild(header);
         });
         
-        // Get first day of month and number of days
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay());
-        
-        // Generate calendar days
-        for (let i = 0; i < 42; i++) {
-            const currentDate = new Date(startDate);
-            currentDate.setDate(startDate.getDate() + i);
-            const dateString = currentDate.toISOString().split('T')[0];
+                    // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // Generate calendar days
+            for (let i = 0; i < 42; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                const dateString = currentDate.toISOString().split('T')[0];
             
             const dayElement = document.createElement('div');
             dayElement.className = 'day';
@@ -241,34 +279,89 @@
                 dayElement.classList.add('available');
             }
             
-            // Check if it's booked
-            const dayBookings = allBookings.filter(booking => 
+            // Check if it's booked - look for both regular bookings and job bookings
+            const regularBookings = bookings.filter(booking => 
                 booking.date === dateString && 
                 (booking.status === 'confirmed' || booking.status === 'pending' || 
                  booking.status === 'quote-ready' || 
                  booking.status === 'pending-booking')
             );
-            if (dayBookings.length > 0) {
+            
+            const jobBookings = bookings.filter(booking => 
+                booking.job_date === dateString && 
+                (booking.status === 'pending-booking' || booking.status === 'confirmed' || 
+                 booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
+                 booking.status === 'completed')
+            );
+            
+            const allDayBookings = [...regularBookings, ...jobBookings];
+            
+            if (allDayBookings.length > 0) {
                 dayElement.classList.add('booked');
                 // Add booking info to the day
                 const bookingInfo = document.createElement('div');
                 bookingInfo.className = 'booking-info';
                 
-                        // Group bookings by time slot
-            const timeSlots = ['5:30 PM', '6:30 PM', '7:30 PM'];
-            const bookedTimeSlots = timeSlots.filter(time =>
-                dayBookings.some(booking => booking.time === time)
-            );
+                // Check if any of the bookings are weekend job bookings
+                const hasWeekendJob = jobBookings.some(booking => 
+                    booking.job_time === 'Full-day (Weekend)' || 
+                    (booking.job_time && booking.job_time.includes('Full-day'))
+                );
                 
-                bookingInfo.innerHTML = `
-                    <div class="booking-count">${dayBookings.length}</div>
-                    <div class="booking-preview">${bookedTimeSlots.join(', ')}</div>
-                `;
+                // Debug: Log weekend job detection for August 23rd
+                if (dateString === '2025-08-23') {
+                    console.log(`🔍 Admin Calendar: August 23rd - Weekend job detection:`, {
+                        jobBookings,
+                        hasWeekendJob,
+                        jobTimes: jobBookings.map(b => b.job_time),
+                        weekendJobCheck: jobBookings.map(booking => ({
+                            job_time: booking.job_time,
+                            isFullDay: booking.job_time === 'Full-day (Weekend)' || 
+                                       (booking.job_time && booking.job_time.includes('Full-day'))
+                        }))
+                    });
+                }
+                
+                if (hasWeekendJob) {
+                    // Weekend job booking - show as full-day
+                    bookingInfo.innerHTML = `
+                        <div class="booking-count">${allDayBookings.length}</div>
+                        <div class="booking-preview">Full Day Job</div>
+                    `;
+                    dayElement.classList.add('weekend-job');
+                } else {
+                    // Regular time-slot bookings
+                    const timeSlots = ['5:30 PM', '6:30 PM', '7:30 PM'];
+                    const bookedTimeSlots = timeSlots.filter(time =>
+                        allDayBookings.some(booking => 
+                            (booking.time === time) || (booking.job_time === time)
+                        )
+                    );
+                    
+                    bookingInfo.innerHTML = `
+                        <div class="booking-count">${allDayBookings.length}</div>
+                        <div class="booking-preview">${bookedTimeSlots.join(', ')}</div>
+                    `;
+                }
                 dayElement.appendChild(bookingInfo);
             }
             
+            // Debug: Log final state for August 23rd
+            if (dateString === '2025-08-23') {
+                console.log(`🔍 Admin Calendar: August 23rd - Final state:`, {
+                    dateString,
+                    allDayBookings: allDayBookings.length,
+                    hasWeekendJob: jobBookings ? jobBookings.some(booking => 
+                        booking.job_time === 'Full-day (Weekend)' || 
+                        (booking.job_time && booking.job_time.includes('Full-day'))
+                    ) : false,
+                    dayElementClasses: dayElement.className,
+                    dayElementHTML: dayElement.innerHTML
+                });
+            }
+            
             // Add click handler
-            dayElement.addEventListener('click', () => handleDayClick(currentDate, dayBookings));
+            dayElement.addEventListener('click', () => handleDayClick(currentDate, allDayBookings));
             
             // Add drag and drop handlers for calendar days
             dayElement.addEventListener('dragover', handleCalendarDragOver);
@@ -290,7 +383,7 @@
         );
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         
-        if (bookings.length > 0) {
+        if (bookings && bookings.length > 0) {
             // Show booking details
             showBookingDetails(date, bookings);
         } else if (isBlocked) {
@@ -298,7 +391,7 @@
             showBlockingModal(date, true);
         } else if (isWeekend && isUnblockedWeekend) {
             // Show re-block option for unblocked weekends
-            showBlockingModal(date, 'unblocked_weekend');
+            showBlockingModal(date, 'weekend');
         } else if (isWeekend) {
             // Show make available option for blocked weekends
             showBlockingModal(date, 'weekend');
@@ -831,7 +924,7 @@
         }
 
         // Get bookings for the source date
-        const sourceBookings = allBookings.filter(booking => 
+        const sourceBookings = (window.allBookings || []).filter(booking => 
             booking.date === sourceDate && 
             (booking.status === 'confirmed' || booking.status === 'pending' || 
              booking.status === 'quote-ready' || 

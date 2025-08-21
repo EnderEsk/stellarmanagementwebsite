@@ -96,6 +96,44 @@ function getEffectiveRedirectUri(req, providedRedirectUri) {
     return `${scheme}://${host}/admin.html`;
 }
 
+// Health check endpoint to keep server awake (for Render free tier)
+app.get('/healthz', async (req, res) => {
+    try {
+        // Check if database connection is healthy
+        if (db && db.topology && db.topology.isConnected()) {
+            return res.status(200).json({ 
+                status: 'healthy', 
+                timestamp: new Date().toISOString(),
+                database: 'connected',
+                uptime: process.uptime()
+            });
+        } else {
+            return res.status(503).json({ 
+                status: 'unhealthy', 
+                timestamp: new Date().toISOString(),
+                database: 'disconnected',
+                error: 'Database connection failed'
+            });
+        }
+    } catch (err) {
+        console.error('Health check failed:', err);
+        return res.status(500).json({ 
+            status: 'error', 
+            timestamp: new Date().toISOString(),
+            error: err.message 
+        });
+    }
+});
+
+// Simple ping endpoint for uptime monitoring (lighter weight)
+app.get('/ping', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
+
 // Test endpoint to check if server is running
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });

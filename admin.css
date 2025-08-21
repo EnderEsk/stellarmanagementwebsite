@@ -2753,6 +2753,18 @@
             background: #e9ecef;
         }
 
+        .calendar-grid .day.weekend-job {
+            background: rgba(23, 162, 184, 0.15);
+            border-color: rgba(23, 162, 184, 0.4);
+            color: #17a2b8;
+            position: relative;
+        }
+
+        .calendar-grid .day.weekend-job:hover {
+            background: rgba(23, 162, 184, 0.25);
+            border-color: rgba(23, 162, 184, 0.5);
+        }
+
         .calendar-grid .day.today:hover {
             background: #5a5a5a;
             color: white;
@@ -2825,6 +2837,10 @@
 
         .legend-indicator.weekend {
             background: var(--admin-primary);
+        }
+
+        .legend-indicator.weekend-job {
+            background: #17a2b8;
         }
 
         /* Booking Details Modal Styles */
@@ -4023,6 +4039,10 @@
                 background: var(--admin-secondary);
             }
 
+                    .timeline-dot.weekend-job {
+            background: #17a2b8;
+        }
+
             .timeline-dot.available {
                 background: var(--admin-success);
             }
@@ -4102,6 +4122,16 @@
 
             .event-block.confirmed {
                 border-left-color: var(--admin-success);
+            }
+
+            .event-block.weekend-job {
+                border-left-color: #17a2b8;
+                background: rgba(0, 188, 217, 0.05);
+            }
+
+            .event-block.weekend-job .event-time {
+                color: #17a2b8;
+                font-weight: 700;
             }
 
             .event-time {

@@ -16,6 +16,8 @@
     <script src="admin-calendar.js" defer></script>
     
     <style>
+
+        
         /* Ensure quote modal is always visible when shown */
         #quoteModal.show {
             display: flex !important;
@@ -113,6 +115,120 @@
         .clickable-address i {
             color: #dc3545;
             font-size: 14px;
+        }
+
+        /* Quick Quote View Styles */
+        .quick-quote-view {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-quote-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .quick-quote-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .quick-quote-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .quick-quote-header p {
+            color: var(--admin-secondary);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .quick-quote-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .quick-quote-btn {
+            background: var(--admin-accent);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .quick-quote-btn:hover {
+            background: #7ab33a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
+        }
+
+        .quick-quote-btn:active {
+            transform: translateY(0);
+        }
+
+        .quick-quote-info {
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .info-card i {
+            font-size: 2rem;
+            color: var(--admin-accent);
+            margin-bottom: 1rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--admin-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card p {
+            color: var(--admin-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .quick-quote-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .quick-quote-btn {
+                width: 100%;
+                max-width: 300px;
+            }
         }
     </style>
 
@@ -267,6 +383,10 @@
                                 <i class="fas fa-calendar-week"></i>
                                 Calendar View
                             </div>
+                            <div class="filter-tab" data-filter="quick-quote">
+                                <i class="fas fa-bolt"></i>
+                                Quick Billing
+                            </div>
                             <!-- Customer Management tab - REMOVED -->
                         </div>
                     </div>
@@ -287,6 +407,8 @@
                         <button class="calendar-nav-btn" onclick="window.adminCalendar.nextMonth()">
                             <i class="fas fa-chevron-right"></i>
                         </button>
+
+
                     </div>
                     
                     <div class="calendar-grid" id="calendarGrid">
@@ -310,6 +432,32 @@
                             <span class="legend-indicator weekend"></span>
                             <span>Weekend</span>
                         </div>
+                        <div class="legend-item">
+                            <span class="legend-indicator weekend-job"></span>
+                            <span>Full Day Job</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Quote View -->
+                <div class="quick-quote-view" id="quickQuoteView" style="display: none;">
+                    <div class="quick-quote-container">
+                        <div class="quick-quote-header">
+                            <h2><i class="fas fa-bolt"></i> Quick Billing Generator</h2>
+                            <p>Generate quotes and invoices quickly without creating a full booking</p>
+                        </div>
+                        
+                        <div class="quick-quote-actions">
+                            <button class="quick-quote-btn" onclick="showQuickQuoteModal()">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                Generate Quote
+                            </button>
+                            <button class="quick-quote-btn" onclick="showQuickInvoiceModal()">
+                                <i class="fas fa-file-invoice"></i>
+                                Generate Invoice
+                            </button>
+                        </div>
+                        
                     </div>
                 </div>
 
@@ -923,6 +1071,9 @@
                 if (response.ok) {
                     allBookings = await response.json();
                     
+                    // Make allBookings globally accessible for admin calendar
+                    window.allBookings = allBookings;
+                    
                     // Debug: Check for bookings with images
                     const bookingsWithImages = allBookings.filter(booking => booking.images);
                     console.log('✅ Loaded bookings:', allBookings.length);
@@ -957,7 +1108,7 @@
                     renderHistory();
                     
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                     
                     // Customer management - REMOVED
@@ -1404,7 +1555,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else if (response.status === 401 || response.status === 403) {
                     showNotification('Session expired. Please log in again.', 'error');
@@ -1488,7 +1639,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else {
                     const emailError = await emailResponse.json();
@@ -1536,7 +1687,7 @@
                 
                 // Explicitly refresh calendar if it's currently visible
                 if (currentFilter === 'calendar') {
-                    window.adminCalendar.renderCalendar();
+                    window.adminCalendar.renderCalendar(allBookings);
                 }
             } catch (error) {
                 console.error('Error confirming job:', error);
@@ -1590,7 +1741,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else {
                     const emailError = await emailResponse.json();
@@ -1658,7 +1809,7 @@
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else if (response.status === 401 || response.status === 403) {
                     showNotification('Session expired. Please log in again.', 'error');
@@ -1688,7 +1839,7 @@
                 if (currentFilter === 'calendar') {
                     document.getElementById('activeBookingsGrid').style.display = 'none';
                     document.getElementById('calendarView').style.display = 'block';
-                    window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar());
+                    window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar(allBookings));
                 } else {
                     document.getElementById('activeBookingsGrid').style.display = 'grid';
                     document.getElementById('calendarView').style.display = 'none';
@@ -2565,7 +2716,7 @@
         // Handle window resize for calendar layout
         window.addEventListener('resize', function() {
             if (currentFilter === 'calendar') {
-                window.adminCalendar.renderCalendar();
+                window.adminCalendar.renderCalendar(allBookings);
             }
         });
 
@@ -3646,6 +3797,673 @@
             }
         }
 
+        // Quick Quote Functions
+        function showQuickQuoteModal() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('quickQuoteDate').value = today;
+            
+            // Clear form fields
+            document.getElementById('quickQuoteClientName').value = '';
+            document.getElementById('quickQuoteClientPhone').value = '';
+            document.getElementById('quickQuoteClientAddress').value = '';
+            document.getElementById('quickQuoteClientEmail').value = '';
+            
+            // Reset service items
+            resetQuickQuoteServiceItems();
+            
+            // Reset tax toggle
+            document.getElementById('quickQuoteTaxToggle').checked = false;
+            
+            // Update totals
+            updateQuickQuoteTotals();
+            
+            // Show modal
+            openModal('quickQuoteModal');
+        }
+
+        function showQuickInvoiceModal() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('quickInvoiceDate').value = today;
+            
+            // Clear form fields
+            document.getElementById('quickInvoiceClientName').value = '';
+            document.getElementById('quickInvoiceClientPhone').value = '';
+            document.getElementById('quickInvoiceClientAddress').value = '';
+            document.getElementById('quickInvoiceClientEmail').value = '';
+            
+            // Reset service items
+            resetQuickInvoiceServiceItems();
+            
+            // Reset tax toggle
+            document.getElementById('quickInvoiceTaxToggle').checked = false;
+            
+            // Update totals
+            updateQuickInvoiceTotals();
+            
+            // Show modal
+            openModal('quickInvoiceModal');
+        }
+
+        function resetQuickQuoteServiceItems() {
+            const container = document.getElementById('quickQuoteServiceItems');
+            container.innerHTML = `
+                <div class="service-item" data-item-id="1">
+                    <div class="item-row">
+                        <div class="item-description">
+                            <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                        </div>
+                        <div class="item-controls">
+                            <div class="item-quantity">
+                                <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                            </div>
+                            <div class="item-price">
+                                <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                            </div>
+                            <div class="item-total">
+                                <span class="item-total-amount">$0.00</span>
+                            </div>
+                            <div class="item-actions">
+                                <button type="button" class="remove-item-btn" onclick="removeQuickQuoteServiceItem(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Setup event listeners for the new service item
+            setupQuickQuoteServiceItemListeners();
+        }
+
+        function resetQuickInvoiceServiceItems() {
+            const container = document.getElementById('quickInvoiceServiceItems');
+            container.innerHTML = `
+                <div class="service-item" data-item-id="1">
+                    <div class="item-row">
+                        <div class="item-description">
+                            <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                        </div>
+                        <div class="item-controls">
+                            <div class="item-quantity">
+                                <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                            </div>
+                            <div class="item-price">
+                                <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                            </div>
+                            <div class="item-total">
+                                <span class="item-total-amount">$0.00</span>
+                            </div>
+                            <div class="item-actions">
+                                <button type="button" class="remove-item-btn" onclick="removeQuickInvoiceServiceItem(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Setup event listeners for the new service item
+            setupQuickInvoiceServiceItemListeners();
+        }
+
+        function addQuickQuoteServiceItem() {
+            const container = document.getElementById('quickQuoteServiceItems');
+            const itemCount = container.children.length + 1;
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'service-item';
+            newItem.dataset.itemId = itemCount;
+            newItem.innerHTML = `
+                <div class="item-row">
+                    <div class="item-description">
+                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                    </div>
+                    <div class="item-controls">
+                        <div class="item-quantity">
+                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                        </div>
+                        <div class="item-price">
+                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                        </div>
+                        <div class="item-total">
+                            <span class="item-total-amount">$0.00</span>
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" class="remove-item-btn" onclick="removeQuickQuoteServiceItem(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(newItem);
+            setupQuickQuoteServiceItemListeners();
+        }
+
+        function addQuickInvoiceServiceItem() {
+            const container = document.getElementById('quickInvoiceServiceItems');
+            const itemCount = container.children.length + 1;
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'service-item';
+            newItem.dataset.itemId = itemCount;
+            newItem.innerHTML = `
+                <div class="item-row">
+                    <div class="item-description">
+                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                    </div>
+                    <div class="item-controls">
+                        <div class="item-quantity">
+                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                        </div>
+                        <div class="item-price">
+                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                        </div>
+                        <div class="item-total">
+                            <span class="item-total-amount">$0.00</span>
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" class="remove-item-btn" onclick="removeQuickInvoiceServiceItem(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(newItem);
+            setupQuickInvoiceServiceItemListeners();
+        }
+
+        function removeQuickQuoteServiceItem(button) {
+            const serviceItem = button.closest('.service-item');
+            if (serviceItem) {
+                serviceItem.remove();
+                updateQuickQuoteTotals();
+            }
+        }
+
+        function removeQuickInvoiceServiceItem(button) {
+            const serviceItem = button.closest('.service-item');
+            if (serviceItem) {
+                serviceItem.remove();
+                updateQuickInvoiceTotals();
+            }
+        }
+
+        function setupQuickQuoteServiceItemListeners() {
+            const container = document.getElementById('quickQuoteServiceItems');
+            const inputs = container.querySelectorAll('.item-desc-input, .item-qty-input, .item-price-input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', updateQuickQuoteTotals);
+            });
+        }
+
+        function setupQuickInvoiceServiceItemListeners() {
+            const container = document.getElementById('quickInvoiceServiceItems');
+            const inputs = container.querySelectorAll('.item-desc-input, .item-qty-input, .item-price-input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', updateQuickInvoiceTotals);
+            });
+        }
+
+        function toggleQuickQuoteTax() {
+            updateQuickQuoteTotals();
+        }
+
+        function toggleQuickInvoiceTax() {
+            updateQuickInvoiceTotals();
+        }
+
+        function updateQuickQuoteTotals() {
+            const container = document.getElementById('quickQuoteServiceItems');
+            const serviceItems = [];
+            
+            container.querySelectorAll('.service-item').forEach(item => {
+                const description = item.querySelector('.item-desc-input').value.trim();
+                const qtyInput = item.querySelector('.item-qty-input');
+                const priceInput = item.querySelector('.item-price-input');
+                
+                const quantity = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
+                const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
+                const total = quantity * price;
+
+                if (description && quantity > 0) {
+                    serviceItems.push({
+                        description,
+                        quantity,
+                        price,
+                        total
+                    });
+                }
+            });
+
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const taxEnabled = document.getElementById('quickQuoteTaxToggle').checked;
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
+
+            document.getElementById('quickQuoteSubtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('quickQuoteTaxAmount').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('quickQuoteGrandTotalAmount').textContent = `$${total.toFixed(2)}`;
+
+            // Show/hide tax row
+            const taxRow = document.getElementById('quickQuoteTaxRow');
+            taxRow.style.display = taxEnabled ? 'flex' : 'none';
+        }
+
+        function updateQuickInvoiceTotals() {
+            const container = document.getElementById('quickInvoiceServiceItems');
+            const serviceItems = [];
+            
+            container.querySelectorAll('.service-item').forEach(item => {
+                const description = item.querySelector('.item-desc-input').value.trim();
+                const qtyInput = item.querySelector('.item-qty-input');
+                const priceInput = item.querySelector('.item-price-input');
+                
+                const quantity = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
+                const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
+                const total = quantity * price;
+
+                if (description && quantity > 0) {
+                    serviceItems.push({
+                        description,
+                        quantity,
+                        price,
+                        total
+                    });
+                }
+            });
+
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const taxEnabled = document.getElementById('quickInvoiceTaxToggle').checked;
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
+
+            document.getElementById('quickInvoiceSubtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('quickInvoiceTaxAmount').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('quickInvoiceGrandTotalAmount').textContent = `$${total.toFixed(2)}`;
+
+            // Show/hide tax row
+            const taxRow = document.getElementById('quickInvoiceTaxRow');
+            taxRow.style.display = taxEnabled ? 'flex' : 'none';
+        }
+
+        function generateQuickQuote() {
+            // Validate required fields
+            const clientName = document.getElementById('quickQuoteClientName').value.trim();
+            if (!clientName) {
+                showNotification('Client name is required', 'error');
+                document.getElementById('quickQuoteClientName').focus();
+                return;
+            }
+
+            // Collect service items
+            const container = document.getElementById('quickQuoteServiceItems');
+            const serviceItems = [];
+            
+            container.querySelectorAll('.service-item').forEach(item => {
+                const description = item.querySelector('.item-desc-input').value.trim();
+                const qtyInput = item.querySelector('.item-qty-input');
+                const priceInput = item.querySelector('.item-price-input');
+                
+                const quantity = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
+                const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
+                const total = quantity * price;
+
+                if (description && quantity > 0) {
+                    serviceItems.push({
+                        description,
+                        quantity,
+                        price,
+                        total
+                    });
+                }
+            });
+
+            if (serviceItems.length === 0) {
+                showNotification('Please add at least one service item with a description', 'error');
+                return;
+            }
+
+            // Generate quote preview
+            generateQuickQuotePreview(serviceItems);
+        }
+
+        function generateQuickInvoice() {
+            // Validate required fields
+            const clientName = document.getElementById('quickInvoiceClientName').value.trim();
+            if (!clientName) {
+                showNotification('Client name is required', 'error');
+                document.getElementById('quickInvoiceClientName').focus();
+                return;
+            }
+
+            // Collect service items
+            const container = document.getElementById('quickInvoiceServiceItems');
+            const serviceItems = [];
+            
+            container.querySelectorAll('.service-item').forEach(item => {
+                const description = item.querySelector('.item-desc-input').value.trim();
+                const qtyInput = item.querySelector('.item-qty-input');
+                const priceInput = item.querySelector('.item-price-input');
+                
+                const quantity = qtyInput.value.trim() === '' ? 0 : parseFloat(qtyInput.value) || 0;
+                const price = priceInput.value.trim() === '' ? 0 : parseFloat(priceInput.value) || 0;
+                const total = quantity * price;
+
+                if (description && quantity > 0) {
+                    serviceItems.push({
+                        description,
+                        quantity,
+                        price,
+                        total
+                    });
+                }
+            });
+
+            if (serviceItems.length === 0) {
+                showNotification('Please add at least one service item with a description', 'error');
+                return;
+            }
+
+            // Generate invoice preview
+            generateQuickInvoicePreview(serviceItems);
+        }
+
+        function generateQuickQuotePreview(serviceItems) {
+            const clientName = document.getElementById('quickQuoteClientName').value;
+            const clientPhone = document.getElementById('quickQuoteClientPhone').value || 'N/A';
+            const clientAddress = document.getElementById('quickQuoteClientAddress').value || 'N/A';
+            const clientEmail = document.getElementById('quickQuoteClientEmail').value || 'N/A';
+            const quoteDate = document.getElementById('quickQuoteDate').value;
+            const taxEnabled = document.getElementById('quickQuoteTaxToggle').checked;
+
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
+
+            const quoteNumber = generateQuoteNumber();
+            const formattedDate = new Date(quoteDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const quoteHTML = `
+                <div class="quote-document">
+                    <!-- Header Section -->
+                    <div class="quote-header">
+                        <div class="company-brand">
+                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                            <div>
+                                <h1 class="company-name">Stellar Tree Management</h1>
+                                <div class="company-contact">
+                                    <div class="contact-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-phone"></i>
+                                        <span>(250) 551-1021</span>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>stellartmanagement@outlook.com</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="document-info">
+                            <div class="document-type">QUOTE</div>
+                            <div class="document-number">#${quoteNumber}</div>
+                            <div class="document-date">${formattedDate}</div>
+                        </div>
+                    </div>
+
+                    <!-- Client & Bill To Section -->
+                    <div class="client-billing-section">
+                        <div>
+                            <h3 class="section-heading">Client Information</h3>
+                            <div class="data-row">
+                                <span class="label">Name:</span>
+                                <span class="value">${clientName}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Phone:</span>
+                                <span class="value">${clientPhone}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Email:</span>
+                                <span class="value">${clientEmail}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Address:</span>
+                                <span class="value">${clientAddress}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="section-heading">Bill To</h3>
+                            <div class="data-row">
+                                <span class="label">Name:</span>
+                                <span class="value">${clientName}</span>
+                            </div>
+                            <div class="label">Address:</span>
+                                <span class="value">${clientAddress}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Table -->
+                    <div class="services-section">
+                        <h3 class="section-heading">Services</h3>
+                        <div class="services-table">
+                            <div class="table-header">
+                                <div class="header-item">#</div>
+                                <div class="header-item description">Description</div>
+                                <div class="header-item quantity">Qty</div>
+                                <div class="header-item price">Unit Price</div>
+                                <div class="header-item total">Total</div>
+                            </div>
+                            <div class="table-body">
+                                ${serviceItems.map((item, index) => `
+                                    <div class="table-row">
+                                        <div class="table-cell">${index + 1}</div>
+                                        <div class="table-cell description">${item.description}</div>
+                                        <div class="table-cell quantity">${item.quantity}</div>
+                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
+                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div class="totals-section">
+                        <div class="totals-container">
+                            <div class="total-row">
+                                <span class="total-label">Subtotal:</span>
+                                <span class="total-value">$${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${taxEnabled ? `
+                                <div class="total-row">
+                                    <span class="total-label">Tax (5%):</span>
+                                    <span class="total-value">$${tax.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="total-row grand-total">
+                                <span class="total-label">Total:</span>
+                                <span class="total-value">$${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Section -->
+                    <div class="terms-section">
+                        <h3 class="section-heading">Terms & Conditions</h3>
+                        <div class="terms-content">
+                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfer.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('quotePreviewContent').innerHTML = quoteHTML;
+            closeModal('quickQuoteModal');
+            openModal('quotePreviewModal');
+        }
+
+        function generateQuickInvoicePreview(serviceItems) {
+            const clientName = document.getElementById('quickInvoiceClientName').value;
+            const clientPhone = document.getElementById('quickInvoiceClientPhone').value || 'N/A';
+            const clientAddress = document.getElementById('quickInvoiceClientAddress').value || 'N/A';
+            const clientEmail = document.getElementById('quickInvoiceClientEmail').value || 'N/A';
+            const invoiceDate = document.getElementById('quickInvoiceDate').value;
+            const taxEnabled = document.getElementById('quickInvoiceTaxToggle').checked;
+
+            const subtotal = serviceItems.reduce((sum, item) => sum + item.total, 0);
+            const tax = taxEnabled ? subtotal * 0.05 : 0;
+            const total = subtotal + tax;
+
+            const invoiceNumber = generateInvoiceNumber();
+            const formattedDate = new Date(invoiceDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const invoiceHTML = `
+                <div class="quote-document">
+                    <!-- Header Section -->
+                    <div class="quote-header">
+                        <div class="company-brand">
+                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                            <div>
+                                <h1 class="company-name">Stellar Tree Management</h1>
+                                <div class="company-contact">
+                                    <div class="contact-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-phone"></i>
+                                        <span>(250) 551-1021</span>
+                                    </div>
+                                    <div class="contact-item">
+                                        <span>stellartmanagement@outlook.com</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="document-info">
+                            <div class="document-type">INVOICE</div>
+                            <div class="document-number">#${invoiceNumber}</div>
+                            <div class="document-date">${formattedDate}</div>
+                        </div>
+                    </div>
+
+                    <!-- Client & Bill To Section -->
+                    <div class="client-billing-section">
+                        <div>
+                            <h3 class="section-heading">Client Information</h3>
+                            <div class="data-row">
+                                <span class="label">Name:</span>
+                                <span class="value">${clientName}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Phone:</span>
+                                <span class="value">${clientPhone}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Email:</span>
+                                <span class="value">${clientEmail}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Address:</span>
+                                <span class="value">${clientAddress}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="section-heading">Bill To</h3>
+                            <div class="data-row">
+                                <span class="label">Name:</span>
+                                <span class="value">${clientName}</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="label">Address:</span>
+                                <span class="value">${clientAddress}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Table -->
+                    <div class="services-section">
+                        <h3 class="section-heading">Services</h3>
+                        <div class="services-table">
+                            <div class="table-header">
+                                <div class="header-item">#</div>
+                                <div class="header-item description">Description</div>
+                                <div class="header-item quantity">Qty</div>
+                                <div class="header-item price">Unit Price</div>
+                                <div class="header-item total">Total</div>
+                            </div>
+                            <div class="table-body">
+                                ${serviceItems.map((item, index) => `
+                                    <div class="table-row">
+                                        <div class="table-cell">${index + 1}</div>
+                                        <div class="table-cell description">${item.description}</div>
+                                        <div class="table-cell quantity">${item.quantity}</div>
+                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
+                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div class="totals-section">
+                        <div class="totals-container">
+                            <div class="total-row">
+                                <span class="total-label">Subtotal:</span>
+                                <span class="total-value">$${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${taxEnabled ? `
+                                <div class="total-row">
+                                    <span class="total-label">Tax (5%):</span>
+                                    <span class="total-value">$${tax.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="total-row grand-total">
+                                <span class="total-label">Total:</span>
+                                <span class="total-value">$${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Terms Section -->
+                    <div class="terms-section">
+                        <h3 class="section-heading">Payment Terms</h3>
+                        <div class="terms-content">
+                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfer. Please include the invoice number with your payment.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('invoicePreviewContent').innerHTML = invoiceHTML;
+            closeModal('quickInvoiceModal');
+            openModal('invoicePreviewModal');
+        }
+
         // Generate Quote Preview
         function generateQuotePreview(serviceItems, quoteId = null) {
             const clientName = document.getElementById('quoteClientName').value;
@@ -3781,7 +4599,7 @@ stellartmanagement@outlook.com</span>
                     <div class="terms-section">
                         <h3 class="section-heading">Terms & Conditions</h3>
                         <div class="terms-content">
-                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept cash, check, and major credit cards.</p>
+                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfers.</p>
                         </div>
                     </div>
                 </div>
@@ -5056,7 +5874,7 @@ stellartmanagement@outlook.com</span>
                     <div class="terms-section">
                         <h3 class="section-heading">Payment Terms</h3>
                         <div class="terms-content">
-                            <p>Payment is due upon receipt of this invoice. We accept cash, check, and major credit cards. Please include the invoice number with your payment.</p>
+                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfers. Please include the invoice number with your payment.</p>
                         </div>
                     </div>
                 </div>
@@ -5909,9 +6727,9 @@ stellartmanagement@outlook.com</span>
                 let newTitle = '';
                 if (filter === 'all') newTitle = 'Active Bookings';
                 else if (filter === 'pending') newTitle = 'Pending Bookings';
-
                 else if (filter === 'all-bookings') newTitle = 'All Bookings';
                 else if (filter === 'calendar') newTitle = 'Calendar View';
+                else if (filter === 'quick-quote') newTitle = 'Quick Quote Generator';
                 else if (filter === 'customers') newTitle = 'Customer Management';
                 
                 // Smooth title transition
@@ -5919,7 +6737,7 @@ stellartmanagement@outlook.com</span>
                 sectionTitle.style.transform = 'translateY(-5px)';
                 
                 // Hide all views smoothly first
-                const views = ['activeBookingsGrid', 'calendarView'];
+                const views = ['activeBookingsGrid', 'calendarView', 'quickQuoteView'];
                 views.forEach(viewId => {
                     const view = document.getElementById(viewId);
                     view.classList.add('view-hidden');
@@ -5939,19 +6757,22 @@ stellartmanagement@outlook.com</span>
                         view.classList.remove('view-hidden');
                     });
                     
-                    // Show appropriate view
-                    let targetView;
-                    if (filter === 'calendar') {
-                        targetView = document.getElementById('calendarView');
-                        targetView.style.display = 'block';
-                        if (!window.adminCalendar.blockedDates.length) window.adminCalendar.loadBlockedDates();
-                        window.adminCalendar.renderCalendar();
-                    } else {
-                        targetView = document.getElementById('activeBookingsGrid');
-                        targetView.style.display = 'grid';
-                        currentFilter = filter;
-                        renderActiveBookings();
-                    }
+                                    // Show appropriate view
+                let targetView;
+                if (filter === 'calendar') {
+                    targetView = document.getElementById('calendarView');
+                    targetView.style.display = 'block';
+                    if (!window.adminCalendar.blockedDates.length) window.adminCalendar.loadBlockedDates();
+                    window.adminCalendar.renderCalendar(allBookings);
+                } else if (filter === 'quick-quote') {
+                    targetView = document.getElementById('quickQuoteView');
+                    targetView.style.display = 'block';
+                } else {
+                    targetView = document.getElementById('activeBookingsGrid');
+                    targetView.style.display = 'grid';
+                    currentFilter = filter;
+                    renderActiveBookings();
+                }
                     
                     // Trigger smooth entrance animation
                     requestAnimationFrame(() => {
@@ -6085,7 +6906,7 @@ stellartmanagement@outlook.com</span>
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else {
                     const errorText = await response.text();
@@ -6151,7 +6972,7 @@ stellartmanagement@outlook.com</span>
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
-                        window.adminCalendar.renderCalendar();
+                        window.adminCalendar.renderCalendar(allBookings);
                     }
                 } else {
                     const error = await response.json();
@@ -6440,6 +7261,10 @@ Check console for detailed analysis.
         }
 
         // ... existing code ...
+
+
+
+
     </script>
 
     <!-- Site Visit Modal -->
@@ -6596,6 +7421,214 @@ Check console for detailed analysis.
                         </button>
                         <button type="button" class="btn-primary" onclick="generateQuote()">
                             <i class="fas fa-save"></i> Save Quote
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Quote Modal -->
+    <div id="quickQuoteModal" class="modal">
+        <div class="modal-content quote-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bolt"></i> Quick Quote</h3>
+                <button class="modal-close" onclick="closeModal('quickQuoteModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="quote-form">
+                    <!-- Client Information Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-user"></i> Client Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <input type="text" id="quickQuoteClientName" placeholder="Full Name *" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="quickQuoteClientPhone" placeholder="Phone Number (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="quickQuoteClientAddress" placeholder="Address (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="quickQuoteClientEmail" placeholder="Email (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="date" id="quickQuoteDate" placeholder="Quote Date" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-tools"></i> Service Items</h4>
+                        <div id="quickQuoteServiceItems" class="service-items-container">
+                            <div class="service-item" data-item-id="1">
+                                <div class="item-row">
+                                    <div class="item-description">
+                                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                                    </div>
+                                    <div class="item-controls">
+                                        <div class="item-quantity">
+                                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                                        </div>
+                                        <div class="item-price">
+                                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                                        </div>
+                                        <div class="item-total">
+                                            <span class="item-total-amount">$0.00</span>
+                                        </div>
+                                        <div class="item-actions">
+                                            <button type="button" class="remove-item-btn" onclick="removeQuickQuoteServiceItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item-btn" onclick="addQuickQuoteServiceItem()">
+                            <i class="fas fa-plus"></i> Add Service Item
+                        </button>
+                    </div>
+
+                    <!-- Tax and Total Section -->
+                    <div class="quote-section">
+                        <div class="tax-toggle-container">
+                            <label class="tax-toggle-label">
+                                <input type="checkbox" id="quickQuoteTaxToggle" onchange="toggleQuickQuoteTax()">
+                                <span class="tax-toggle-text">Apply 5% Sales Tax</span>
+                            </label>
+                        </div>
+                        <div class="quote-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span id="quickQuoteSubtotalAmount">$0.00</span>
+                            </div>
+                            <div class="total-row tax-row" id="quickQuoteTaxRow" style="display: none;">
+                                <span>Tax (5%):</span>
+                                <span id="quickQuoteTaxAmount">$0.00</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span id="quickQuoteGrandTotalAmount">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Quote Actions -->
+                    <div class="quote-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('quickQuoteModal')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-primary" onclick="generateQuickQuote()">
+                            <i class="fas fa-eye"></i> Generate Quote
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Invoice Modal -->
+    <div id="quickInvoiceModal" class="modal">
+        <div class="modal-content quote-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bolt"></i> Quick Invoice</h3>
+                <button class="modal-close" onclick="closeModal('quickInvoiceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="quote-form">
+                    <!-- Client Information Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-user"></i> Client Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <input type="text" id="quickInvoiceClientName" placeholder="Full Name *" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="quickInvoiceClientPhone" placeholder="Phone Number (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="quickInvoiceClientAddress" placeholder="Address (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="quickInvoiceClientEmail" placeholder="Email (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="date" id="quickInvoiceDate" placeholder="Invoice Date" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-tools"></i> Service Items</h4>
+                        <div id="quickInvoiceServiceItems" class="service-items-container">
+                            <div class="service-item" data-item-id="1">
+                                <div class="item-row">
+                                    <div class="item-description">
+                                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                                    </div>
+                                    <div class="item-controls">
+                                        <div class="item-quantity">
+                                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                                        </div>
+                                        <div class="item-price">
+                                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                                        </div>
+                                        <div class="item-total">
+                                            <span class="item-total-amount">$0.00</span>
+                                        </div>
+                                        <div class="item-actions">
+                                            <button type="button" class="remove-item-btn" onclick="removeQuickInvoiceServiceItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item-btn" onclick="addQuickInvoiceServiceItem()">
+                            <i class="fas fa-plus"></i> Add Service Item
+                        </button>
+                    </div>
+
+                    <!-- Tax and Total Section -->
+                    <div class="quote-section">
+                        <div class="tax-toggle-container">
+                            <label class="tax-toggle-label">
+                                <input type="checkbox" id="quickInvoiceTaxToggle" onchange="toggleQuickInvoiceTax()">
+                                <span class="tax-toggle-text">Apply 5% Sales Tax</span>
+                            </label>
+                        </div>
+                        <div class="quote-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span id="quickInvoiceSubtotalAmount">$0.00</span>
+                            </div>
+                            <div class="total-row tax-row" id="quickInvoiceTaxRow" style="display: none;">
+                                <span>Tax (5%):</span>
+                                <span id="quickInvoiceTaxAmount">$0.00</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span id="quickInvoiceGrandTotalAmount">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Invoice Actions -->
+                    <div class="quote-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('quickInvoiceModal')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-primary" onclick="generateQuickInvoice()">
+                            <i class="fas fa-eye"></i> Generate Invoice
                         </button>
                     </div>
                 </div>
