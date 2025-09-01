@@ -13,13 +13,25 @@
     let moveBookingData = null;
 
     // Calendar functions
-    function renderCalendar(bookings = []) {
+    async function renderCalendar(bookings = []) {
+        console.log('📅 renderCalendar called with bookings:', bookings.length);
+        
+        // Wait for calendar events to be loaded before rendering
+        if (window.adminCalendarEvents && typeof window.adminCalendarEvents.loadEvents === 'function') {
+            console.log('🔄 Waiting for calendar events to load...');
+            await window.adminCalendarEvents.loadEvents();
+            console.log('✅ Calendar events loaded, proceeding with render');
+        } else {
+            console.log('⚠️ AdminCalendarEvents not available, proceeding without events');
+        }
+        
         const grid = document.getElementById('calendarGrid');
         const monthDisplay = document.getElementById('calendarMonth');
         
         // Update month display
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                            'July', 'August', 'September', 'October', 'November', 'December'];
+        
         monthDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         
         // Clear grid
@@ -35,6 +47,8 @@
             // Desktop calendar (original grid layout)
             renderDesktopCalendar(grid, bookings);
         }
+        
+        console.log('✅ Calendar rendered successfully');
     }
 
     function renderMobileCalendar(grid, bookings = []) {
@@ -81,9 +95,14 @@
             const isUnblockedWeekend = blockedDates.some(blockedDate => 
                 blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
             );
+            const isFullDayJob = blockedDates.some(blockedDate => 
+                blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
+            );
             
             // Set dot color based on status
-            if (isBlocked) {
+            if (isFullDayJob) {
+                timelineDot.classList.add('weekend-job'); // Use weekend-job class for full-day jobs
+            } else if (isBlocked) {
                 timelineDot.classList.add('blocked');
             } else if (isWeekend && !isUnblockedWeekend) {
                 timelineDot.classList.add('weekend');
@@ -198,6 +217,11 @@
                 eventsColumn.appendChild(statusBlock);
             }
             
+            // Add event indicators if available
+            if (window.adminCalendarEvents && typeof window.adminCalendarEvents.renderEventIndicators === 'function') {
+                window.adminCalendarEvents.renderEventIndicators(timelineItem, dateString);
+            }
+            
             // Add click handler for day management
             timelineItem.addEventListener('click', () => handleDayClick(currentDate, allDayBookings));
             
@@ -268,8 +292,14 @@
             const isUnblockedWeekend = blockedDates.some(blockedDate => 
                 blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
             );
+            const isFullDayJob = blockedDates.some(blockedDate => 
+                blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
+            );
             
-            if (isBlocked) {
+            if (isFullDayJob) {
+                // Full day blocked due to job scheduling
+                dayElement.classList.add('weekend-job');
+            } else if (isBlocked) {
                 dayElement.classList.add('blocked');
             } else if (isWeekend && !isUnblockedWeekend) {
                 // Weekends are blocked by default unless explicitly unblocked
@@ -308,19 +338,7 @@
                     (booking.job_time && booking.job_time.includes('Full-day'))
                 );
                 
-                // Debug: Log weekend job detection for August 23rd
-                if (dateString === '2025-08-23') {
-                    console.log(`🔍 Admin Calendar: August 23rd - Weekend job detection:`, {
-                        jobBookings,
-                        hasWeekendJob,
-                        jobTimes: jobBookings.map(b => b.job_time),
-                        weekendJobCheck: jobBookings.map(booking => ({
-                            job_time: booking.job_time,
-                            isFullDay: booking.job_time === 'Full-day (Weekend)' || 
-                                       (booking.job_time && booking.job_time.includes('Full-day'))
-                        }))
-                    });
-                }
+
                 
                 if (hasWeekendJob) {
                     // Weekend job booking - show as full-day
@@ -346,18 +364,11 @@
                 dayElement.appendChild(bookingInfo);
             }
             
-            // Debug: Log final state for August 23rd
-            if (dateString === '2025-08-23') {
-                console.log(`🔍 Admin Calendar: August 23rd - Final state:`, {
-                    dateString,
-                    allDayBookings: allDayBookings.length,
-                    hasWeekendJob: jobBookings ? jobBookings.some(booking => 
-                        booking.job_time === 'Full-day (Weekend)' || 
-                        (booking.job_time && booking.job_time.includes('Full-day'))
-                    ) : false,
-                    dayElementClasses: dayElement.className,
-                    dayElementHTML: dayElement.innerHTML
-                });
+
+            
+            // Add event indicators if available
+            if (window.adminCalendarEvents && typeof window.adminCalendarEvents.renderEventIndicators === 'function') {
+                window.adminCalendarEvents.renderEventIndicators(dayElement, dateString);
             }
             
             // Add click handler
@@ -381,24 +392,13 @@
         const isUnblockedWeekend = blockedDates.some(blockedDate => 
             blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
         );
+        const isFullDayJob = blockedDates.some(blockedDate => 
+            blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
+        );
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         
-        if (bookings && bookings.length > 0) {
-            // Show booking details
-            showBookingDetails(date, bookings);
-        } else if (isBlocked) {
-            // Show unblock option for manually blocked dates
-            showBlockingModal(date, true);
-        } else if (isWeekend && isUnblockedWeekend) {
-            // Show re-block option for unblocked weekends
-            showBlockingModal(date, 'weekend');
-        } else if (isWeekend) {
-            // Show make available option for blocked weekends
-            showBlockingModal(date, 'weekend');
-        } else {
-            // Show blocking management for available dates
-            showBlockingModal(date, false);
-        }
+        // Show day management modal with Add Event button
+        showDayManagementModal(date, dateString, bookings, isBlocked, isUnblockedWeekend, isFullDayJob, isWeekend);
     }
 
     function showCalendarPopup(date, bookings) {
@@ -453,15 +453,15 @@
         
         if (isWeekend) {
             if (isBlocked) {
-                popupContent += `<button class="calendar-popup-btn primary" onclick="unblockWeekend('${dateString}')">Make Available</button>`;
+                popupContent += `<button class="calendar-popup-btn primary" onclick="window.adminCalendar.unblockWeekendFromString('${dateString}')">Make Available</button>`;
             } else {
-                popupContent += `<button class="calendar-popup-btn secondary" onclick="reblockWeekend('${dateString}')">Block Weekend</button>`;
+                popupContent += `<button class="calendar-popup-btn secondary" onclick="window.adminCalendar.reblockWeekendFromString('${dateString}')">Block Weekend</button>`;
             }
         } else {
             if (isBlocked) {
-                popupContent += `<button class="calendar-popup-btn primary" onclick="unblockDate('${dateString}')">Unblock Date</button>`;
+                popupContent += `<button class="calendar-popup-btn primary" onclick="window.adminCalendar.unblockDateFromString('${dateString}')">Unblock Date</button>`;
             } else {
-                popupContent += `<button class="calendar-popup-btn secondary" onclick="toggleDateBlock('${dateString}')">Block Date</button>`;
+                popupContent += `<button class="calendar-popup-btn secondary" onclick="window.adminCalendar.blockDate('${dateString}')">Block Date</button>`;
             }
         }
         
@@ -499,13 +499,13 @@
         if (isBlocked === 'weekend') {
             statusDisplay.textContent = 'Weekend (Blocked)';
             toggleBtn.innerHTML = '<i class="fas fa-unlock"></i> Make Available';
-            toggleBtn.onclick = () => unblockWeekend(dateString);
+            toggleBtn.onclick = () => window.adminCalendar.unblockWeekendFromString(dateString);
             toggleBtn.style.display = 'inline-block';
             unblockBtn.style.display = 'none';
         } else if (isBlocked === 'unblocked_weekend') {
             statusDisplay.textContent = 'Weekend (Available)';
             toggleBtn.innerHTML = '<i class="fas fa-lock"></i> Block Weekend';
-            toggleBtn.onclick = () => reblockWeekend(dateString);
+            toggleBtn.onclick = () => window.adminCalendar.reblockWeekendFromString(dateString);
             toggleBtn.style.display = 'inline-block';
             unblockBtn.style.display = 'none';
         } else if (isBlocked === true) {
@@ -515,7 +515,7 @@
         } else {
             statusDisplay.textContent = 'Available';
             toggleBtn.innerHTML = '<i class="fas fa-lock"></i> Block Date';
-            toggleBtn.onclick = () => toggleDateBlock();
+            toggleBtn.onclick = () => window.adminCalendar.toggleDateBlock();
             toggleBtn.style.display = 'inline-block';
             unblockBtn.style.display = 'none';
         }
@@ -575,6 +575,135 @@
         document.body.classList.remove('modal-open');
         moveBookingData = null;
         selectedMoveDate = null;
+    }
+
+    function showDayManagementModal(date, dateString, bookings, isBlocked, isUnblockedWeekend, isFullDayJob, isWeekend) {
+        // Store the modal parameters for later refresh
+        window.currentDayManagementParams = { date, dateString, bookings, isBlocked, isUnblockedWeekend, isFullDayJob, isWeekend };
+        
+        refreshDayManagementModal();
+        
+        // Show modal
+        const modal = document.getElementById('dateBlockingModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function refreshDayManagementModal() {
+        if (!window.currentDayManagementParams) {
+            return;
+        }
+        
+        const { date, dateString, bookings, isBlocked, isUnblockedWeekend, isFullDayJob, isWeekend } = window.currentDayManagementParams;
+        
+        const formattedDate = date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Get events for this date
+        const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateString) : [];
+        
+        // Create modal content
+        let modalContent = `
+            <div class="day-management-modal">
+                <div class="day-management-header">
+                    <h3><i class="fas fa-calendar-day"></i> ${formattedDate}</h3>
+                    <button class="modal-close" onclick="closeDayManagementModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="day-management-content">
+                    <!-- Add Event Button -->
+                    <div class="add-event-section">
+                        <button class="action-btn primary" onclick="window.adminCalendarEvents.showModal('${dateString}')">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+
+                    <!-- Bookings Section -->
+                    <div class="day-section">
+                        <h4><i class="fas fa-calendar-check"></i> Bookings</h4>
+                        ${bookings && bookings.length > 0 ? 
+                            bookings.map(booking => `
+                                <div class="day-booking-item" onclick="showBookingDetailsPopup('${booking.booking_id}')">
+                                    <div class="booking-time">${booking.time}</div>
+                                    <div class="booking-details">
+                                        <div class="booking-service">${booking.service}</div>
+                                        <div class="booking-customer">${booking.name}</div>
+                                    </div>
+                                </div>
+                            `).join('') : 
+                            '<div class="no-bookings">No bookings scheduled</div>'
+                        }
+                    </div>
+
+                    <!-- Events Section -->
+                    <div class="day-section">
+                        <h4><i class="fas fa-calendar-alt"></i> Events</h4>
+                        ${dayEvents.length > 0 ? 
+                            dayEvents.map(event => `
+                                <div class="day-event-item" style="border-left-color: ${event.color || '#007bff'}">
+                                    <div class="event-time">${event.startTime && event.endTime ? `${event.startTime} - ${event.endTime}` : (event.time || 'Time TBD')}</div>
+                                    <div class="event-details">
+                                        <div class="event-title">${event.title}</div>
+                                        <div class="event-type">${event.type}</div>
+                                        ${event.location ? `<div class="event-location">📍 ${event.location}</div>` : ''}
+                                        ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                                    </div>
+                                    <button class="delete-event-btn" onclick="window.adminCalendarEvents.deleteEvent('${event._id || event.id}')" title="Delete Event">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `).join('') : 
+                            '<div class="no-events">No events scheduled</div>'
+                        }
+                    </div>
+
+                    <!-- Date Management Section -->
+                    <div class="day-section">
+                        <h4><i class="fas fa-cog"></i> Date Management</h4>
+                        ${isFullDayJob ? 
+                            '<div class="full-day-job-info">This date has a full-day job scheduled (5:30 PM)</div>' :
+                            isBlocked ? 
+                                '<button class="action-btn secondary" onclick="window.adminCalendar.unblockDateFromString(\'' + dateString + '\')">Unblock Date</button>' :
+                                '<button class="action-btn secondary" onclick="window.adminCalendar.blockDate(\'' + dateString + '\')">Block Date</button>'
+                        }
+                        ${isWeekend ? 
+                            (isUnblockedWeekend ? 
+                                '<button class="action-btn warning" onclick="window.adminCalendar.reblockWeekendFromString(\'' + dateString + '\')">Block Weekend</button>' :
+                                '<button class="action-btn primary" onclick="window.adminCalendar.unblockWeekendFromString(\'' + dateString + '\')">Make Weekend Available</button>'
+                            ) : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Update the existing modal content
+        const modal = document.getElementById('dateBlockingModal');
+        if (modal) {
+            const modalBody = modal.querySelector('.modal-body');
+            if (modalBody) {
+                modalBody.innerHTML = modalContent;
+            }
+
+            // Update modal title
+            const modalTitle = modal.querySelector('#blockingModalTitle');
+            if (modalTitle) {
+                modalTitle.textContent = `Manage ${formattedDate}`;
+            }
+        }
+    }
+
+    function closeDayManagementModal() {
+        const modal = document.getElementById('dateBlockingModal');
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
     }
 
     function renderMoveCalendar() {
@@ -756,7 +885,7 @@
                 closeBlockingModal();
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
-                renderCalendar();
+                await renderCalendar(window.allBookings || []);
             } else {
                 showNotification('Failed to block date', 'error');
             }
@@ -785,7 +914,7 @@
                 closeBlockingModal();
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
-                renderCalendar();
+                await renderCalendar(window.allBookings || []);
             } else {
                 const error = await response.json();
                 showNotification(error.message || 'Failed to make weekend available', 'error');
@@ -808,13 +937,13 @@
                 closeBlockingModal();
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
-                renderCalendar();
+                await renderCalendar(window.allBookings || []);
             } else {
                 const error = await response.json();
                 showNotification(error.message || 'Failed to block weekend', 'error');
             }
         } catch (error) {
-            console.error('Error blocking weekend:', error);
+            console.error('Error blocking weekend', error);
             showNotification('Network error blocking weekend', 'error');
         }
     }
@@ -834,7 +963,7 @@
                 closeBlockingModal();
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
-                renderCalendar();
+                await renderCalendar(window.allBookings || []);
             } else {
                 showNotification('Failed to unblock date', 'error');
             }
@@ -844,22 +973,22 @@
         }
     }
 
-    function previousMonth() {
+    async function previousMonth() {
         currentMonth--;
         if (currentMonth < 0) {
             currentMonth = 11;
             currentYear--;
         }
-        renderCalendar();
+        await renderCalendar(window.allBookings || []);
     }
 
-    function nextMonth() {
+    async function nextMonth() {
         currentMonth++;
         if (currentMonth > 11) {
             currentMonth = 0;
             currentYear++;
         }
-        renderCalendar();
+        await renderCalendar(window.allBookings || []);
     }
 
     // Calendar Drag and Drop functionality
@@ -958,8 +1087,9 @@
             loadBookings(); // Reload to update the display
             
             // Explicitly refresh calendar if it's currently visible
-            if (currentFilter === 'calendar') {
-                renderCalendar();
+            const calendarView = document.getElementById('calendarView');
+            if (calendarView && calendarView.style.display !== 'none') {
+                await renderCalendar(window.allBookings || []);
             }
         } catch (error) {
             console.error('Error moving bookings:', error);
@@ -979,6 +1109,137 @@
         } catch (error) {
             console.error('Error loading blocked dates:', error);
             blockedDates = [];
+        }
+    }
+
+    // Show full-day job blocking info
+    function showFullDayJobInfo(date, dateString) {
+        const blockedDate = blockedDates.find(blocked => 
+            blocked.date === dateString && blocked.reason === 'full_day_job'
+        );
+        
+        if (!blockedDate) return;
+        
+        // Find the job booking details
+        const jobBooking = (window.allBookings || []).find(booking => 
+            booking.booking_id === blockedDate.job_booking_id
+        );
+        
+        const customerName = jobBooking ? jobBooking.name : 'Unknown Customer';
+        const service = jobBooking ? jobBooking.service : 'Tree Service';
+        
+        // Show blocking modal with full-day job info
+        const modal = document.getElementById('dateBlockingModal');
+        const title = document.getElementById('blockingModalTitle');
+        const dateDisplay = document.getElementById('selectedDateDisplay');
+        const statusDisplay = document.getElementById('dateStatusDisplay');
+        const toggleBtn = document.getElementById('toggleBlockBtn');
+        const unblockBtn = document.getElementById('unblockBtn');
+        
+        if (modal && title && dateDisplay && statusDisplay && toggleBtn && unblockBtn) {
+            title.textContent = 'Full-Day Job Scheduled';
+            dateDisplay.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            statusDisplay.textContent = `Blocked - ${customerName} (${service})`;
+            
+            // Hide toggle button, show unblock button
+            toggleBtn.style.display = 'none';
+            unblockBtn.style.display = 'block';
+            
+            // Update unblock button text and action
+            unblockBtn.textContent = 'Unblock Date (Cancel Job)';
+            unblockBtn.onclick = () => unblockFullDayJob(dateString, blockedDate.job_booking_id);
+            
+            modal.classList.add('show');
+        }
+    }
+
+    // Unblock full-day job (cancel the job)
+    async function unblockFullDayJob(dateString, jobBookingId) {
+        if (!confirm('Are you sure you want to cancel this job and unblock the date? This will revert the booking status.')) {
+            return;
+        }
+        
+        try {
+            // First, revert the job booking status to 'quote-sent'
+            const response = await fetch(`/api/bookings/${jobBookingId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'quote-sent' })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                showNotification(error.error || 'Failed to revert job status', 'error');
+                return;
+            }
+            
+            // Remove the full-day job block
+            const unblockResponse = await fetch(`/api/blocked-dates/${dateString}`, {
+                method: 'DELETE'
+            });
+            
+            if (unblockResponse.ok) {
+                showNotification('Job cancelled and date unblocked successfully', 'success');
+                
+                // Reload data and refresh calendar
+                if (window.loadBookings) {
+                    window.loadBookings();
+                }
+                await renderCalendar(window.allBookings || []);
+            } else {
+                showNotification('Failed to unblock date', 'error');
+            }
+        } catch (error) {
+            console.error('Error unblocking full-day job:', error);
+            showNotification('Network error unblocking date', 'error');
+        }
+    }
+
+    // Wrapper functions for HTML onclick handlers
+    function blockDate(dateString) {
+        try {
+            // Set the selectedDate for the toggleDateBlock function
+            selectedDate = new Date(dateString);
+            toggleDateBlock();
+        } catch (error) {
+            console.error('Error in blockDate wrapper:', error);
+            showNotification('Error blocking date', 'error');
+        }
+    }
+
+    function unblockDateFromString(dateString) {
+        try {
+            // Set the selectedDate for the unblockDate function
+            selectedDate = new Date(dateString);
+            unblockDate();
+        } catch (error) {
+            console.error('Error in unblockDateFromString wrapper:', error);
+            showNotification('Error unblocking date', 'error');
+        }
+    }
+
+    function unblockWeekendFromString(dateString) {
+        try {
+            unblockWeekend(dateString);
+        } catch (error) {
+            console.error('Error in unblockWeekendFromString wrapper:', error);
+            showNotification('Error unblocking weekend', 'error');
+        }
+    }
+
+    function reblockWeekendFromString(dateString) {
+        try {
+            reblockWeekend(dateString);
+        } catch (error) {
+            console.error('Error in reblockWeekendFromString wrapper:', error);
+            showNotification('Error blocking weekend', 'error');
         }
     }
 
@@ -1012,6 +1273,16 @@
         handleCalendarDragLeave,
         handleCalendarDrop,
         loadBlockedDates,
+        showFullDayJobInfo,
+        unblockFullDayJob,
+        showDayManagementModal,
+        refreshDayManagementModal,
+        closeDayManagementModal,
+        // Wrapper functions for HTML onclick handlers
+        blockDate,
+        unblockDateFromString,
+        unblockWeekendFromString,
+        reblockWeekendFromString,
         // Getter for blockedDates
         get blockedDates() { return blockedDates; }
     };

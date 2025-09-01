@@ -591,7 +591,16 @@ app.get('/api/availability', async (req, res) => {
                 if (!availability[blocked.date]) {
                     availability[blocked.date] = {};
                 }
-                availability[blocked.date]['blocked'] = true;
+                
+                if (blocked.reason === 'full_day_job') {
+                    // Full day blocked due to job scheduling
+                    availability[blocked.date]['blocked'] = true;
+                    availability[blocked.date]['full_day_job'] = true;
+                    availability[blocked.date]['job_booking_id'] = blocked.job_booking_id;
+                } else {
+                    // Regular blocked date
+                    availability[blocked.date]['blocked'] = true;
+                }
             }
         });
         
@@ -634,7 +643,7 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
         }
 
-        // Validate time format
+        // Validate time format for quotes (all time slots available)
         const validTimes = ['5:30 PM', '6:30 PM', '7:30 PM'];
         if (!validTimes.includes(time)) {
             return res.status(400).json({ error: 'Invalid time slot' });
@@ -679,6 +688,24 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             address: sanitizedData.address,
             notes: sanitizedData.notes
         };
+
+        // Check if the date is blocked due to a full-day job
+        const fullDayJobBlock = await db.collection('blocked_dates').findOne({
+            date: cleanedData.date,
+            reason: 'full_day_job'
+        });
+
+        if (fullDayJobBlock) {
+            return res.status(409).json({ 
+                error: 'This date is completely blocked due to a scheduled job',
+                type: 'full_day_job_blocked',
+                existingJob: {
+                    date: fullDayJobBlock.date,
+                    job_booking_id: fullDayJobBlock.job_booking_id,
+                    note: fullDayJobBlock.note
+                }
+            });
+        }
 
         // Check for double booking (same time slot) - only check active bookings
         const existingTimeSlotBooking = await db.collection('bookings').findOne({
@@ -1018,6 +1045,291 @@ app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Create new booking from admin panel (admin only)
+app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
+    try {
+        const {
+            booking_id,
+            service,
+            date,
+            time,
+            name,
+            email,
+            phone,
+            address,
+            notes,
+            service_items,
+            estimated_cost
+        } = req.body;
+
+        // Input validation and sanitization
+        if (!booking_id || !service || !date || !time || !name || !email) {
+            return res.status(400).json({ error: 'Missing required fields: Name and Email are required' });
+        }
+
+        // Validate service type
+        const validServices = ['Tree Removal', 'Trimming & Pruning', 'Stump Grinding', 'Emergency Service'];
+        if (!validServices.includes(service)) {
+            return res.status(400).json({ error: 'Invalid service type' });
+        }
+
+        // Validate date format (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+            return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+        }
+
+        // Validate time format for quotes (all time slots available)
+        const validTimes = ['5:30 PM', '6:30 PM', '7:30 PM'];
+        if (!validTimes.includes(time)) {
+            return res.status(400).json({ error: 'Invalid time slot' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        // Sanitize text inputs (remove potential script tags and excessive whitespace)
+        const sanitize = (str) => str ? str.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') : '';
+        
+        const sanitizedData = {
+            booking_id: booking_id.trim(),
+            service: service.trim(),
+            date: date.trim(),
+            time: time.trim(),
+            name: sanitize(name),
+            email: email.trim().toLowerCase(),
+            phone: sanitize(phone) || '',
+            address: sanitize(address) || '',
+            notes: sanitize(notes) || '',
+            service_items: service_items || [],
+            estimated_cost: estimated_cost || 0
+        };
+
+        // Check if the date is blocked due to a full-day job
+        const fullDayJobBlock = await db.collection('blocked_dates').findOne({
+            date: sanitizedData.date,
+            reason: 'full_day_job'
+        });
+
+        if (fullDayJobBlock) {
+            return res.status(409).json({ 
+                error: 'This date is completely blocked due to a scheduled job',
+                type: 'full_day_job_blocked',
+                existingJob: {
+                    date: fullDayJobBlock.date,
+                    job_booking_id: fullDayJobBlock.job_booking_id,
+                    note: fullDayJobBlock.note
+                }
+            });
+        }
+
+        // Check for double booking (same time slot) - only check active bookings
+        const existingTimeSlotBooking = await db.collection('bookings').findOne({
+            date: sanitizedData.date,
+            time: sanitizedData.time,
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
+        });
+
+        if (existingTimeSlotBooking) {
+            return res.status(409).json({ 
+                error: 'This time slot is already booked by another customer',
+                type: 'time_slot_conflict',
+                existingBooking: {
+                    date: existingTimeSlotBooking.date,
+                    time: existingTimeSlotBooking.time,
+                    status: existingTimeSlotBooking.status
+                }
+            });
+        }
+
+        // Additional validation: Check if this is a weekend and weekends are blocked
+        // Parse date string as local date to avoid timezone issues
+        const [year, month, day] = sanitizedData.date.split('-').map(Number);
+        const bookingDate = new Date(year, month - 1, day); // month is 0-indexed
+        const dayOfWeek = bookingDate.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+        
+        if (isWeekend) {
+            // For admin-created bookings, allow weekends by default
+            // Only check weekend restrictions if explicitly blocked
+            const blockedWeekend = await db.collection('blocked_dates').findOne({ 
+                date: sanitizedData.date, 
+                reason: 'weekend_blocked' 
+            });
+            
+            if (blockedWeekend) {
+                return res.status(409).json({ 
+                    error: 'This weekend date is explicitly blocked and not available for booking.',
+                    type: 'weekend_blocked'
+                });
+            }
+            
+            // Weekend is allowed for admin bookings
+            console.log(`✅ Admin booking allowed on weekend: ${sanitizedData.date}`);
+        }
+
+        // Validate booking date is not in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // Use the same parsed date to avoid timezone issues
+        const bookingDateOnly = new Date(year, month - 1, day);
+        bookingDateOnly.setHours(0, 0, 0, 0);
+        
+        if (bookingDateOnly < today) {
+            return res.status(400).json({ 
+                error: 'Cannot book appointments for past dates',
+                type: 'past_date'
+            });
+        }
+
+        // Check if the date is blocked
+        const blockedDate = await db.collection('blocked_dates').findOne({ date: sanitizedData.date });
+        if (blockedDate) {
+            return res.status(409).json({ 
+                error: `This date (${sanitizedData.date}) is not available for booking. Please select a different date.`,
+                type: 'date_blocked',
+                reason: blockedDate.reason
+            });
+        }
+
+        // Check for duplicate booking by same customer on same date
+        const sameDateBooking = await db.collection('bookings').findOne({
+            $or: [
+                { phone: sanitizedData.phone },
+                { email: sanitizedData.email }
+            ],
+            date: sanitizedData.date,
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
+        });
+
+        if (sameDateBooking && sanitizedData.phone && sanitizedData.email) {
+            return res.status(409).json({ 
+                error: `You already have a booking on ${sanitizedData.date}. Only one booking per customer per day is allowed.`,
+                type: 'same_date_booking_exists',
+                existingBooking: {
+                    date: sameDateBooking.date,
+                    time: sameDateBooking.time,
+                    status: sameDateBooking.status,
+                    bookingId: sameDateBooking.booking_id
+                }
+            });
+        }
+
+        // Check if customer has too many active bookings (limit to 3 active bookings)
+        const activeBookings = await db.collection('bookings').find({
+            $or: [
+                { phone: sanitizedData.phone },
+                { email: sanitizedData.email }
+            ],
+            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
+        }).toArray();
+
+        if (activeBookings.length >= 3 && sanitizedData.phone && sanitizedData.email) {
+            return res.status(409).json({ 
+                error: `You have reached the maximum number of active bookings (3). Please complete or cancel an existing booking before making a new one.`,
+                type: 'max_active_bookings',
+                activeBookings: activeBookings.map(b => ({
+                    date: b.date,
+                    time: b.time,
+                    status: b.status,
+                    bookingId: b.booking_id,
+                    service: b.service
+                }))
+            });
+        }
+
+        // Insert new booking
+        const newBooking = {
+            booking_id: sanitizedData.booking_id,
+            service: sanitizedData.service,
+            date: sanitizedData.date,
+            time: sanitizedData.time,
+            name: sanitizedData.name,
+            email: sanitizedData.email,
+            phone: sanitizedData.phone,
+            address: sanitizedData.address,
+            notes: sanitizedData.notes,
+            service_items: JSON.stringify(sanitizedData.service_items),
+            estimated_cost: sanitizedData.estimated_cost,
+            images: '[]', // No images for admin-created bookings initially
+            status: 'quote-ready', // Admin bookings go directly to quote-ready stage
+            created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        const result = await db.collection('bookings').insertOne(newBooking);
+
+        // Send automatic quote request confirmation email to customer
+        try {
+            const EmailService = require('./email-service');
+            const emailService = new EmailService();
+            
+            const emailResult = await emailService.sendQuoteRequestConfirmationEmail(
+                sanitizedData.email,
+                sanitizedData.booking_id,
+                sanitizedData.service,
+                sanitizedData.date,
+                sanitizedData.time,
+                sanitizedData.name,
+                sanitizedData.address,
+                sanitizedData.notes
+            );
+            
+            if (emailResult.success) {
+                console.log(`📧 Quote request confirmation email sent successfully to ${sanitizedData.email}`);
+            } else {
+                console.error(`❌ Failed to send quote request confirmation email:`, emailResult.error);
+            }
+        } catch (emailError) {
+            console.error('❌ Error sending quote request confirmation email:', emailError);
+            // Don't fail the booking creation if email fails
+        }
+
+        // Send notification email to Stellar Tree Management about new booking
+        try {
+            const EmailService = require('./email-service');
+            const emailService = new EmailService();
+            
+            const adminNotificationResult = await emailService.sendNewBookingNotificationEmail(
+                process.env.ADMIN_EMAIL || 'stellartmanagement@outlook.com',
+                sanitizedData.booking_id,
+                sanitizedData.service,
+                sanitizedData.date,
+                sanitizedData.time,
+                sanitizedData.name,
+                sanitizedData.email,
+                sanitizedData.phone,
+                sanitizedData.address,
+                sanitizedData.notes
+            );
+            
+            if (adminNotificationResult.success) {
+                console.log(`📧 New booking notification email sent successfully to admin`);
+            } else {
+                console.error(`❌ Failed to send new booking notification email:`, adminNotificationResult.error);
+            }
+        } catch (adminEmailError) {
+            console.error('❌ Error sending new booking notification email:', adminEmailError);
+            // Don't fail the booking creation if admin email fails
+        }
+
+        console.log(`✅ Admin booking created successfully: ${sanitizedData.booking_id}`);
+        res.status(201).json({
+            message: 'Admin booking created successfully',
+            bookingId: sanitizedData.booking_id,
+            id: result.insertedId,
+            status: 'pending'
+        });
+
+    } catch (error) {
+        console.error('❌ Error creating admin booking:', error);
+        res.status(500).json({ error: 'Failed to create admin booking' });
     }
 });
 
@@ -1455,31 +1767,6 @@ app.post('/api/bookings/:bookingId/accept-quote', async (req, res) => {
         if (result.modifiedCount > 0) {
             console.log(`✅ Quote accepted by customer for ${bookingId}`);
             
-            // Send quote acceptance email to customer
-            try {
-                const EmailService = require('./email-service');
-                const emailService = new EmailService();
-                
-                const emailResult = await emailService.sendQuoteAcceptanceEmail(
-                    booking.email,
-                    booking.booking_id,
-                    booking.service,
-                    booking.estimated_cost || 'TBD',
-                    booking.work_description || 'Tree service as requested',
-                    booking.name,
-                    booking.address || '',
-                    booking.notes || ''
-                );
-                
-                if (emailResult.success) {
-                    console.log(`📧 Quote acceptance email sent successfully to ${booking.email}`);
-                } else {
-                    console.log(`⚠️ Quote acceptance email failed to send: ${emailResult.error}`);
-                }
-            } catch (emailError) {
-                console.error('❌ Error sending quote acceptance email:', emailError);
-            }
-            
             res.json({ 
                 message: 'Quote accepted successfully',
                 status: 'quote-accepted'
@@ -1504,6 +1791,25 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // Validate job time - jobs can ONLY be scheduled at 5:30 PM on weekdays
+        if (jobTime !== '5:30 PM') {
+            return res.status(400).json({ 
+                error: 'Jobs can only be scheduled at 5:30 PM on weekdays' 
+            });
+        }
+
+        // Validate job date - jobs can only be scheduled on weekdays
+        const [year, month, day] = jobDate.split('-').map(Number);
+        const jobDateObj = new Date(year, month - 1, day);
+        const dayOfWeek = jobDateObj.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+        
+        if (isWeekend) {
+            return res.status(400).json({ 
+                error: 'Jobs can only be scheduled on weekdays (Monday-Friday)' 
+            });
+        }
+
         // Get booking details
         const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
         if (!booking) {
@@ -1524,6 +1830,87 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
 
         if (result.modifiedCount > 0) {
             console.log(`📅 Job booking submitted for ${bookingId}: ${jobDate} at ${jobTime}`);
+            
+            // Block the entire day when a job is scheduled at 5:30 PM
+            try {
+                // First, remove any existing full-day job blocks for this date
+                await db.collection('blocked_dates').deleteMany({
+                    date: jobDate,
+                    reason: 'full_day_job'
+                });
+                
+                // Then create the new full-day job block
+                await db.collection('blocked_dates').insertOne({
+                    date: jobDate,
+                    reason: 'full_day_job',
+                    blocked_at: new Date(),
+                    job_booking_id: bookingId,
+                    note: `Full day blocked due to job scheduled at ${jobTime}`
+                });
+                
+                console.log(`🚫 Blocked entire day ${jobDate} due to job scheduling (replaced any existing blocks)`);
+            } catch (blockError) {
+                console.error('❌ Error blocking date for job:', blockError);
+            }
+
+            // Cancel any existing quotes on this date since it's now a full-day job
+            try {
+                const existingQuotes = await db.collection('bookings').find({
+                    date: jobDate,
+                    status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+                }).toArray();
+
+                if (existingQuotes.length > 0) {
+                    console.log(`⚠️ Found ${existingQuotes.length} existing quotes on ${jobDate} - cancelling them due to job scheduling`);
+                    
+                    // Update all existing quotes to cancelled status
+                    const updateResult = await db.collection('bookings').updateMany(
+                        { 
+                            date: jobDate,
+                            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+                        },
+                        { 
+                            $set: { 
+                                status: 'cancelled',
+                                cancelled_reason: 'Date blocked due to job scheduling',
+                                cancelled_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                            }
+                        }
+                    );
+                    
+                    console.log(`✅ Cancelled ${updateResult.modifiedCount} existing quotes on ${jobDate}`);
+                }
+            } catch (cancelError) {
+                console.error('❌ Error cancelling existing quotes:', cancelError);
+            }
+            
+            // Send quote acceptance email to customer after they confirm the job date/time
+            try {
+                const EmailService = require('./email-service');
+                const emailService = new EmailService();
+                
+                const emailResult = await emailService.sendQuoteAcceptanceEmail(
+                    booking.email,
+                    booking.booking_id,
+                    booking.service,
+                    booking.estimated_cost || 'TBD',
+                    booking.work_description || 'Tree service as requested',
+                    booking.name,
+                    booking.address || '',
+                    booking.notes || '',
+                    jobDate,
+                    jobTime
+                );
+                
+                if (emailResult.success) {
+                    console.log(`📧 Quote acceptance email sent successfully to ${booking.email} after job scheduling`);
+                } else {
+                    console.log(`⚠️ Quote acceptance email failed to send: ${emailResult.error}`);
+                }
+            } catch (emailError) {
+                console.error('❌ Error sending quote acceptance email:', emailError);
+            }
+            
             res.json({ 
                 message: 'Job booking submitted successfully',
                 jobDate: jobDate,
@@ -2091,6 +2478,342 @@ app.delete('/api/blocked-dates/:date', async (req, res) => {
     }
 });
 
+// Cleanup duplicate full-day job blocks
+app.post('/api/blocked-dates/cleanup-duplicates', requireAdminAuth, async (req, res) => {
+    try {
+        console.log('🧹 Starting cleanup of duplicate full-day job blocks...');
+        
+        // Find all full-day job blocks
+        const fullDayJobBlocks = await db.collection('blocked_dates')
+            .find({ reason: 'full_day_job' })
+            .sort({ date: 1, blocked_at: 1 })
+            .toArray();
+        
+        let cleanedCount = 0;
+        const processedDates = new Set();
+        
+        for (const block of fullDayJobBlocks) {
+            if (processedDates.has(block.date)) {
+                // This date has already been processed, remove this duplicate
+                await db.collection('blocked_dates').deleteOne({ _id: block._id });
+                cleanedCount++;
+                console.log(`🧹 Removed duplicate block for date: ${block.date}`);
+            } else {
+                // First time seeing this date, mark as processed
+                processedDates.add(block.date);
+            }
+        }
+        
+        console.log(`🧹 Cleanup completed. Removed ${cleanedCount} duplicate blocks.`);
+        
+        res.json({ 
+            message: 'Cleanup completed successfully',
+            removedCount: cleanedCount,
+            totalBlocks: fullDayJobBlocks.length
+        });
+    } catch (error) {
+        console.error('❌ Error during cleanup:', error);
+        res.status(500).json({ error: 'Database error during cleanup' });
+    }
+});
+
+// Cleanup inconsistent data: dates with both full-day job blocks and active quotes
+app.post('/api/blocked-dates/cleanup-inconsistent', requireAdminAuth, async (req, res) => {
+    try {
+        console.log('🧹 Starting cleanup of inconsistent data...');
+        
+        // Find all full-day job blocks
+        const fullDayJobBlocks = await db.collection('blocked_dates')
+            .find({ reason: 'full_day_job' })
+            .toArray();
+        
+        let cleanedCount = 0;
+        
+        for (const block of fullDayJobBlocks) {
+            // Check if there are any active quotes on this date
+            const activeQuotes = await db.collection('bookings').find({
+                date: block.date,
+                status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+            }).toArray();
+            
+            if (activeQuotes.length > 0) {
+                console.log(`⚠️ Found ${activeQuotes.length} active quotes on ${block.date} - cancelling them due to full-day job block`);
+                
+                // Cancel all active quotes on this date
+                const updateResult = await db.collection('bookings').updateMany(
+                    { 
+                        date: block.date,
+                        status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+                    },
+                    { 
+                        $set: { 
+                            status: 'cancelled',
+                            cancelled_reason: 'Date blocked due to job scheduling (cleanup)',
+                            cancelled_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                        }
+                    }
+                );
+                
+                cleanedCount += updateResult.modifiedCount;
+                console.log(`✅ Cancelled ${updateResult.modifiedCount} quotes on ${block.date}`);
+            }
+        }
+        
+        console.log(`🧹 Inconsistent data cleanup completed. Cancelled ${cleanedCount} quotes.`);
+        
+        res.json({ 
+            message: 'Inconsistent data cleanup completed successfully',
+            cancelledQuotes: cleanedCount,
+            totalJobBlocks: fullDayJobBlocks.length
+        });
+    } catch (error) {
+        console.error('❌ Error during inconsistent data cleanup:', error);
+        res.status(500).json({ error: 'Database error during cleanup' });
+    }
+});
+
+// Cleanup orphaned full-day job blocks (no actual job bookings)
+app.post('/api/blocked-dates/cleanup-orphaned', requireAdminAuth, async (req, res) => {
+    try {
+        console.log('🧹 Starting cleanup of orphaned full-day job blocks...');
+        
+        // Find all full-day job blocks
+        const fullDayJobBlocks = await db.collection('blocked_dates')
+            .find({ reason: 'full_day_job' })
+            .toArray();
+        
+        let cleanedCount = 0;
+        
+        for (const block of fullDayJobBlocks) {
+            // Check if there's an actual job booking for this date
+            const jobBooking = await db.collection('bookings').findOne({
+                date: block.date,
+                status: 'pending-booking'
+            });
+            
+            if (!jobBooking) {
+                console.log(`⚠️ Found orphaned full-day job block for ${block.date} - no actual job booking exists`);
+                
+                // Remove the orphaned block
+                await db.collection('blocked_dates').deleteOne({ _id: block._id });
+                cleanedCount++;
+                console.log(`✅ Removed orphaned block for ${block.date}`);
+            }
+        }
+        
+        console.log(`🧹 Orphaned block cleanup completed. Removed ${cleanedCount} blocks.`);
+        
+        res.json({ 
+            message: 'Orphaned block cleanup completed successfully',
+            removedBlocks: cleanedCount,
+            totalJobBlocks: fullDayJobBlocks.length
+        });
+    } catch (error) {
+        console.error('❌ Error during orphaned block cleanup:', error);
+        res.status(500).json({ error: 'Database error during cleanup' });
+    }
+});
+
+// Automatic cleanup endpoint (no auth required - runs automatically)
+app.post('/api/blocked-dates/auto-cleanup', async (req, res) => {
+    try {
+        console.log('🤖 Starting automatic cleanup of inconsistent data...');
+        
+        let totalCleaned = 0;
+        let details = [];
+        
+        // 1. Clean up orphaned full-day job blocks
+        const fullDayJobBlocks = await db.collection('blocked_dates')
+            .find({ reason: 'full_day_job' })
+            .toArray();
+        
+        for (const block of fullDayJobBlocks) {
+            // Check if there's an actual job booking for this date
+            const jobBooking = await db.collection('bookings').findOne({
+                date: block.date,
+                status: 'pending-booking'
+            });
+            
+            if (!jobBooking) {
+                console.log(`🤖 Auto-cleanup: Removing orphaned full-day job block for ${block.date}`);
+                await db.collection('blocked_dates').deleteOne({ _id: block._id });
+                totalCleaned++;
+                details.push(`Removed orphaned job block for ${block.date}`);
+            }
+        }
+        
+        // 2. Clean up inconsistent data (quotes on job-blocked dates)
+        for (const block of fullDayJobBlocks) {
+            if (block.reason === 'full_day_job') {
+                // Check if there are active quotes on this date
+                const activeQuotes = await db.collection('bookings').find({
+                    date: block.date,
+                    status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+                }).toArray();
+                
+                if (activeQuotes.length > 0) {
+                    console.log(`🤖 Auto-cleanup: Cancelling ${activeQuotes.length} quotes on ${block.date} due to job block`);
+                    
+                    const updateResult = await db.collection('bookings').updateMany(
+                        { 
+                            date: block.date,
+                            status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted'] }
+                        },
+                        { 
+                            $set: { 
+                                status: 'cancelled',
+                                cancelled_reason: 'Date blocked due to job scheduling (auto-cleanup)',
+                                cancelled_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                            }
+                        }
+                    );
+                    
+                    totalCleaned += updateResult.modifiedCount;
+                    details.push(`Cancelled ${updateResult.modifiedCount} quotes on ${block.date}`);
+                }
+            }
+        }
+        
+        console.log(`🤖 Automatic cleanup completed. Total actions: ${totalCleaned}`);
+        
+        res.json({ 
+            message: 'Automatic cleanup completed successfully',
+            totalActions: totalCleaned,
+            details: details,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Error during automatic cleanup:', error);
+        res.status(500).json({ error: 'Database error during automatic cleanup' });
+    }
+});
+
+// Debug endpoint to see all blocked dates with full details (admin only)
+app.get('/api/blocked-dates/debug', requireAdminAuth, async (req, res) => {
+    try {
+        const blockedDates = await db.collection('blocked_dates')
+            .find({})
+            .sort({ date: 1 })
+            .toArray();
+        
+        res.json(blockedDates);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Calendar Events Endpoints
+// Get all calendar events
+app.get('/api/calendar-events', requireAdminAuth, async (req, res) => {
+    try {
+        const events = await db.collection('calendar_events')
+            .find({})
+            .sort({ date: 1, time: 1 })
+            .toArray();
+        
+        res.json(events);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Create a new calendar event
+app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
+    try {
+        const { title, type, date, startTime, endTime, location, description, color } = req.body;
+        
+        if (!title || !type || !date || !startTime || !endTime) {
+            return res.status(400).json({ error: 'Title, type, date, start time, and end time are required' });
+        }
+        
+        const eventData = {
+            title: title.trim(),
+            type: type.trim(),
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            location: location ? location.trim() : '',
+            description: description ? description.trim() : '',
+            color: color || '#007bff',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+        
+        const result = await db.collection('calendar_events').insertOne(eventData);
+        
+        res.status(201).json({
+            message: 'Event created successfully',
+            event: { ...eventData, _id: result.insertedId }
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Update a calendar event
+app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { title, type, date, startTime, endTime, location, description, color } = req.body;
+        
+        if (!title || !type || !date || !startTime || !endTime) {
+            return res.status(400).json({ error: 'Title, type, date, start time, and end time are required' });
+        }
+        
+        const updateData = {
+            title: title.trim(),
+            type: type.trim(),
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            location: location ? location.trim() : '',
+            description: description ? description.trim() : '',
+            color: color || '#007bff',
+            updated_at: new Date().toISOString()
+        };
+        
+        const result = await db.collection('calendar_events').updateOne(
+            { _id: new ObjectId(eventId) },
+            { $set: updateData }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        res.json({
+            message: 'Event updated successfully',
+            event: { ...updateData, _id: eventId }
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Delete a calendar event
+app.delete('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        
+        const result = await db.collection('calendar_events').deleteOne({
+            _id: new ObjectId(eventId)
+        });
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Move booking to a new date
 app.patch('/api/bookings/:bookingId/move', async (req, res) => {
     try {
@@ -2243,6 +2966,12 @@ app.post('/api/quotes', async (req, res) => {
             tax_amount: tax_amount,
             total_amount: total_amount,
             tax_enabled: tax_enabled ? 1 : 0,
+            // New booking restriction fields
+            booking_restrictions: {
+                allowed_days: req.body.booking_restrictions?.allowed_days || 'weekends',
+                custom_dates: req.body.booking_restrictions?.custom_dates || [],
+                job_duration_days: req.body.booking_restrictions?.job_duration_days || 1
+            },
             status: 'draft',
             created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
             updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
@@ -2402,6 +3131,12 @@ app.put('/api/quotes/:quoteId', async (req, res) => {
                     tax_amount: tax_amount,
                     total_amount: total_amount,
                     tax_enabled: tax_enabled ? 1 : 0,
+                    // Update booking restrictions
+                    booking_restrictions: {
+                        allowed_days: req.body.booking_restrictions?.allowed_days || 'weekends',
+                        custom_dates: req.body.booking_restrictions?.custom_dates || [],
+                        job_duration_days: req.body.booking_restrictions?.job_duration_days || 1
+                    },
                     updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
                 }
             }
@@ -2468,6 +3203,31 @@ app.get('/api/quotes/booking/:bookingId', async (req, res) => {
         res.json(quotes);
     } catch (error) {
         console.error('❌ Database error fetching quotes:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get booking restrictions for a specific quote
+app.get('/api/quotes/:quoteId/booking-restrictions', async (req, res) => {
+    try {
+        const { quoteId } = req.params;
+        
+        const quote = await db.collection('quotes').findOne({ quote_id: quoteId });
+        
+        if (!quote) {
+            return res.status(404).json({ error: 'Quote not found' });
+        }
+        
+        // Return booking restrictions with defaults if not set
+        const restrictions = quote.booking_restrictions || {
+            allowed_days: 'weekends',
+            custom_dates: [],
+            job_duration_days: 1
+        };
+        
+        res.json(restrictions);
+    } catch (error) {
+        console.error('❌ Database error fetching booking restrictions:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Display Test - Stellar Tree Management</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="booking/booking.css">
+    <style>
+        body {
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .calendar-test {
+            border: 2px solid #007bff;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .debug-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1><i class="fas fa-calendar-check"></i> Calendar Display Test</h1>
+        <p>This page tests the calendar display functionality to ensure all date types are properly shown.</p>
+        
+        <div class="test-section">
+            <h3><i class="fas fa-server"></i> Server Status Test</h3>
+            <button class="test-button" onclick="testServerStatus()">Test Server Status</button>
+            <button class="test-button" onclick="testAvailabilityAPI()">Test Availability API</button>
+            <button class="test-button" onclick="testBlockedDatesAPI()">Test Blocked Dates API</button>
+            <div id="serverStatus" class="debug-info"></div>
+        </div>
+        
+        <div class="test-section calendar-test">
+            <h3><i class="fas fa-calendar-alt"></i> Calendar Display Test</h3>
+            <p>This calendar should show different visual states for different date types:</p>
+            <ul>
+                <li><strong>Available:</strong> Green with ✅ indicator</li>
+                <li><strong>Partially Booked:</strong> Yellow with booking count</li>
+                <li><strong>Fully Booked:</strong> Red with "Fully Booked" text</li>
+                <li><strong>Blocked:</strong> Gray with 🚫 indicator</li>
+                <li><strong>Weekend:</strong> Gray with 🌅 indicator</li>
+                <li><strong>Job Day:</strong> Red with 🚫 and "Full Day Job" text</li>
+            </ul>
+            
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button type="button" class="calendar-nav" id="prevMonth">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h4 id="currentMonth">December 2024</h4>
+                    <button type="button" class="calendar-nav" id="nextMonth">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekdays">
+                        <span>Sun</span>
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-indicator available"></span>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator partially-booked"></span>
+                        <span>Partially Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator fully-booked"></span>
+                        <span>Fully Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator blocked"></span>
+                        <span>Blocked</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator weekend"></span>
+                        <span>Weekend (Blocked)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-indicator job-blocked"></span>
+                        <span>Job Day (Full Day Blocked)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="debug-info" id="calendarDebug"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3><i class="fas fa-bug"></i> Test Controls</h3>
+            <button class="test-button success" onclick="loadTestData()">Load Test Data</button>
+            <button class="test-button warning" onclick="simulateBookings()">Simulate Bookings</button>
+            <button class="test-button danger" onclick="clearTestData()">Clear Test Data</button>
+            <button class="test-button" onclick="refreshCalendar()">Refresh Calendar</button>
+        </div>
+    </div>
+
+    <script>
+        // Test calendar system
+        class TestCalendar {
+            constructor() {
+                this.currentMonth = new Date(2024, 11, 1); // December 2024
+                this.testData = {};
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.renderCalendar();
+                this.log('Test calendar initialized');
+            }
+            
+            setupEventListeners() {
+                document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1));
+                document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1));
+            }
+            
+            changeMonth(delta) {
+                this.currentMonth.setMonth(this.currentMonth.getMonth() + delta);
+                this.renderCalendar();
+                this.log(`Changed to month: ${this.currentMonth.toLocaleDateString()}`);
+            }
+            
+            renderCalendar() {
+                const year = this.currentMonth.getFullYear();
+                const month = this.currentMonth.getMonth();
+                
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                   'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+                
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                const calendarDays = document.getElementById('calendarDays');
+                calendarDays.innerHTML = '';
+                
+                // Generate calendar days
+                for (let i = 0; i < 42; i++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = currentDate.getDate();
+                    
+                    const dateString = this.formatDateForServer(currentDate);
+                    dayElement.setAttribute('data-date', dateString);
+                    
+                    // Check if it's current month
+                    if (currentDate.getMonth() !== month) {
+                        dayElement.classList.add('other-month');
+                    }
+                    
+                    // Check if it's today
+                    const today = new Date();
+                    if (this.isSameDay(currentDate, today)) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // Check if date is in the past
+                    if (currentDate < today) {
+                        dayElement.classList.add('disabled');
+                    } else {
+                        // Apply test data styling
+                        this.applyTestDataStyling(dayElement, dateString, currentDate);
+                    }
+                    
+                    calendarDays.appendChild(dayElement);
+                }
+                
+                this.log('Calendar rendered with test data');
+            }
+            
+            applyTestDataStyling(dayElement, dateString, currentDate) {
+                const testData = this.testData[dateString];
+                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+                
+                if (testData) {
+                    if (testData.type === 'fully-booked') {
+                        dayElement.classList.add('fully-booked');
+                        dayElement.title = 'Fully Booked - All time slots taken';
+                        
+                        const bookingInfo = document.createElement('div');
+                        bookingInfo.className = 'booking-info fully-booked';
+                        bookingInfo.innerHTML = `
+                            <div class="booking-count">3</div>
+                            <div class="booking-preview">Fully Booked</div>
+                        `;
+                        dayElement.appendChild(bookingInfo);
+                        
+                    } else if (testData.type === 'partially-booked') {
+                        dayElement.classList.add('partially-booked');
+                        dayElement.title = 'Partially Booked - Some time slots available';
+                        
+                        const bookingInfo = document.createElement('div');
+                        bookingInfo.className = 'booking-info partially-booked';
+                        bookingInfo.innerHTML = `
+                            <div class="booking-count">1</div>
+                            <div class="booking-preview">Partially Booked</div>
+                            <div class="available-slots">2 slots available</div>
+                        `;
+                        dayElement.appendChild(bookingInfo);
+                        
+                    } else if (testData.type === 'blocked') {
+                        dayElement.classList.add('blocked');
+                        dayElement.title = 'This day is blocked';
+                        
+                        const blockingInfo = document.createElement('div');
+                        blockingInfo.className = 'blocking-info blocked';
+                        blockingInfo.innerHTML = `
+                            <div class="blocking-icon">🚫</div>
+                            <div class="blocking-text">Blocked</div>
+                        `;
+                        dayElement.appendChild(blockingInfo);
+                        
+                    } else if (testData.type === 'job-blocked') {
+                        dayElement.classList.add('blocked', 'job-blocked');
+                        dayElement.title = 'Full day blocked - Job scheduled at 5:30 PM';
+                        
+                        const blockingInfo = document.createElement('div');
+                        blockingInfo.className = 'blocking-info job-blocked';
+                        blockingInfo.innerHTML = `
+                            <div class="blocking-icon">🚫</div>
+                            <div class="blocking-text">Full Day Job</div>
+                            <div class="job-details">John Doe - Tree Removal</div>
+                        `;
+                        dayElement.appendChild(blockingInfo);
+                    }
+                } else if (isWeekend) {
+                    // Weekends are blocked by default
+                    dayElement.classList.add('blocked', 'weekend');
+                    dayElement.title = 'Weekend - blocked by default';
+                    
+                    const blockingInfo = document.createElement('div');
+                    blockingInfo.className = 'blocking-info weekend-blocked';
+                    blockingInfo.innerHTML = `
+                        <div class="blocking-icon">🌅</div>
+                        <div class="blocking-text">Weekend</div>
+                    `;
+                    dayElement.appendChild(blockingInfo);
+                } else {
+                    // Available for booking
+                    dayElement.classList.add('available');
+                    dayElement.title = 'Available for booking';
+                    
+                    const availabilityInfo = document.createElement('div');
+                    availabilityInfo.className = 'availability-info';
+                    availabilityInfo.innerHTML = `
+                        <div class="availability-icon">✅</div>
+                        <div class="availability-text">Available</div>
+                    `;
+                    dayElement.appendChild(availabilityInfo);
+                }
+            }
+            
+            loadTestData() {
+                // Create some test data for December 2024
+                this.testData = {
+                    '2024-12-05': { type: 'fully-booked' },
+                    '2024-12-10': { type: 'partially-booked' },
+                    '2024-12-15': { type: 'blocked' },
+                    '2024-12-20': { type: 'job-blocked' },
+                    '2024-12-25': { type: 'fully-booked' },
+                    '2024-12-30': { type: 'partially-booked' }
+                };
+                
+                this.log('Test data loaded:', this.testData);
+                this.renderCalendar();
+            }
+            
+            clearTestData() {
+                this.testData = {};
+                this.log('Test data cleared');
+                this.renderCalendar();
+            }
+            
+            simulateBookings() {
+                // Add some random bookings
+                const randomDates = ['2024-12-03', '2024-12-08', '2024-12-12', '2024-12-18', '2024-12-22'];
+                randomDates.forEach(date => {
+                    const types = ['fully-booked', 'partially-booked', 'blocked'];
+                    const randomType = types[Math.floor(Math.random() * types.length)];
+                    this.testData[date] = { type: randomType };
+                });
+                
+                this.log('Random bookings simulated:', this.testData);
+                this.renderCalendar();
+            }
+            
+            formatDateForServer(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            isSameDay(date1, date2) {
+                return date1.getDate() === date2.getDate() &&
+                       date1.getMonth() === date2.getMonth() &&
+                       date1.getFullYear() === date2.getFullYear();
+            }
+            
+            log(message, data = null) {
+                const debugElement = document.getElementById('calendarDebug');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}${data ? ': ' + JSON.stringify(data, null, 2) : ''}`;
+                debugElement.innerHTML += logEntry + '\n';
+                debugElement.scrollTop = debugElement.scrollHeight;
+                console.log(message, data);
+            }
+        }
+        
+        // Global functions for test buttons
+        let testCalendar;
+        
+        function testServerStatus() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.innerHTML = 'Testing server status...';
+            
+            fetch('/api/availability?start_date=2024-12-01&end_date=2024-12-31')
+                .then(response => {
+                    statusDiv.innerHTML = `
+                        <strong>Server Status:</strong> ✅ Running<br>
+                        <strong>Availability API:</strong> ✅ Responding (${response.status})<br>
+                        <strong>Response:</strong> ${response.ok ? 'OK' : 'Error'}
+                    `;
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `
+                        <strong>Server Status:</strong> ❌ Not responding<br>
+                        <strong>Error:</strong> ${error.message}
+                    `;
+                });
+        }
+        
+        function testAvailabilityAPI() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.innerHTML = 'Testing availability API...';
+            
+            fetch('/api/availability?start_date=2024-12-01&end_date=2024-12-31')
+                .then(response => response.json())
+                .then(data => {
+                    statusDiv.innerHTML = `
+                        <strong>Availability API Response:</strong><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                });
+        }
+        
+        function testBlockedDatesAPI() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.innerHTML = 'Testing blocked dates API...';
+            
+            fetch('/api/blocked-dates')
+                .then(response => response.json())
+                .then(data => {
+                    statusDiv.innerHTML = `
+                        <strong>Blocked Dates API Response:</strong><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                });
+        }
+        
+        function loadTestData() {
+            if (testCalendar) {
+                testCalendar.loadTestData();
+            }
+        }
+        
+        function simulateBookings() {
+            if (testCalendar) {
+                testCalendar.simulateBookings();
+            }
+        }
+        
+        function clearTestData() {
+            if (testCalendar) {
+                testCalendar.clearTestData();
+            }
+        }
+        
+        function refreshCalendar() {
+            if (testCalendar) {
+                testCalendar.renderCalendar();
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            testCalendar = new TestCalendar();
+        });
+    </script>
+</body>
+</html>

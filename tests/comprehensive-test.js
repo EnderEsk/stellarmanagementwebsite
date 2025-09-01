@@ -194,6 +194,54 @@ class SystemTestSuite {
         }
     }
 
+    async testJobSchedulingRestrictions() {
+        // Find next weekday
+        const nextWeekday = new Date();
+        while (nextWeekday.getDay() === 0 || nextWeekday.getDay() === 6) {
+            nextWeekday.setDate(nextWeekday.getDate() + 1);
+        }
+        const dateString = nextWeekday.toISOString().split('T')[0];
+
+        // Test 1: Job scheduling with invalid time (should fail)
+        const invalidJobTime = {
+            jobDate: dateString,
+            jobTime: '6:30 PM' // Only 5:30 PM allowed for jobs
+        };
+
+        const response1 = await makeRequest(`/api/bookings/TEST-BOOKING/book-job`, 'POST', invalidJobTime);
+        if (response1.status !== 400) {
+            throw new Error(`Job scheduling with invalid time should be rejected but got status: ${response1.status}`);
+        }
+
+        // Test 2: Job scheduling on weekend (should fail)
+        const nextSaturday = new Date();
+        while (nextSaturday.getDay() !== 6) {
+            nextSaturday.setDate(nextSaturday.getDate() + 1);
+        }
+        const weekendDateString = nextSaturday.toISOString().split('T')[0];
+
+        const weekendJob = {
+            jobDate: weekendDateString,
+            jobTime: '5:30 PM' // Valid time but weekend
+        };
+
+        const response2 = await makeRequest(`/api/bookings/TEST-BOOKING/book-job`, 'POST', weekendJob);
+        if (response2.status !== 400) {
+            throw new Error(`Weekend job scheduling should be rejected but got status: ${response2.status}`);
+        }
+
+        // Test 3: Valid job scheduling (should succeed)
+        const validJob = {
+            jobDate: dateString,
+            jobTime: '5:30 PM' // Valid time and weekday
+        };
+
+        const response3 = await makeRequest(`/api/bookings/TEST-BOOKING/book-job`, 'POST', validJob);
+        if (response3.status !== 200) {
+            throw new Error(`Valid job scheduling should succeed but got status: ${response3.status}`);
+        }
+    }
+
     // 4. Security tests
     async testXSSPrevention() {
         const xssBooking = {
@@ -337,6 +385,7 @@ class SystemTestSuite {
         await this.runTest('Booking Validation', () => this.testBookingValidation());
         await this.runTest('Past Date Rejection', () => this.testPastDateRejection());
         await this.runTest('Weekend Blocking', () => this.testWeekendBlocking());
+        await this.runTest('Job Scheduling Restrictions', () => this.testJobSchedulingRestrictions());
         await this.runTest('XSS Prevention', () => this.testXSSPrevention());
         await this.runTest('Duplicate Time Slot Prevention', () => this.testDuplicateTimeSlotPrevention());
         await this.runTest('System Statistics', () => this.testSystemStats());
@@ -373,6 +422,8 @@ class SystemTestSuite {
         log('  • Comprehensive input validation and sanitization', 'info');
         log('  • Duplicate booking prevention', 'info');
         log('  • Weekend blocking with override capability', 'info');
+        log('  • New job scheduling restrictions (5:30 PM weekdays only)', 'info');
+        log('  • Full-day blocking when jobs are scheduled', 'info');
         log('  • XSS and injection attack prevention', 'info');
         log('  • Enhanced error handling and user feedback', 'info');
         log('  • Improved system monitoring and statistics', 'info');

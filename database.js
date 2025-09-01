@@ -55,6 +55,8 @@ async function createIndexes() {
         // Quote indexes
         await db.collection('quotes').createIndex({ quote_id: 1 }, { unique: true });
         await db.collection('quotes').createIndex({ customer_id: 1 });
+        await db.collection('quotes').createIndex({ 'booking_restrictions.allowed_days': 1 });
+        await db.collection('quotes').createIndex({ 'booking_restrictions.job_duration_days': 1 });
         
         // Invoice indexes
         await db.collection('invoices').createIndex({ invoice_id: 1 }, { unique: true });

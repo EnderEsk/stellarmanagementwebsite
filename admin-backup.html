@@ -1590,9 +1590,6 @@
                         <button class="action-btn confirm" onclick="markInvoicePaid('${booking.booking_id}')">
                             <i class="fas fa-check"></i> Mark as Paid
                         </button>
-                        <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                            <i class="fas fa-file-invoice-dollar"></i> Quote
-                        </button>
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-ready')" title="Revert to Invoice Ready">
                             <i class="fas fa-undo"></i> Revert
                         </button>
@@ -2689,9 +2686,6 @@
                     </button>
                     <button class="action-btn confirm" onclick="markInvoicePaid('${booking.booking_id}')">
                         <i class="fas fa-check"></i> Mark as Paid
-                    </button>
-                    <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                        <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-ready')" title="Revert to Invoice Ready">
                         <i class="fas fa-undo"></i> Revert

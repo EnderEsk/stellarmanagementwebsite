@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mobile Calendar Test - Stellar Tree Management</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="booking/booking.css">
+    <style>
+        /* Test page specific styles */
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .test-header h1 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        .test-header p {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+        }
+        
+        .mobile-test-info {
+            background: rgba(140, 198, 63, 0.1);
+            border: 1px solid rgba(140, 198, 63, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mobile-test-info h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+        
+        .mobile-test-info ul {
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .mobile-test-info li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .test-calendar-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .test-calendar-section h3 {
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .responsive-test-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .responsive-test-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .responsive-test-btn:hover {
+            background: #9bc84a;
+            transform: translateY(-1px);
+        }
+        
+        .responsive-test-btn.active {
+            background: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .test-container {
+                padding: 1rem;
+            }
+            
+            .responsive-test-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .responsive-test-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <img src="images/logo.png" alt="Stellar Tree Management Logo" class="logo">
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/projects">Projects</a></li>
+                <li><a href="/booking/" class="active">Book Quote</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <section class="booking-hero">
+    <div class="test-container">
+            <div class="test-header">
+                <h1>Mobile Calendar Test</h1>
+                <p>Test the improved mobile-responsive calendar design for the booking system</p>
+            </div>
+            
+            <div class="mobile-test-info">
+                <h3><i class="fas fa-mobile-alt"></i> Mobile Improvements Made</h3>
+                <ul>
+                    <li><strong>Fixed Right-Side Clipping:</strong> Calendar now properly fits within mobile viewport</li>
+                    <li><strong>Improved Touch Targets:</strong> All interactive elements meet 44px minimum size</li>
+                    <li><strong>Better Spacing:</strong> Optimized gaps and padding for mobile devices</li>
+                    <li><strong>Enhanced Visibility:</strong> Improved calendar day states and indicators</li>
+                    <li><strong>Touch-Friendly:</strong> Better touch feedback and active states</li>
+                    <li><strong>Responsive Breakpoints:</strong> Optimized for 768px, 480px, 360px, and 320px screens</li>
+                    <li><strong>Landscape Support:</strong> Special optimizations for landscape orientation</li>
+                </ul>
+            </div>
+            
+            <div class="responsive-test-buttons">
+                <button class="responsive-test-btn" onclick="setViewport(1200, 800)">Desktop (1200x800)</button>
+                <button class="responsive-test-btn" onclick="setViewport(768, 1024)">Tablet (768x1024)</button>
+                <button class="responsive-test-btn" onclick="setViewport(375, 667)">Mobile (375x667)</button>
+                <button class="responsive-test-btn" onclick="setViewport(320, 568)">Small Mobile (320x568)</button>
+            </div>
+            
+            <div class="test-calendar-section">
+                <h3><i class="fas fa-calendar"></i> Test Calendar</h3>
+                <div class="date-selection">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button type="button" class="calendar-nav" id="prevMonth">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h4 id="currentMonth">December 2024</h4>
+                            <button type="button" class="calendar-nav" id="nextMonth">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div class="calendar-weekdays">
+                                <span>Sun</span>
+                                <span>Mon</span>
+                                <span>Tue</span>
+                                <span>Wed</span>
+                                <span>Thu</span>
+                                <span>Fri</span>
+                                <span>Sat</span>
+                            </div>
+                            <div class="calendar-days" id="calendarDays"></div>
+                        </div>
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <span class="legend-indicator available"></span>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-indicator partially-booked"></span>
+                    <span>Partial</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-indicator fully-booked"></span>
+                    <span>Booked</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-indicator blocked"></span>
+                    <span>Blocked</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-indicator weekend"></span>
+                    <span>Weekend</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-indicator job-blocked"></span>
+                    <span>Job Day</span>
+                            </div>
+                </div>
+            </div>
+        </div>
+        
+                <div class="time-selection" id="timeSelectionContainer" style="display: none;">
+                    <div class="selected-date">
+                        <i class="fas fa-calendar-day"></i>
+                        <span id="selectedDateDisplay">No date selected</span>
+                    </div>
+                    <div class="time-slots" id="timeSlots">
+                        <!-- Time slots will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mobile-test-info">
+                <h3><i class="fas fa-info-circle"></i> Testing Instructions</h3>
+                <ul>
+                    <li><strong>Resize your browser window</strong> to test different screen sizes</li>
+                    <li><strong>Use browser dev tools</strong> to simulate mobile devices</li>
+                    <li><strong>Test touch interactions</strong> on actual mobile devices</li>
+                    <li><strong>Check for clipping</strong> - calendar should fit completely within viewport</li>
+                    <li><strong>Verify touch targets</strong> - all buttons should be easily tappable</li>
+                    <li><strong>Test landscape orientation</strong> on mobile devices</li>
+            </ul>
+        </div>
+    </div>
+    </section>
+    
+    <script>
+        // Simple calendar functionality for testing
+        class TestCalendar {
+            constructor() {
+                this.currentMonth = new Date();
+                this.selectedDate = null;
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.renderCalendar();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1));
+                document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1));
+            }
+            
+            changeMonth(delta) {
+                this.currentMonth.setMonth(this.currentMonth.getMonth() + delta);
+                this.renderCalendar();
+            }
+            
+            renderCalendar() {
+                const month = this.currentMonth.getMonth();
+                const year = this.currentMonth.getFullYear();
+                
+                // Update header
+                document.getElementById('currentMonth').textContent = 
+                    this.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                // Generate calendar days
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                const calendarDays = document.getElementById('calendarDays');
+                calendarDays.innerHTML = '';
+                
+                for (let i = 0; i < 42; i++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = currentDate.getDate();
+                    
+                    // Check if it's current month
+                    if (currentDate.getMonth() !== month) {
+                        dayElement.classList.add('other-month');
+                    }
+                    
+                    // Check if it's today
+                    const today = new Date();
+                    if (this.isSameDay(currentDate, today)) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // Add some sample states for testing
+                    if (i % 7 === 0) dayElement.classList.add('weekend');
+                    if (i % 10 === 0) dayElement.classList.add('blocked');
+                    if (i % 15 === 0) dayElement.classList.add('available');
+                    if (i % 20 === 0) dayElement.classList.add('partially-booked');
+                    if (i % 25 === 0) dayElement.classList.add('fully-booked');
+                    if (i % 30 === 0) dayElement.classList.add('job-blocked');
+                    
+                    // Add click event
+                    dayElement.addEventListener('click', () => this.selectDate(currentDate));
+                    
+                    calendarDays.appendChild(dayElement);
+                }
+            }
+            
+            isSameDay(date1, date2) {
+                return date1.getDate() === date2.getDate() &&
+                       date1.getMonth() === date2.getMonth() &&
+                       date1.getFullYear() === date2.getFullYear();
+            }
+            
+            selectDate(date) {
+                this.selectedDate = date;
+                this.updateSelectedDateDisplay();
+                this.showTimeSlots();
+            }
+            
+            updateSelectedDateDisplay() {
+                if (this.selectedDate) {
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const dateString = this.selectedDate.toLocaleDateString('en-US', options);
+                    document.getElementById('selectedDateDisplay').textContent = dateString;
+                }
+            }
+            
+            showTimeSlots() {
+                const timeSelectionContainer = document.getElementById('timeSelectionContainer');
+                const timeSlots = document.getElementById('timeSlots');
+                
+                timeSelectionContainer.style.display = 'block';
+                timeSlots.innerHTML = '';
+                
+                // Sample time slots
+                const times = ['5:30 PM', '6:30 PM', '7:30 PM'];
+                times.forEach(time => {
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-slot';
+                    timeSlot.textContent = time;
+                    timeSlot.addEventListener('click', () => this.selectTimeSlot(timeSlot, time));
+                    timeSlots.appendChild(timeSlot);
+                });
+            }
+            
+            selectTimeSlot(element, time) {
+                document.querySelectorAll('.time-slot.selected').forEach(slot => {
+                    slot.classList.remove('selected');
+                });
+                element.classList.add('selected');
+            }
+        }
+        
+        // Initialize test calendar
+        const testCalendar = new TestCalendar();
+        
+        // Viewport testing functions
+        function setViewport(width, height) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.responsive-test-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Update viewport size display
+            console.log(`Testing viewport: ${width}x${height}`);
+            
+            // In a real test environment, you would resize the viewport
+            // For this demo, we'll just log the intended size
+            alert(`Viewport size set to ${width}x${height}. Resize your browser window to test this size.`);
+        }
+        
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

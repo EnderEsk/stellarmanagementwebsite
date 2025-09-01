@@ -199,6 +199,58 @@
             margin-bottom: 2rem;
         }
 
+        /* Booking Restrictions Styles */
+        .booking-restrictions-info {
+            margin: 2rem 0;
+        }
+
+        .info-box {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid var(--accent-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(140, 198, 63, 0.1);
+        }
+
+        .info-box i {
+            color: var(--accent-color);
+            font-size: 24px;
+            margin-top: 5px;
+        }
+
+        .info-content h4 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .info-content p {
+            margin: 0 0 10px 0;
+            color: var(--secondary-color);
+            line-height: 1.6;
+        }
+
+        .restrictions-detail {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .restrictions-detail strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .restrictions-detail .highlight {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
         .detail-item {
             background: var(--light-gray);
             border-radius: 12px;
@@ -1863,6 +1915,20 @@
                             Thank you for accepting our quote! You should now be redirected to the job scheduling page. 
                             If you're not redirected automatically, click the button below to schedule your job.
                         </p>
+                        
+                        <!-- Booking Restrictions Info -->
+                        <div id="booking-restrictions-info" class="booking-restrictions-info" style="display: none;">
+                            <div class="info-box">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div class="info-content">
+                                    <h4>📅 Job Scheduling Information</h4>
+                                    <div id="restrictions-content">
+                                        <!-- Booking restrictions will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="action-buttons">
                             <a href="schedule-job.html?booking_id=${booking.booking_id}" class="btn btn-primary">
                                 <i class="fas fa-calendar"></i> Schedule My Job
@@ -1876,6 +1942,9 @@
                 
                 // Show quote preview for accepted quotes as well
                 setTimeout(() => fetchQuoteDetails(booking.booking_id), 500);
+                
+                // Load and display booking restrictions
+                setTimeout(() => loadBookingRestrictions(booking.booking_id), 1000);
             } else if (booking.status === 'confirmed') {
                 buttons = `
                     <button class="btn btn-primary" onclick="confirmBooking('${booking.booking_id}')">
@@ -4098,9 +4167,105 @@
             }
         }
 
+        // Load and display booking restrictions for a quote
+        async function loadBookingRestrictions(bookingId) {
+            try {
+                // First get the quote for this booking
+                const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
+                if (!quoteResponse.ok) {
+                    console.log('No quote found for booking:', bookingId);
+                    return;
+                }
+                
+                const quotes = await quoteResponse.json();
+                if (quotes.length === 0) {
+                    console.log('No quotes found for booking:', bookingId);
+                    return;
+                }
+                
+                const latestQuote = quotes[0];
+                const restrictions = latestQuote.booking_restrictions;
+                
+                if (!restrictions) {
+                    console.log('No booking restrictions found for quote');
+                    return;
+                }
+                
+                // Display the restrictions
+                displayBookingRestrictions(restrictions);
+                
+            } catch (error) {
+                console.error('Error loading booking restrictions:', error);
+            }
+        }
 
+        // Display booking restrictions information
+        function displayBookingRestrictions(restrictions) {
+            const restrictionsInfo = document.getElementById('booking-restrictions-info');
+            const restrictionsContent = document.getElementById('restrictions-content');
             
-
+            if (!restrictionsInfo || !restrictionsContent) {
+                console.log('Restrictions display elements not found');
+                return;
+            }
+            
+            let restrictionsHtml = '';
+            
+            // Job duration information
+            restrictionsHtml += `
+                <div class="restrictions-detail">
+                    <strong>Job Duration:</strong> This job will take <span class="highlight">${restrictions.job_duration_days} day${restrictions.job_duration_days > 1 ? 's' : ''}</span> to complete.
+                </div>
+            `;
+            
+            // Allowed days information
+            if (restrictions.allowed_days === 'weekends') {
+                restrictionsHtml += `
+                    <div class="restrictions-detail">
+                        <strong>Available Days:</strong> You can only book on <span class="highlight">weekends (all day)</span>.
+                    </div>
+                `;
+            } else if (restrictions.allowed_days === 'weekdays') {
+                restrictionsHtml += `
+                    <div class="restrictions-detail">
+                        <strong>Available Days:</strong> You can only book on <span class="highlight">weekdays at 5:30 PM, 6:30 PM, or 7:30 PM</span>.
+                    </div>
+                `;
+            } else if (restrictions.allowed_days === 'both') {
+                restrictionsHtml += `
+                    <div class="restrictions-detail">
+                        <strong>Available Days:</strong> You can book on <span class="highlight">weekends (all day) and weekdays at 5:30 PM, 6:30 PM, or 7:30 PM</span>.
+                    </div>
+                `;
+            } else if (restrictions.allowed_days === 'custom' && restrictions.custom_dates && restrictions.custom_dates.length > 0) {
+                const customDatesList = restrictions.custom_dates.map(date => {
+                    const dateObj = new Date(date);
+                    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                    const timeInfo = isWeekend ? 'all day' : '5:30 PM, 6:30 PM, or 7:30 PM';
+                    return `${dateObj.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })} (${timeInfo})`;
+                }).join(', ');
+                
+                restrictionsHtml += `
+                    <div class="restrictions-detail">
+                        <strong>Available Dates:</strong> You can only book on these specific dates: <span class="highlight">${customDatesList}</span>
+                    </div>
+                `;
+            }
+            
+            // Additional information
+            restrictionsHtml += `
+                <div class="restrictions-detail">
+                    <strong>Important:</strong> You must select <span class="highlight">${restrictions.job_duration_days} consecutive day${restrictions.job_duration_days > 1 ? 's' : ''}</span> when scheduling your job.
+                </div>
+            `;
+            
+            restrictionsContent.innerHTML = restrictionsHtml;
+            restrictionsInfo.style.display = 'block';
+        }
 
     </script>
 </body>

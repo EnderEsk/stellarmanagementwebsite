@@ -298,6 +298,34 @@
             box-sizing: border-box;
         }
 
+        /* Booking Restrictions Styles */
+        .restrictions-item {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .restrictions-info {
+            margin-top: 0.5rem;
+        }
+
+        .restrictions-info p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .restrictions-info strong {
+            color: var(--primary-color);
+        }
+
+        .restrictions-info small {
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+
         .calendar-day:hover:not(.disabled):not(.blocked):not(.booked) {
             background: rgba(140, 198, 63, 0.1);
             border-color: var(--accent-color);
@@ -634,6 +662,7 @@
         }
 
         .time-slot {
+            position: relative;
             padding: 1.5rem 1rem;
             text-align: center;
             background: var(--light-gray);
@@ -655,6 +684,26 @@
             background: var(--accent-color);
             color: white;
             border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
+            transform: scale(1.02);
+        }
+
+        .time-slot.selected::before {
+            content: '✓';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--success-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
         }
 
         .time-slot.unavailable {
@@ -1073,6 +1122,21 @@
         <div class="scheduling-header">
             <h1>📅 Schedule Your Job</h1>
             <p>Choose your preferred date and time for your tree service</p>
+            
+            <!-- Job Scheduling Restrictions Notice -->
+            <div style="background: #e7f3ff; border: 2px solid #007bff; border-radius: 12px; padding: 1rem; margin: 1rem 0; text-align: center;">
+                <div style="color: #007bff; font-size: 1.5rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div style="color: #007bff; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                    Job Scheduling Restrictions
+                </div>
+                <div style="color: #333; font-size: 0.95rem; line-height: 1.4;">
+                    <strong>Jobs can ONLY be scheduled at 5:30 PM on weekdays.</strong><br>
+                    The 5:30 PM time slot is automatically selected for your convenience.<br>
+                    When you book a job, the entire day will be reserved for your service.
+                </div>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -1118,6 +1182,7 @@
                         <button class="nav-btn" onclick="clearCalendarSelection()" style="margin-left: 0.5rem; background: var(--light-gray); color: var(--secondary-color);">
                             <i class="fas fa-times"></i> Clear
                         </button>
+
 
                     </div>
                 </div>
@@ -1165,7 +1230,7 @@
             <div class="time-selection" id="time-selection">
                 <div class="selected-date-display">
                     <h3 id="selected-date-title">Selected Date</h3>
-                    <p id="selected-date-subtitle">Choose a time slot below</p>
+                    <p id="selected-date-subtitle">Select a date to schedule your job</p>
                 </div>
                 <div class="time-slots" id="time-slots">
                     <!-- Time slots will be populated here -->
@@ -1254,10 +1319,10 @@
         let availabilityData = {};
         let blockedDatesData = {}; // Store blocked dates from database
 
-        // Business configuration - match the main booking system
+        // Business configuration - Job scheduling only allows 5:30 PM on weekdays
         const businessHours = {
             maxBookingsPerTimeSlot: 1,
-            timeSlots: ['5:30 PM', '6:30 PM', '7:30 PM']
+            timeSlots: ['5:30 PM'] // Jobs can ONLY be scheduled at 5:30 PM
         };
 
         // Load booking details when page loads
@@ -1293,12 +1358,8 @@
                 }
 
                 const booking = await response.json();
-                console.log('📋 Booking data received:', booking);
-                console.log('💰 Booking cost fields:', {
-                    estimated_cost: booking.estimated_cost,
-                    work_description: booking.work_description,
-                    notes: booking.notes
-                });
+
+
                 
                 // Check if booking status allows scheduling
                 if (booking.status !== 'quote-accepted') {
@@ -1307,24 +1368,25 @@
                 }
 
                 // Try to fetch quote information to get the actual cost
+                let quotes = []; // Declare quotes variable in proper scope
                 try {
-                    console.log('🔍 Fetching quote information for booking:', bookingId);
+    
                     const quoteResponse = await fetch(`/api/quotes/booking/${bookingId}`);
-                    console.log('📡 Quote response status:', quoteResponse.status);
+
                     
                     if (quoteResponse.ok) {
-                        const quotes = await quoteResponse.json();
-                        console.log('📋 Quotes received:', quotes);
+                        quotes = await quoteResponse.json();
+        
                         
                         if (quotes.length > 0) {
                             // Get the most recent quote
                             const latestQuote = quotes[0];
-                            console.log('📋 Latest quote data:', latestQuote);
+            
                             
                             // Try to get cost from total_amount first
                             if (latestQuote.total_amount) {
                                 booking.estimated_cost = latestQuote.total_amount;
-                                console.log('✅ Quote cost found from total_amount:', latestQuote.total_amount);
+                
                             }
                             // Fallback: try to calculate from service items
                             else if (latestQuote.service_items && latestQuote.service_items.length > 0) {
@@ -1336,13 +1398,13 @@
                                 });
                                 if (calculatedTotal > 0) {
                                     booking.estimated_cost = calculatedTotal.toFixed(2);
-                                    console.log('✅ Quote cost calculated from service items:', calculatedTotal.toFixed(2));
+                    
                                 }
                             }
                             // Fallback: try subtotal
                             else if (latestQuote.subtotal) {
                                 booking.estimated_cost = latestQuote.subtotal;
-                                console.log('✅ Quote cost found from subtotal:', latestQuote.subtotal);
+                
                             }
                             
                             if (!booking.estimated_cost) {
@@ -1359,11 +1421,49 @@
                     console.log('Using booking data only');
                 }
 
+                // Load booking restrictions from quote
+                let bookingRestrictions = null;
+                try {
+    
+                    console.log('  - Quotes array length:', quotes ? quotes.length : 'undefined');
+                    console.log('  - Quotes array:', quotes);
+                    
+                    if (quotes && quotes.length > 0) {
+                        const latestQuote = quotes[0];
+                        
+                        
+                        bookingRestrictions = latestQuote.booking_restrictions;
+        
+                        
+                        // Debug: Check if restrictions are properly structured
+                        if (bookingRestrictions) {
+            
+                            console.log('  - allowed_days:', bookingRestrictions.allowed_days);
+                            console.log('  - job_duration_days:', bookingRestrictions.job_duration_days);
+                            console.log('  - custom_dates:', bookingRestrictions.custom_dates);
+                        } else {
+                            console.log('⚠️ Quote found but no booking_restrictions field');
+                        }
+                    } else {
+                        console.log('⚠️ No quotes available for restrictions loading');
+                    }
+                } catch (restrictionError) {
+                    console.error('❌ Error loading booking restrictions:', restrictionError);
+                }
+
                 bookingData = booking;
                 displayBookingSummary(booking);
+                
+                // Display booking restrictions info if available
+                if (bookingRestrictions) {
+                    displayBookingRestrictions(bookingRestrictions);
+                }
+                
                 await loadBlockedDates(); // Load blocked dates first
                 await loadAvailabilityData();
-                initializeCalendar();
+                
+                console.log('🚀 Initializing calendar with restrictions:', bookingRestrictions);
+                initializeCalendar(bookingRestrictions);
                 
                 // Hide loading, show content
                 document.getElementById('loading').style.display = 'none';
@@ -1421,6 +1521,44 @@
             `;
         }
 
+        // Display booking restrictions information
+        function displayBookingRestrictions(restrictions) {
+            if (!restrictions) return;
+            
+            const summaryGrid = document.getElementById('summary-grid');
+            const restrictionsHtml = `
+                <div class="summary-item restrictions-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Job Scheduling</h4>
+                        <div class="restrictions-info">
+                            <p><strong>Duration:</strong> ${restrictions.job_duration_days} day${restrictions.job_duration_days > 1 ? 's' : ''}</p>
+                            <p><strong>Available:</strong> ${getAvailableDaysText(restrictions)}</p>
+                            <p><small style="color: #666;">You must select ${restrictions.job_duration_days} consecutive day${restrictions.job_duration_days > 1 ? 's' : ''}</small></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            summaryGrid.insertAdjacentHTML('beforeend', restrictionsHtml);
+        }
+
+        // Get human-readable text for available days
+        function getAvailableDaysText(restrictions) {
+            if (restrictions.allowed_days === 'weekends') {
+                return 'Weekends only (all day)';
+            } else if (restrictions.allowed_days === 'weekdays') {
+                return 'Weekdays only (5:30 PM)';
+            } else if (restrictions.allowed_days === 'both') {
+                return 'Weekends (all day) & Weekdays (5:30 PM)';
+            } else if (restrictions.allowed_days === 'custom' && restrictions.custom_dates && restrictions.custom_dates.length > 0) {
+                return `${restrictions.custom_dates.length} custom date${restrictions.custom_dates.length > 1 ? 's' : ''}`;
+            }
+            return 'Weekends only (all day)';
+        }
+
         // Load blocked dates from the database
         async function loadBlockedDates() {
             try {
@@ -1429,7 +1567,7 @@
                 
                 if (response.ok) {
                     const blockedDates = await response.json();
-                    console.log('✅ Blocked dates loaded:', blockedDates);
+    
                     
                     // Convert array to object for easy lookup
                     blockedDates.forEach(blockedDate => {
@@ -1459,22 +1597,22 @@
                 const endDate = new Date();
                 endDate.setMonth(endDate.getMonth() + 3); // 3 months ahead
                 
-                console.log('📅 Loading availability data from:', startDate.toISOString().split('T')[0], 'to', endDate.toISOString().split('T')[0]);
+
                 
                 // Try the correct availability endpoint first
                 let response = await fetch(`/api/availability?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
                 
                 // If that fails, try the alternative endpoint
                 if (!response.ok) {
-                    console.log('📡 First availability endpoint failed, trying alternative...');
+
                     response = await fetch(`/api/bookings/availability?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
                 }
                 
-                console.log('📡 Availability API response status:', response.status);
+                
                 
                 if (response.ok) {
                     availabilityData = await response.json();
-                    console.log('✅ Availability data loaded successfully:', availabilityData);
+    
                     
                     // Log some sample data for debugging
                     const sampleDates = Object.keys(availabilityData).slice(0, 5);
@@ -1484,7 +1622,6 @@
                     
                     // If no real data, add sample data for testing
                     if (Object.keys(availabilityData).length === 0) {
-                        console.log('🧪 No real data found, adding sample data for testing...');
                         addSampleAvailabilityData();
                     }
                     
@@ -1501,7 +1638,6 @@
                     availabilityData = {};
                     
                     // For testing purposes, add some sample data
-                    console.log('🧪 Adding sample data for testing...');
                     addSampleAvailabilityData();
                     
                     // Re-render calendar with sample data
@@ -1519,9 +1655,8 @@
                 // Start with empty availability data
                 availabilityData = {};
                 
-                // For testing purposes, add some sample data
-                console.log('🧪 Adding sample data for testing...');
-                addSampleAvailabilityData();
+                                    // For testing purposes, add some sample data
+                    addSampleAvailabilityData();
                 
                 // Re-render calendar with sample data
                 if (document.getElementById('calendar-grid')) {
@@ -1564,25 +1699,19 @@
                 } else if (i === 2 && !isWeekend) {
                     // Third day - fully booked (weekday only)
                     availabilityData[dateString] = {
-                        '5:30 PM': 1,
-                        '6:30 PM': 1,
-                        '7:30 PM': 1
+                        '5:30 PM': 1
                     };
                     bookedCount++;
                 } else if (i === 3 && !isWeekend) {
                     // Fourth day - partially booked (weekday only)
                     availabilityData[dateString] = {
-                        '5:30 PM': 1,
-                        '6:30 PM': 0,
-                        '7:30 PM': 1
+                        '5:30 PM': 1
                     };
                     partiallyBookedCount++;
                 } else if (i === 4 && !isWeekend) {
                     // Fifth day - available (weekday only)
                     availabilityData[dateString] = {
-                        '5:30 PM': 0,
-                        '6:30 PM': 0,
-                        '7:30 PM': 0
+                        '5:30 PM': 0
                     };
                     availableCount++;
                 } else {
@@ -1598,29 +1727,23 @@
                             weekendBooked: true
                         };
                         bookedCount++;
-                        console.log(`📅 Weekend ${dateString} marked as booked`);
+        
                     } else if (random < 0.55 && !isWeekend) {
                         // 20% chance of weekday being fully booked
                         availabilityData[dateString] = {
-                            '5:30 PM': 1,
-                            '6:30 PM': 1,
-                            '7:30 PM': 1
+                            '5:30 PM': 1
                         };
                         bookedCount++;
                     } else if (random < 0.75 && !isWeekend) {
                         // 20% chance of weekday being partially booked
                         availabilityData[dateString] = {
-                            '5:30 PM': 1,
-                            '6:30 PM': 0,
-                            '7:30 PM': 1
+                            '5:30 PM': 1
                         };
                         partiallyBookedCount++;
                     } else if (!isWeekend) {
                         // Remaining weekdays are available
                         availabilityData[dateString] = {
-                            '5:30 PM': 0,
-                            '6:30 PM': 0,
-                            '7:30 PM': 0
+                            '5:30 PM': 0
                         };
                         availableCount++;
                     } else {
@@ -1629,14 +1752,17 @@
                             weekendBooked: false
                         };
                         unblockedWeekendCount++;
-                        console.log(`📅 Weekend ${dateString} marked as available for full-day booking`);
+        
                     }
                 }
             }
         }
 
         // Initialize calendar
-        function initializeCalendar() {
+        function initializeCalendar(bookingRestrictions = null) {
+            // Store booking restrictions globally
+            window.bookingRestrictions = bookingRestrictions;
+            
             updateCalendarDisplay();
             
             // Hide calendar info initially
@@ -1719,47 +1845,71 @@
                     const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekday';
                     const isWeekend = currentDateObj.getDay() === 0 || currentDateObj.getDay() === 6; // Sunday or Saturday
                     
-                    // Check if the date has availability data (time slots) - this means it's available
-                    const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined || 
-                                             dayBookings['6:30 PM'] !== undefined || 
-                                             dayBookings['7:30 PM'] !== undefined;
+                                    // Check if the date has availability data (time slots) - this means it's available
+                const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined;
                     
-                    // Date is blocked if: explicitly blocked OR (weekday AND not explicitly unblocked)
-                    // Weekends are now available by default for job scheduling
-                    const isBlocked = isExplicitlyBlocked || (!isWeekend && !isExplicitlyUnblocked);
+                    // Apply booking restrictions if they exist
+                    let isBlocked = false; // Start with all dates available
+                    
+                    if (window.bookingRestrictions) {
+                        const restrictions = window.bookingRestrictions;
+                        
+                        if (restrictions.allowed_days === 'weekends') {
+                            // Only weekends are allowed
+                            isBlocked = !isWeekend || isExplicitlyBlocked;
+                        } else if (restrictions.allowed_days === 'weekdays') {
+                            // Only weekdays are allowed
+                            isBlocked = isWeekend || isExplicitlyBlocked;
+                        } else if (restrictions.allowed_days === 'custom' && restrictions.custom_dates) {
+                            // Only custom dates are allowed
+                            const isCustomDate = restrictions.custom_dates.includes(dateString);
+                            isBlocked = !isCustomDate || isExplicitlyBlocked;
+                        } else if (restrictions.allowed_days === 'both') {
+                            // Both weekends and weekdays are allowed
+                            isBlocked = isExplicitlyBlocked;
+                        }
+                    } else {
+                        // No restrictions set - apply default business logic
+                        isBlocked = isExplicitlyBlocked || (!isWeekend && !isExplicitlyUnblocked);
+                    }
+                    
+                    // Debug logging for restrictions
+                    if (window.bookingRestrictions) {
+        
+                    }
                     
                     if (isBlocked) {
                         if (isExplicitlyBlocked) {
                             dayElement.classList.add('blocked');
                             dayElement.textContent = currentDateObj.getDate();
                             dayElement.title = 'This day is explicitly blocked';
-                        } else if (!isWeekend && !isExplicitlyUnblocked) {
+                        } else {
                             dayElement.classList.add('blocked');
                             dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'Weekday - blocked by default';
+                            dayElement.title = 'This day is blocked by restrictions';
                         }
                     } else {
-                                            // Check if this is a weekend (full-day booking) or weekday (time-slot booking)
-                    if (isWeekend) {
-                        // Weekend days are full-day bookings - no time slots
-                        const isWeekendBooked = dayBookings.weekendBooked || false;
-                        
-                        console.log(`📅 Rendering weekend ${dateString}: weekendBooked=${isWeekendBooked}`);
-                        
-                        if (isWeekendBooked) {
-                            // Weekend is fully booked
-                            dayElement.classList.add('booked');
-                            dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'Weekend - Fully booked for the day';
-                        } else {
-                            // Weekend is available for full-day booking
-                            dayElement.classList.add('weekend');
-                            dayElement.textContent = currentDateObj.getDate();
-                            dayElement.title = 'Weekend - Available for full-day job scheduling';
+                        // Check if this is a weekend (full-day booking) or weekday (time-slot booking)
+                        if (isWeekend) {
+                            // Weekend days are full-day bookings - no time slots
+                            const isWeekendBooked = dayBookings.weekendBooked || false;
                             
-                            // Add click handler for weekend selection
-                            dayElement.addEventListener('click', () => selectWeekendDate(currentDateObj));
-                        }
+            
+                            
+                            if (isWeekendBooked) {
+                                // Weekend is fully booked
+                                dayElement.classList.add('booked');
+                                dayElement.textContent = currentDateObj.getDate();
+                                dayElement.title = 'Weekend - Fully booked for the day';
+                            } else {
+                                // Weekend is available for full-day booking
+                                dayElement.classList.add('weekend');
+                                dayElement.textContent = currentDateObj.getDate();
+                                dayElement.title = 'Weekend - Available for full-day job scheduling';
+                                
+                                // Add click handler for weekend selection
+                                dayElement.addEventListener('click', () => selectWeekendDate(currentDateObj));
+                            }
                         } else {
                             // Weekday - check time slot availability
                             const timeSlots = businessHours.timeSlots;
@@ -1815,19 +1965,11 @@
                    date1.getDate() === date2.getDate();
         }
 
-        // Debug function to test availability logic
-       
 
-        // Test function to debug availability logic
-        function testAvailabilityLogic() {
-            // Test a few sample dates
-            const today = new Date();
-            for (let i = 0; i < 7; i++) {
-                const testDate = new Date(today);
-                testDate.setDate(today.getDate() + i);
-                debugAvailabilityLogic(testDate);
-            }
-        }
+
+
+
+
 
 
 
@@ -1874,9 +2016,7 @@
             const isExplicitlyBlocked = blockedDateReason === 'blocked_date';
             const isExplicitlyUnblocked = blockedDateReason === 'unblocked_weekday';
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined || 
-                                      dayBookings['6:30 PM'] !== undefined || 
-                                      dayBookings['7:30 PM'] !== undefined;
+            const hasAvailabilityData = dayBookings['5:30 PM'] !== undefined;
             
             const infoContainer = document.getElementById('calendar-info');
             const infoContent = document.getElementById('calendar-info-content');
@@ -1947,7 +2087,7 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Reason:</span>
-                            <span class="info-value">Weekend available for full-day job scheduling (no time slots)</span>
+                            <span class="info-value">Weekend available for full-day job scheduling (no time slots needed)</span>
                         </div>
                     `;
                 }
@@ -1978,11 +2118,11 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Total Bookings:</span>
-                            <span class="info-value">${totalBookings}</span>
+                            <span class="info-value">${totalBookings} (Job scheduling only)</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Available Slots:</span>
-                            <span class="info-value">None</span>
+                            <span class="info-value">None (Job scheduling only)</span>
                         </div>
                     `;
                 } else if (bookedTimeSlots.length > 0) {
@@ -1994,15 +2134,15 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Total Bookings:</span>
-                            <span class="info-value">${totalBookings}</span>
+                            <span class="info-value">${totalBookings} (Job scheduling only)</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Booked Slots:</span>
-                            <span class="info-value">${bookedTimeSlots.join(', ')}</span>
+                            <span class="info-value">${bookedTimeSlots.join(', ')} (Job scheduling only)</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Available Slots:</span>
-                            <span class="info-value">${availableTimeSlots.join(', ')}</span>
+                            <span class="info-value">${availableTimeSlots.join(', ')} (Job scheduling only)</span>
                         </div>
                     `;
                 } else {
@@ -2014,11 +2154,11 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Available Slots:</span>
-                            <span class="info-value">${timeSlots.join(', ')}</span>
+                            <span class="info-value">${timeSlots.join(', ')} (Job scheduling only)</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Max Bookings per Slot:</span>
-                            <span class="info-value">${businessHours.maxBookingsPerTimeSlot}</span>
+                            <span class="info-value">${businessHours.maxBookingsPerTimeSlot} (Job scheduling only)</span>
                         </div>
                     `;
                 }
@@ -2066,25 +2206,28 @@
                 // Hide booking form if it was shown
                 document.getElementById('booking-form').classList.remove('show');
             } else {
-                // Weekday - time slot selection
+                // Weekday - time slot selection (only 5:30 PM available)
                 document.getElementById('selected-date-title').textContent = formattedDate;
-                document.getElementById('selected-date-subtitle').textContent = 'Choose a time slot below';
+                document.getElementById('selected-date-subtitle').textContent = '5:30 PM - Automatically Selected for Job Scheduling';
                 
-                // Populate time slots
+                // Populate time slots (only 5:30 PM)
                 const timeSlotsContainer = document.getElementById('time-slots');
                 timeSlotsContainer.innerHTML = '';
                 
                 businessHours.timeSlots.forEach(timeSlot => {
                     const slotElement = document.createElement('div');
-                    slotElement.className = 'time-slot';
+                    slotElement.className = 'time-slot selected'; // Auto-select the time slot
                     
                     // Check availability for this time slot
                     const isAvailable = checkTimeSlotAvailability(dateString, timeSlot);
                     
                     if (isAvailable) {
+                        // Auto-select the time slot since it's the only option
+                        selectedTime = timeSlot;
                         slotElement.addEventListener('click', () => selectTimeSlot(timeSlot));
                     } else {
                         slotElement.classList.add('unavailable');
+                        slotElement.classList.remove('selected');
                     }
                     
                     slotElement.innerHTML = `
@@ -2093,7 +2236,7 @@
                         </div>
                         <div class="time-slot-text">${timeSlot}</div>
                         <div class="time-slot-status">
-                            ${isAvailable ? 'Available' : 'Booked'}
+                            ${isAvailable ? 'Available (Auto-selected)' : 'Booked'}
                         </div>
                     `;
                     
@@ -2105,6 +2248,13 @@
                 
                 // Hide booking form if it was shown
                 document.getElementById('booking-form').classList.remove('show');
+                
+                // If the time slot is available, automatically show the booking form
+                if (selectedTime) {
+                    setTimeout(() => {
+                        showBookingForm();
+                    }, 500); // Small delay for better UX
+                }
             }
         }
 
@@ -2313,7 +2463,7 @@
             
             try {
                 await loadAvailabilityData();
-                console.log('✅ Availability data refreshed successfully');
+
                 
                 // Show success feedback
                 showNotification('Calendar updated with latest availability!', 'success');

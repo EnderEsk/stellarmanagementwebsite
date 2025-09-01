@@ -1,0 +1,587 @@
+/* Admin Booking Creation Modal Styles */
+
+:root {
+    --admin-primary: #2a2a2a;
+    --admin-accent: #8cc63f;
+    --admin-secondary: #5a5a5a;
+    --admin-bg: #f8f9fa;
+    --admin-text: #2a2a2a;
+    --admin-light-gray: #f8fafc;
+    --admin-border: #e5e7eb;
+}
+
+.admin-booking-creation-modal {
+    max-width: 900px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.admin-booking-creation-modal .modal-body {
+    padding: 2rem;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.form-section h4 {
+    margin: 0 0 1.5rem 0;
+    color: var(--admin-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-section h4 i {
+    color: var(--admin-accent);
+}
+
+/* Form Grid Layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--admin-primary);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+.form-group input[required] + label::after,
+.form-group select[required] + label::after {
+    content: ' *';
+    color: #dc3545;
+}
+
+/* Service Items Container */
+.service-items-container {
+    margin-bottom: 1rem;
+}
+
+.service-item {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.service-item:hover {
+    border-color: var(--admin-accent);
+    box-shadow: 0 4px 12px rgba(140, 198, 63, 0.1);
+}
+
+/* Service Item Description */
+.item-description {
+    margin-bottom: 1rem;
+}
+
+.item-description input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.item-description input:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+/* Quantity and Price Section */
+.item-quantity-price {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.quantity-section,
+.price-section {
+    flex: 1;
+}
+
+.quantity-section label,
+.price-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.item-qty-input,
+.item-price-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.item-qty-input:focus,
+.item-price-input:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+/* Actions and Total Section */
+.item-actions-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.remove-item-btn {
+    background: white;
+    color: #dc3545;
+    border: 2px solid #ffb3b3;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-item-btn:hover {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.item-total {
+    background: #e8f5e8;
+    border: 2px solid #c3e6c3;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    min-width: 80px;
+}
+
+.item-total-amount {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #28a745;
+}
+
+/* Photos Section */
+.item-photos {
+    margin-top: 1rem;
+}
+
+.item-photos label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.add-photo-btn {
+    background: #ff8c00;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.add-photo-btn:hover {
+    background: #e67e00;
+    transform: translateY(-1px);
+}
+
+/* Add Service Item Button */
+.add-item-btn {
+    background: #28a745;
+    color: white;
+    border: 2px solid #ff8c00;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 auto;
+    width: 100%;
+    justify-content: center;
+}
+
+.add-item-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.add-item-btn:active {
+    transform: translateY(0);
+}
+
+/* Cost Summary Section */
+.cost-summary {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--admin-accent);
+}
+
+.cost-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.cost-row.total {
+    background: var(--admin-accent);
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-color: var(--admin-accent);
+}
+
+.cost-row label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.cost-row input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: var(--admin-accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #7ab33a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-booking-creation-modal {
+        width: 98%;
+        margin: 1rem;
+    }
+    
+    .admin-booking-creation-modal .modal-body {
+        padding: 1rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .item-quantity-price {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .quantity-section,
+    .price-section {
+        width: 100%;
+    }
+    
+    .item-actions-total {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
+    .remove-item-btn {
+        align-self: flex-start;
+    }
+    
+    .item-total {
+        align-self: center;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .service-item {
+        padding: 1rem;
+    }
+    
+    .item-description input,
+    .item-qty-input,
+    .item-price-input {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .remove-item-btn {
+        width: 45px;
+        height: 45px;
+        padding: 0.6rem;
+    }
+    
+    .add-photo-btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Loading States */
+.btn-primary.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-primary.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error States */
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.form-group.error .error-message {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* Success States */
+.form-group.success input,
+.form-group.success select,
+.form-group.success textarea {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+/* Focus States */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+/* Hover Effects */
+.service-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.add-item-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+}
+
+/* Animation for modal appearance */
+.admin-booking-creation-modal {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth transitions */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.service-item,
+.btn-primary,
+.btn-secondary {
+    transition: all 0.2s ease;
+}
+
+/* Custom scrollbar for modal */
+.admin-booking-creation-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-booking-creation-modal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.admin-booking-creation-modal::-webkit-scrollbar-thumb {
+    background: var(--admin-accent);
+    border-radius: 4px;
+}
+
+.admin-booking-creation-modal::-webkit-scrollbar-thumb:hover {
+    background: #7ab33a;
+}
+
+/* Admin Info Note */
+.admin-info-note {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #1976d2;
+}
+
+.admin-info-note i {
+    color: #2196f3;
+    font-size: 1rem;
+}

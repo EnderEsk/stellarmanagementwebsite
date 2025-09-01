@@ -15,7 +15,8 @@ class BookingSystem {
         this.businessHours = {
             maxBookingsPerTimeSlot: 1, // Only 1 booking per time slot
             workingDays: [1, 2, 3, 4, 5], // Monday to Friday (0 = Sunday, 6 = Saturday)
-            timeSlots: ['5:30 PM', '6:30 PM', '7:30 PM'] // Available time slots
+            timeSlots: ['5:30 PM', '6:30 PM', '7:30 PM'], // Available time slots for quotes
+            jobTimeSlots: ['5:30 PM'] // Only 5:30 PM available for job scheduling
         };
         
         this.init();
@@ -45,6 +46,9 @@ class BookingSystem {
         document.querySelectorAll('.prev-step').forEach(btn => {
             btn.addEventListener('click', () => this.prevStep());
         });
+        
+        // Monitor step changes to refresh calendar data when needed
+        this.setupStepChangeMonitoring();
         
         // Service selection - auto-advance to next step
         document.querySelectorAll('input[name="service"]').forEach(radio => {
@@ -107,6 +111,76 @@ class BookingSystem {
         
         // Setup image upload functionality
         this.setupImageUpload();
+        
+        // Make debug method available globally
+        window.debugFullDayJobs = () => this.debugFullDayJobs();
+    }
+    
+    /**
+     * Monitor step changes to refresh calendar data when the calendar step is shown
+     */
+    setupStepChangeMonitoring() {
+        // Create a MutationObserver to watch for step changes
+        const stepObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    if (target.id === 'step2' && target.classList.contains('active')) {
+                        // Calendar step is now active, refresh data if needed
+                        console.log('📅 Calendar step activated, ensuring data consistency...');
+                        this.ensureCalendarDataConsistency().then(() => {
+                            // Re-render calendar with fresh data
+                            this.renderCalendar();
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Start observing the step elements
+        const stepElements = document.querySelectorAll('.booking-step');
+        stepElements.forEach(step => {
+            stepObserver.observe(step, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+        
+        console.log('📅 Step change monitoring setup completed');
+    }
+    
+    /**
+     * Debug method to test full-day job detection
+     * Call this from the console to see what's happening
+     */
+    debugFullDayJobs() {
+        console.log('🔍 Debugging full-day job detection...');
+        console.log('📅 Current month:', this.currentMonth);
+        console.log('📅 Existing bookings:', this.existingBookings);
+        console.log('📅 Blocked dates:', this.blockedDates);
+        console.log('📅 Availability data:', this.availabilityData);
+        
+        // Check for full-day job blocks
+        if (this.blockedDates) {
+            const fullDayJobBlocks = this.blockedDates.filter(bd => bd.reason === 'full_day_job');
+            console.log('📅 Full-day job blocks found:', fullDayJobBlocks);
+            
+            fullDayJobBlocks.forEach(block => {
+                const jobBooking = this.findJobBookingForDate(block.date);
+                console.log(`📅 Job block for ${block.date}:`, {
+                    block: block,
+                    jobBooking: jobBooking
+                });
+            });
+        }
+        
+        // Check for job bookings in existing bookings
+        if (this.existingBookings) {
+            const jobBookings = this.existingBookings.filter(b => 
+                ['pending-booking', 'invoice-ready', 'invoice-sent', 'completed'].includes(b.status)
+            );
+            console.log('📅 Job bookings found:', jobBookings);
+        }
     }
     
     setupPhoneFormatting() {
@@ -460,6 +534,15 @@ class BookingSystem {
         if (this.currentStep > 1) {
             this.currentStep--;
             this.updateStepDisplay();
+            
+            // If we're going back to the calendar step, refresh the data
+            if (this.currentStep === 2) {
+                console.log('📅 Returning to calendar step, refreshing data...');
+                setTimeout(async () => {
+                    await this.ensureCalendarDataConsistency();
+                    this.renderCalendar();
+                }, 100);
+            }
         }
     }
     
@@ -481,9 +564,16 @@ class BookingSystem {
         
         // If we're on step 2 (date and time selection), ensure calendar shows selected date
         if (this.currentStep === 2) {
-            // Force calendar re-render to ensure selected date is highlighted
-            setTimeout(() => {
+            // Ensure calendar data is consistent and up-to-date
+            console.log('📅 Calendar step activated, ensuring data consistency...');
+            
+            setTimeout(async () => {
+                // Check and refresh data if needed
+                await this.ensureCalendarDataConsistency();
+                
+                // Re-render calendar with fresh data
                 this.renderCalendar();
+                
                 if (this.selectedDate) {
                     this.updateSelectedDateDisplay();
                     // Show time selection if date is selected
@@ -683,7 +773,19 @@ class BookingSystem {
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                            'July', 'August', 'September', 'October', 'November', 'December'];
         
-        console.log(`Rendering calendar for month: ${month} (${monthNames[month]}) ${year}`);
+        console.log(`📅 Rendering calendar for month: ${month} (${monthNames[month]}) ${year}`);
+        console.log(`📅 Available data: ${this.existingBookings?.length || 0} existing bookings, ${Object.keys(this.availabilityData).length} availability entries`);
+        console.log(`📅 Blocked dates: ${this.blockedDates?.length || 0} blocked dates`);
+        
+        // Debug: Log some sample data
+        if (this.availabilityData && Object.keys(this.availabilityData).length > 0) {
+            console.log('📅 Sample availability data:', Object.entries(this.availabilityData).slice(0, 3));
+        }
+        if (this.blockedDates && this.blockedDates.length > 0) {
+            console.log('📅 Sample blocked dates:', this.blockedDates.slice(0, 3));
+        }
+        
+
         
         document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
         
@@ -704,6 +806,10 @@ class BookingSystem {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
             dayElement.textContent = currentDate.getDate();
+            
+            // Add data-date attribute for easy lookup
+            const dateString = this.formatDateForServer(currentDate);
+            dayElement.setAttribute('data-date', dateString);
             
             // Check if it's current month
             if (currentDate.getMonth() !== month) {
@@ -744,18 +850,80 @@ class BookingSystem {
                                      blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
                                  ));
                 
+                // Check if date is blocked due to a full-day job (jobs block entire days)
+                // Check both availability data and blocked dates
+                const isFullDayJobBlocked = (this.availabilityData[dateString] && 
+                                          this.availabilityData[dateString].full_day_job === true) ||
+                                          (this.blockedDates && this.blockedDates.some(blockedDate => 
+                                              blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
+                                          ));
+                
+                // Debug logging for full-day job detection
+                if (isFullDayJobBlocked) {
+                    console.log(`📅 Full-day job detected for ${dateString}:`, {
+                        availabilityData: this.availabilityData[dateString],
+                        blockedDates: this.blockedDates?.filter(bd => bd.date === dateString)
+                    });
+                }
+                
+
+                
                 // Check if weekend is explicitly unblocked
                 const isUnblockedWeekend = this.blockedDates && this.blockedDates.some(blockedDate => 
                     blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
                 );
                 
-                if (isBlocked) {
+                if (isFullDayJobBlocked) {
+                    // Full day blocked due to job scheduling - show as completely unavailable
+                    dayElement.classList.add('blocked');
+                    dayElement.classList.add('job-blocked'); // Add specific class for styling
+                    dayElement.title = 'Full day blocked - Job scheduled at 5:30 PM';
+                    
+                    // Find the specific job booking details
+                    const jobBooking = this.findJobBookingForDate(dateString);
+                    
+                    // Add job blocking indicator with more details
+                    const blockingInfo = document.createElement('div');
+                    blockingInfo.className = 'blocking-info job-blocked';
+                    
+                    if (jobBooking) {
+                        const customerName = jobBooking.name || 'Unknown Customer';
+                        const service = jobBooking.service || 'Tree Service';
+                        blockingInfo.innerHTML = `
+                            <div class="blocking-text">Job</div>
+                        `;
+                        dayElement.title = `Full day blocked - Job for ${customerName} (${service}) at 5:30 PM`;
+                    } else {
+                        blockingInfo.innerHTML = `
+                            <div class="blocking-text">Job</div>
+                        `;
+                    }
+                    
+                    dayElement.appendChild(blockingInfo);
+                } else if (isBlocked) {
                     dayElement.classList.add('blocked');
                     dayElement.title = 'This day is blocked';
+                    
+                    // Add blocking indicator
+                    const blockingInfo = document.createElement('div');
+                    blockingInfo.className = 'blocking-info blocked';
+                    blockingInfo.innerHTML = `
+                        <div class="blocking-text">Blocked</div>
+                    `;
+                    dayElement.appendChild(blockingInfo);
                 } else if (isWeekend && !isUnblockedWeekend) {
                     // Weekends are blocked by default unless explicitly unblocked
                     dayElement.classList.add('blocked');
+                    dayElement.classList.add('weekend');
                     dayElement.title = 'Weekend - blocked by default';
+                    
+                    // Add weekend blocking indicator
+                    const blockingInfo = document.createElement('div');
+                    blockingInfo.className = 'blocking-info weekend-blocked';
+                    blockingInfo.innerHTML = `
+                        <div class="blocking-text">Weekend</div>
+                    `;
+                    dayElement.appendChild(blockingInfo);
                 } else {
                     // Check booking status for this day
                     const timeSlots = this.businessHours.timeSlots;
@@ -780,14 +948,15 @@ class BookingSystem {
                     if (bookedTimeSlots.length === timeSlots.length) {
                         // All time slots are booked
                         dayElement.classList.add('booked');
+                        dayElement.classList.add('fully-booked');
                         dayElement.title = 'All time slots are booked';
                         
                         // Add booking count indicator
                         const bookingInfo = document.createElement('div');
-                        bookingInfo.className = 'booking-info';
+                        bookingInfo.className = 'booking-info fully-booked';
                         bookingInfo.innerHTML = `
                             <div class="booking-count">${totalBookings}</div>
-                            <div class="booking-preview">Fully Booked</div>
+                            <div class="booking-preview">Full</div>
                         `;
                         dayElement.appendChild(bookingInfo);
                     } else if (bookedTimeSlots.length > 0) {
@@ -797,10 +966,10 @@ class BookingSystem {
                         
                         // Add booking count indicator
                         const bookingInfo = document.createElement('div');
-                        bookingInfo.className = 'booking-info';
+                        bookingInfo.className = 'booking-info partially-booked';
                         bookingInfo.innerHTML = `
                             <div class="booking-count">${totalBookings}</div>
-                            <div class="booking-preview">Partially Booked</div>
+                            <div class="booking-preview">Partial</div>
                         `;
                         dayElement.appendChild(bookingInfo);
                     } else if (totalBookings > 0) {
@@ -810,16 +979,24 @@ class BookingSystem {
                         
                         // Add booking count indicator
                         const bookingInfo = document.createElement('div');
-                        bookingInfo.className = 'booking-info';
+                        bookingInfo.className = 'booking-info has-bookings';
                         bookingInfo.innerHTML = `
                             <div class="booking-count">${totalBookings}</div>
-                            <div class="booking-preview">Available</div>
+                            <div class="booking-preview">Booked</div>
                         `;
                         dayElement.appendChild(bookingInfo);
                     } else {
                         // Available for booking
                         dayElement.classList.add('available');
                         dayElement.title = 'Available for booking';
+                        
+                        // Add availability indicator
+                        const availabilityInfo = document.createElement('div');
+                        availabilityInfo.className = 'availability-info';
+                        availabilityInfo.innerHTML = `
+                            <div class="availability-text">Open</div>
+                        `;
+                        dayElement.appendChild(availabilityInfo);
                     }
                 }
                 
@@ -829,6 +1006,66 @@ class BookingSystem {
             
             calendarDays.appendChild(dayElement);
         }
+        
+        // Enhance calendar display with existing booking details
+        this.enhanceCalendarWithExistingBookings();
+    }
+    
+    /**
+     * Enhance calendar display with detailed information from existing bookings
+     * This provides better visibility of what's already booked
+     */
+    enhanceCalendarWithExistingBookings() {
+        if (!this.existingBookings || this.existingBookings.length === 0) {
+            return;
+        }
+        
+        console.log('📅 Enhancing calendar with existing booking details...');
+        
+        // Group bookings by date for easier lookup
+        const bookingsByDate = {};
+        this.existingBookings.forEach(booking => {
+            const dateKey = booking.date;
+            if (!bookingsByDate[dateKey]) {
+                bookingsByDate[dateKey] = [];
+            }
+            bookingsByDate[dateKey].push(booking);
+        });
+        
+        // Enhance each calendar day with existing booking information
+        Object.keys(bookingsByDate).forEach(dateString => {
+            const dayElement = document.querySelector(`[data-date="${dateString}"]`);
+            if (dayElement) {
+                const dateBookings = bookingsByDate[dateString];
+                
+                // Add detailed booking information
+                const existingBookingsInfo = document.createElement('div');
+                existingBookingsInfo.className = 'existing-bookings-info';
+                
+                const bookingDetails = dateBookings.map(booking => {
+                    const status = booking.status || 'unknown';
+                    const time = booking.time || booking.job_time || 'TBD';
+                    const customer = booking.name || 'Unknown';
+                    
+                    return `${status}: ${time} (${customer})`;
+                }).join(', ');
+                
+                existingBookingsInfo.innerHTML = `
+                    <div class="existing-bookings-title">Bookings:</div>
+                    <div class="existing-bookings-details">${bookingDetails}</div>
+                `;
+                
+                // Remove any existing info to avoid duplicates
+                const existingInfo = dayElement.querySelector('.existing-bookings-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                dayElement.appendChild(existingBookingsInfo);
+                
+                console.log(`📅 Enhanced day ${dateString} with ${dateBookings.length} existing bookings`);
+            }
+        });
     }
     
     selectDate(date) {
@@ -873,7 +1110,15 @@ class BookingSystem {
         }
     }
     
-        loadTimeSlots() {
+    /**
+     * Load available time slots for the selected date
+     * 
+     * IMPORTANT: This function handles QUOTE scheduling only.
+     * - Quotes can be scheduled at 5:30 PM, 6:30 PM, or 7:30 PM on weekdays
+     * - Jobs (when customer accepts quote) can ONLY be scheduled at 5:30 PM on weekdays
+     * - When a job is scheduled, the entire day is blocked for all other bookings
+     */
+    loadTimeSlots() {
         if (!this.selectedDate) return;
         
         const timeSlotsContainer = document.getElementById('timeSlots');
@@ -892,12 +1137,28 @@ class BookingSystem {
                              blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
                          ));
         
+        // Check if date is blocked due to a full-day job (jobs block entire days)
+        const isFullDayJobBlocked = this.availabilityData[dateString] && 
+                                   this.availabilityData[dateString].full_day_job === true;
+        
         // Check if weekend is explicitly unblocked
         const isUnblockedWeekend = this.blockedDates && this.blockedDates.some(blockedDate => 
             blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
         );
         
-        if (isBlocked) {
+        if (isFullDayJobBlocked) {
+            // Full day blocked due to job scheduling
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot disabled job-blocked';
+            timeSlot.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">🚫</div>
+                    <div style="font-weight: 600; color: #dc3545;">Full Day Blocked</div>
+                </div>
+            `;
+            timeSlot.title = 'This day is completely blocked due to a scheduled job. No quotes can be booked.';
+            timeSlotsContainer.appendChild(timeSlot);
+        } else if (isBlocked) {
             const timeSlot = document.createElement('div');
             timeSlot.className = 'time-slot disabled';
             timeSlot.textContent = 'This day is blocked';
@@ -1012,26 +1273,126 @@ class BookingSystem {
         console.log(`After change: ${newMonth}/${newYear} (${this.currentMonth})`);
         console.log(`Direction: ${direction}, Target: ${targetMonth}/${targetYear}`);
         
-        try {
+                try {
+            // Load availability data for the new month
             await this.loadAvailabilityData();
+            
+            // Ensure data consistency across month navigation
+            await this.ensureCalendarDataConsistency();
+            
+            // Render calendar with all available data
             this.renderCalendar();
+            
+            console.log(`📅 Calendar rendered for ${newMonth}/${newYear} with ${this.existingBookings?.length || 0} existing bookings`);
         } finally {
             this.isChangingMonth = false;
         }
     }
-
+    
+    /**
+     * Ensure calendar data consistency across month navigation
+     * This method checks if we have all necessary data and reloads if needed
+     */
+    async ensureCalendarDataConsistency() {
+        console.log('📅 Checking calendar data consistency...');
+        
+        // Check if we have existing bookings
+        if (!this.existingBookings || this.existingBookings.length === 0) {
+            console.log('📅 No existing bookings found, reloading...');
+            await this.loadExistingBookings();
+        }
+        
+        // Check if we have availability data for the current month
+        const currentMonthKey = `${this.currentMonth.getFullYear()}-${String(this.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        const hasCurrentMonthData = Object.keys(this.availabilityData).some(date => date.startsWith(currentMonthKey));
+        
+        if (!hasCurrentMonthData) {
+            console.log('📅 No availability data for current month, reloading...');
+            await this.loadAvailabilityData();
+        }
+        
+        // Check if we have blocked dates
+        if (!this.blockedDates || this.blockedDates.length === 0) {
+            console.log('📅 No blocked dates found, reloading...');
+            const blockedResponse = await fetch('/api/blocked-dates');
+            if (blockedResponse.ok) {
+                this.blockedDates = await blockedResponse.json();
+            }
+        }
+        
+        console.log('📅 Calendar data consistency check completed');
+    }
+    
+    /**
+     * Find job booking for a specific date
+     * This helps display job details in the calendar
+     */
+    findJobBookingForDate(dateString) {
+        if (!this.existingBookings) return null;
+        
+        return this.existingBookings.find(booking => 
+            booking.job_date === dateString && 
+            (booking.status === 'pending-booking' || 
+             booking.status === 'invoice-ready' || 
+             booking.status === 'invoice-sent' ||
+             booking.status === 'completed')
+        );
+    }
+    
     async refreshCalendar() {
-        await this.loadAvailabilityData();
+        console.log('📅 Refreshing calendar data...');
+        
+        // Reload all data to ensure consistency
+        await Promise.all([
+            this.loadExistingBookings(),
+            this.loadAvailabilityData()
+        ]);
+        
+        // Re-render calendar with fresh data
         this.renderCalendar();
+        
+        console.log('📅 Calendar refresh completed');
     }
     
     async loadExistingBookings() {
         try {
+            console.log('📅 Loading all existing bookings...');
             const response = await fetch('/api/bookings');
             if (response.ok) {
                 this.existingBookings = await response.json();
+                console.log(`📅 Loaded ${this.existingBookings.length} existing bookings`);
+                
+                // Log some sample bookings for debugging
+                if (this.existingBookings.length > 0) {
+                    const sampleBookings = this.existingBookings.slice(0, 3);
+                    console.log('📅 Sample bookings:', sampleBookings.map(b => ({
+                        id: b.booking_id,
+                        date: b.date,
+                        time: b.time,
+                        status: b.status
+                    })));
+                    
+                    // Log job bookings specifically
+                    const jobBookings = this.existingBookings.filter(b => 
+                        ['pending-booking', 'invoice-ready', 'invoice-sent', 'completed'].includes(b.status)
+                    );
+                    if (jobBookings.length > 0) {
+                        console.log('📅 Found job bookings:', jobBookings.map(b => ({
+                            id: b.booking_id,
+                            date: b.date,
+                            job_date: b.job_date,
+                            time: b.time,
+                            job_time: b.job_time,
+                            status: b.status,
+                            customer: b.name
+                        })));
+                    } else {
+                        console.log('📅 No job bookings found');
+                    }
+                }
             } else {
                 this.existingBookings = [];
+                console.log('📅 Failed to load existing bookings');
             }
         } catch (error) {
             console.error('Error loading bookings:', error);
@@ -1041,35 +1402,94 @@ class BookingSystem {
     
     async loadAvailabilityData() {
         try {
-            // Get date range for current month
-            const startDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
-            const endDate = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0);
+            console.log('📅 Starting to load availability data...');
             
-            const startDateStr = this.formatDateForServer(startDate);
-            const endDateStr = this.formatDateForServer(endDate);
+            // First, run automatic cleanup to fix any inconsistencies
+            try {
+                console.log('🤖 Running automatic cleanup before loading availability data...');
+                const cleanupResponse = await fetch('/api/blocked-dates/auto-cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (cleanupResponse.ok) {
+                    const cleanupResult = await cleanupResponse.json();
+                    if (cleanupResult.totalActions > 0) {
+                        console.log(`🤖 Auto-cleanup completed: ${cleanupResult.totalActions} actions taken`);
+                        console.log('Details:', cleanupResult.details);
+                    } else {
+                        console.log('🤖 Auto-cleanup completed: No actions needed');
+                    }
+                } else {
+                    console.warn('🤖 Auto-cleanup failed:', cleanupResponse.status, cleanupResponse.statusText);
+                }
+            } catch (cleanupError) {
+                console.warn('Auto-cleanup failed (non-critical):', cleanupError);
+            }
             
-            console.log(`Loading availability data for ${startDateStr} to ${endDateStr}`);
+            // Get date range for current month PLUS surrounding dates to cover the full calendar grid
+            // The calendar shows 6 weeks (42 days), so we need to ensure we cover all visible dates
+            const currentMonthStart = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+            const currentMonthEnd = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0);
+            
+            // Calculate the first visible date (start of the week containing the first day of the month)
+            const firstVisibleDate = new Date(currentMonthStart);
+            firstVisibleDate.setDate(currentMonthStart.getDate() - currentMonthStart.getDay());
+            
+            // Calculate the last visible date (end of the week containing the last day of the month)
+            const lastVisibleDate = new Date(currentMonthEnd);
+            lastVisibleDate.setDate(currentMonthEnd.getDate() + (6 - currentMonthEnd.getDay()));
+            
+            const startDateStr = this.formatDateForServer(firstVisibleDate);
+            const endDateStr = this.formatDateForServer(lastVisibleDate);
+            
+            console.log(`📅 Loading availability data for full calendar grid: ${startDateStr} to ${endDateStr}`);
+            console.log(`📅 This covers the visible calendar dates including partial weeks from previous/next months`);
+            console.log(`📅 Current month: ${this.currentMonth.getMonth() + 1}/${this.currentMonth.getFullYear()}`);
+            console.log(`📅 First visible date: ${firstVisibleDate.toDateString()}`);
+            console.log(`📅 Last visible date: ${lastVisibleDate.toDateString()}`);
             
             const response = await fetch(`/api/availability?start_date=${startDateStr}&end_date=${endDateStr}`);
             if (response.ok) {
                 this.availabilityData = await response.json();
-                console.log('Loaded availability data:', this.availabilityData);
+                console.log('📅 Successfully loaded availability data:', this.availabilityData);
+                console.log(`📅 Availability data covers ${Object.keys(this.availabilityData).length} dates`);
             } else {
+                console.error('❌ Failed to load availability data:', response.status, response.statusText);
                 this.availabilityData = {};
-                console.log('Failed to load availability data');
             }
 
             // Load blocked dates
+            console.log('📅 Loading blocked dates...');
             const blockedResponse = await fetch('/api/blocked-dates');
             if (blockedResponse.ok) {
                 this.blockedDates = await blockedResponse.json();
-                console.log('Loaded blocked dates:', this.blockedDates);
+                console.log('📅 Successfully loaded blocked dates:', this.blockedDates);
+                console.log(`📅 Total blocked dates: ${this.blockedDates.length}`);
+                
+                // Log full-day job blocks specifically
+                const fullDayJobBlocks = this.blockedDates.filter(bd => bd.reason === 'full_day_job');
+                if (fullDayJobBlocks.length > 0) {
+                    console.log('📅 Found full-day job blocks:', fullDayJobBlocks);
+                } else {
+                    console.log('📅 No full-day job blocks found in blocked dates');
+                }
+                
+                // Log other types of blocked dates
+                const otherBlockedDates = this.blockedDates.filter(bd => bd.reason !== 'full_day_job');
+                if (otherBlockedDates.length > 0) {
+                    console.log('📅 Other blocked dates:', otherBlockedDates);
+                }
             } else {
+                console.error('❌ Failed to load blocked dates:', blockedResponse.status, blockedResponse.statusText);
                 this.blockedDates = [];
-                console.log('Failed to load blocked dates');
             }
+            
+            console.log('📅 Availability data loading completed successfully');
         } catch (error) {
-            console.error('Error loading availability data:', error);
+            console.error('❌ Error loading availability data:', error);
             this.availabilityData = {};
             this.blockedDates = [];
         }

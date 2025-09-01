@@ -236,7 +236,9 @@ async function loadBookings() {
             renderActiveBookings();
             renderHistory();
             
+            // Wait for calendar events to be loaded before rendering calendar
             if (document.getElementById('calendarView').classList.contains('active')) {
+                await waitForCalendarEvents();
                 renderCalendar();
             }
             
@@ -250,6 +252,26 @@ async function loadBookings() {
         }
     } catch (error) {
         showNotification('Network error loading bookings', 'error');
+    }
+}
+
+// Wait for calendar events to be loaded
+async function waitForCalendarEvents() {
+    // Wait for AdminCalendarEvents to be initialized
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (!window.adminCalendarEvents && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
+    if (window.adminCalendarEvents) {
+        // Wait for events to be loaded
+        await window.adminCalendarEvents.loadEvents();
+        console.log('✅ Calendar events loaded before rendering calendar');
+    } else {
+        console.warn('⚠️ AdminCalendarEvents not available, proceeding without events');
     }
 }
 

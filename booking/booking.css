@@ -170,6 +170,10 @@
 
 .calendar-grid {
     width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    max-width: 100%;
+    position: relative;
 }
 
 .calendar-weekdays {
@@ -193,46 +197,63 @@
     gap: 0.5rem;
 }
 
+/* Calendar Legend - More compact and sleek */
 .calendar-legend {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 1.5rem;
     margin-top: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
     flex-wrap: wrap;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
+    gap: 0.4rem;
+    font-size: 0.75rem;
     color: var(--text-color);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.legend-item:hover {
+    opacity: 1;
 }
 
 .legend-indicator {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
 }
 
 .legend-indicator.available {
-    background: rgba(140, 198, 63, 0.3);
-}
-
-.legend-indicator.booked {
-    background: rgba(220, 53, 69, 0.3);
-}
-
-.legend-indicator.blocked {
-    background: rgba(108, 117, 125, 0.3);
+    background: rgba(40, 167, 69, 0.6);
 }
 
 .legend-indicator.partially-booked {
-    background: rgba(255, 193, 7, 0.3);
+    background: rgba(255, 193, 7, 0.6);
+}
+
+.legend-indicator.fully-booked {
+    background: rgba(220, 53, 69, 0.6);
+}
+
+.legend-indicator.blocked {
+    background: rgba(108, 117, 125, 0.6);
+}
+
+.legend-indicator.weekend {
+    background: rgba(108, 117, 125, 0.6);
+}
+
+.legend-indicator.job-blocked {
+    background: rgba(220, 53, 69, 0.6);
 }
 
 .calendar-day {
@@ -240,6 +261,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    max-width: 100%;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -270,19 +294,33 @@
     opacity: 0.5;
 }
 
+/* Remove bulky emoji indicators from top-right */
+.calendar-day.booked::after {
+    display: none;
+}
+
+.calendar-day.blocked::after {
+    display: none;
+}
+
+.calendar-day.partially-booked::after {
+    display: none;
+}
+
+.calendar-day.available::after {
+    display: none;
+}
+
+.calendar-day.weekend::after {
+    display: none;
+}
+
+/* Calendar day state styles */
 .calendar-day.booked {
     background: rgba(220, 53, 69, 0.2);
     color: #ff6b6b;
     position: relative;
     opacity: 0.8;
-}
-
-.calendar-day.booked::after {
-    content: '🔴';
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
 }
 
 .calendar-day.blocked {
@@ -292,32 +330,10 @@
     opacity: 0.8;
 }
 
-.calendar-day.blocked::after {
-    content: '🚫';
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
-}
-
-.calendar-day.booked {
-    background: rgba(255, 0, 0, 0.2);
-    border-color: #ff4444;
-    cursor: not-allowed;
-}
-
 .calendar-day.partially-booked {
     background: rgba(255, 193, 7, 0.2);
     border-color: #ffc107;
     position: relative;
-}
-
-.calendar-day.partially-booked::after {
-    content: '🟡';
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
 }
 
 .calendar-day.available {
@@ -326,55 +342,158 @@
     position: relative;
 }
 
-.calendar-day.available::after {
-    content: '🟢';
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
+.calendar-day.fully-booked {
+    background: rgba(220, 53, 69, 0.3);
+    border-color: #dc3545;
+    color: #dc3545;
+    position: relative;
 }
 
-/* Booking info display on calendar days */
-.calendar-day .booking-info {
+.calendar-day.weekend {
+    background: rgba(108, 117, 125, 0.3);
+    border-color: #6c757d;
+    color: #6c757d;
+    position: relative;
+}
+
+.calendar-day.job-blocked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+    position: relative;
+}
+
+/* Make bottom indicators more subtle and sleek */
+.calendar-day .booking-info,
+.calendar-day .blocking-info,
+.calendar-day .availability-info {
     position: absolute;
-    bottom: 2px;
-    left: 2px;
-    right: 2px;
-    background: rgba(0, 0, 0, 0.8);
+    bottom: 1px;
+    left: 1px;
+    right: 1px;
     color: white;
-    border-radius: 3px;
-    padding: 2px 4px;
-    font-size: 0.6rem;
+    border-radius: 2px;
+    padding: 1px 3px;
+    font-size: 0.5rem;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.1;
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+}
+
+.calendar-day:hover .booking-info,
+.calendar-day:hover .blocking-info,
+.calendar-day:hover .availability-info {
+    opacity: 1;
+}
+
+/* Simplified booking info */
+.calendar-day .booking-info {
+    background: rgba(0, 0, 0, 0.7);
 }
 
 .calendar-day .booking-count {
-    font-weight: bold;
-    font-size: 0.7rem;
+    font-weight: 600;
+    font-size: 0.6rem;
     display: block;
 }
 
 .calendar-day .booking-preview {
-    font-size: 0.5rem;
-    opacity: 0.9;
+    font-size: 0.4rem;
+    opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Different colors for different booking states */
+/* Simplified blocking info */
+.calendar-day .blocking-info {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.calendar-day .blocking-icon {
+    font-size: 0.5rem;
+    margin-bottom: 0;
+    display: none; /* Remove icons for cleaner look */
+}
+
+.calendar-day .blocking-text {
+    font-size: 0.4rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Simplified availability info */
+.calendar-day .availability-info {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.calendar-day .availability-icon {
+    font-size: 0.5rem;
+    margin-bottom: 0;
+    display: none; /* Remove icons for cleaner look */
+}
+
+.calendar-day .availability-text {
+    font-size: 0.4rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Different colors for different states - more subtle */
 .calendar-day.booked .booking-info {
-    background: rgba(220, 53, 69, 0.9);
+    background: rgba(220, 53, 69, 0.8);
 }
 
 .calendar-day.partially-booked .booking-info {
-    background: rgba(255, 193, 7, 0.9);
+    background: rgba(255, 193, 7, 0.8);
     color: #212529;
 }
 
-.calendar-day.available .booking-info {
-    background: rgba(40, 167, 69, 0.9);
+.calendar-day.available .availability-info {
+    background: rgba(40, 167, 69, 0.8);
+}
+
+.calendar-day.blocked .blocking-info {
+    background: rgba(108, 117, 125, 0.8);
+}
+
+.calendar-day.weekend .blocking-info {
+    background: rgba(108, 117, 125, 0.8);
+}
+
+.calendar-day.job-blocked .blocking-info {
+    background: rgba(220, 53, 69, 0.8);
+}
+
+/* Enhanced booking info styles - more subtle */
+.calendar-day.fully-booked .booking-info {
+    background: rgba(220, 53, 69, 0.8);
+}
+
+.calendar-day.fully-booked .booking-info.fully-booked {
+    background: rgba(220, 53, 69, 0.8);
+}
+
+.calendar-day.partially-booked .booking-info.partially-booked {
+    background: rgba(255, 193, 7, 0.8);
+}
+
+.calendar-day.partially-booked .booking-info.has-bookings {
+    background: rgba(255, 193, 7, 0.8);
+}
+
+/* Remove available slots text for cleaner look */
+.calendar-day .available-slots {
+    display: none;
+}
+
+/* Remove job details for cleaner look */
+.calendar-day .job-details {
+    display: none;
 }
 
 /* Time Selection */
@@ -441,6 +560,13 @@
     cursor: not-allowed;
     background: rgba(255, 0, 0, 0.1);
     border-color: #ff4444;
+}
+
+.time-slot.disabled.job-blocked {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.15);
+    border-color: #dc3545;
+    color: #dc3545;
 }
 
 .time-slot {
@@ -853,12 +979,39 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    /* Critical: Prevent calendar overflow on mobile */
+    .calendar-container * {
+        box-sizing: border-box !important;
+    }
+    
+    /* Force calendar to fit mobile viewport */
+    .calendar-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+        padding: 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    /* Ensure parent containers don't overflow */
+    .date-selection,
+    .booking-form-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
     .booking-hero {
         padding: 100px 0 40px;
     }
     
     .booking-container {
         padding: 0 1rem;
+        max-width: 100%;
     }
     
     .booking-header h1 {
@@ -880,60 +1033,302 @@
         font-size: 1rem;
     }
     
+    /* Enhanced mobile calendar container - prevent overflow */
     .calendar-container {
-        padding: 1rem;
+        padding: 0.75rem !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        max-width: 100vw !important;
+        position: relative !important;
+        min-width: 0 !important;
+        /* Critical: Prevent horizontal overflow on mobile */
+        transform: translateZ(0) !important;
+        will-change: transform !important;
+        /* Force container to fit */
+        flex-shrink: 1 !important;
+        flex-basis: 100% !important;
+    }
+    
+    /* Mobile calendar header improvements */
+    .calendar-header {
+        flex-direction: column !important;
+        gap: 1rem !important;
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.3rem !important;
+        margin: 0 !important;
+        order: 1 !important;
+    }
+    
+    .calendar-nav {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 1rem !important;
+        order: 2 !important;
+    }
+    
+    /* Mobile calendar grid - prevent overflow and ensure all columns fit */
+    .calendar-grid {
+        width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+        position: relative !important;
+        /* Force calendar to fit container */
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+        /* Critical: Ensure grid fits within container */
+        display: block !important;
+    }
+    
+    /* Mobile calendar weekdays - ensure all 7 columns fit */
+    .calendar-weekdays {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 0.25rem !important;
+        margin-bottom: 0.5rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        min-width: 0 !important;
+        /* Critical: Prevent horizontal overflow */
+        max-width: 100% !important;
     }
     
     .calendar-weekdays span {
-        font-size: 0.8rem;
-        padding: 0.25rem;
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0 !important;
+        text-align: center !important;
+        font-weight: 600 !important;
+        color: var(--accent-color) !important;
+        min-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+        /* Critical: Ensure each weekday fits */
+        flex: 1 !important;
+        flex-shrink: 1 !important;
     }
     
+    /* Mobile calendar days - ensure all 7 columns fit */
+    .calendar-days {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 0.25rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        min-width: 0 !important;
+        /* Critical: Prevent horizontal overflow */
+        max-width: 100% !important;
+    }
+    
+    /* Mobile calendar day improvements - ensure proper sizing */
     .calendar-day {
-        font-size: 0.9rem;
+        aspect-ratio: 1 !important;
+        min-height: 40px !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: var(--text-color) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        padding: 1px !important;
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+        /* Critical: Ensure each day fits within its grid cell */
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
+    /* Ensure touch targets meet minimum requirements */
+    .calendar-day {
+        min-height: 40px !important;
+        min-width: 40px !important;
+        max-width: 100% !important;
+        flex: 1 !important;
+    }
+    
+    /* Mobile calendar legend improvements */
     .calendar-legend {
-        gap: 1rem;
-        padding: 0.75rem;
+        gap: 0.75rem !important;
+        padding: 0.75rem !important;
+        margin-top: 1rem !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    /* Critical: Ensure Saturday column is never clipped on mobile */
+    .calendar-weekdays span:last-child,
+    .calendar-days .calendar-day:nth-child(7n) {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        /* Ensure last column is fully visible */
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    
+    /* Force calendar to fit within container - prevent any overflow */
+    .calendar-container,
+    .calendar-grid,
+    .calendar-weekdays,
+    .calendar-days {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        /* Critical: Prevent horizontal scrolling */
+        overflow-x: hidden !important;
+    }
+    
+    /* Aggressive overflow prevention for mobile */
+    .calendar-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        position: relative !important;
+        /* Ensure container fits viewport */
+        max-width: calc(100vw - 2rem) !important;
+    }
+    
+    .calendar-grid {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        display: block !important;
+        /* Critical: Prevent grid overflow */
+        max-width: calc(100vw - 3rem) !important;
+    }
+    
+    .calendar-weekdays,
+    .calendar-days {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 0.25rem !important;
+        /* Critical: Ensure grid fits within viewport */
+        max-width: calc(100vw - 3rem) !important;
+    }
+    
+    /* Force each day to fit within its allocated space */
+    .calendar-day {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        flex: 1 !important;
+        flex-shrink: 1 !important;
+        /* Critical: Ensure day fits within grid cell */
+        box-sizing: border-box !important;
+        position: relative !important;
     }
     
     .legend-item {
-        font-size: 0.8rem;
+        font-size: 0.7rem !important;
+        gap: 0.3rem !important;
+        min-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        /* Ensure legend items don't overflow */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .legend-indicator {
+        width: 8px !important;
+        height: 8px !important;
+        min-width: 8px !important;
+        min-height: 8px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Mobile time selection improvements */
+    .time-selection {
+        margin-top: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        padding: 1rem !important;
+    }
+    
+    .selected-date {
+        margin-bottom: 1rem !important;
+        padding: 0.75rem !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.5rem !important;
     }
     
     .time-slots {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+        gap: 0.75rem !important;
     }
     
     .time-slot {
-        padding: 0.75rem;
-        font-size: 0.9rem;
+        padding: 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
     }
     
     .step-buttons {
-        flex-direction: column;
+        flex-direction: column !important;
+        gap: 1rem !important;
     }
     
     .step-buttons .btn-primary,
     .step-buttons .btn-secondary {
-        width: 100%;
+        width: 100% !important;
+        min-height: 48px !important;
+        font-size: 1rem !important;
     }
     
     .modal-content {
-        width: 95%;
-        margin: 1rem;
+        width: 95% !important;
+        margin: 1rem !important;
     }
     
     .modal-footer {
-        flex-direction: column;
+        flex-direction: column !important;
     }
     
     .summary-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.5rem !important;
     }
 }
 
@@ -950,16 +1345,59 @@
         font-size: 1.25rem;
     }
     
+    /* Small mobile calendar adjustments */
+    .calendar-container {
+        padding: 0.75rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.2rem;
+    }
+    
     .calendar-weekdays span {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        padding: 0.4rem 0;
+        min-height: 28px;
     }
     
     .calendar-day {
-        font-size: 0.8rem;
+        min-height: 44px;
+        font-size: 0.85rem;
+        border-radius: 4px;
+    }
+    
+    /* Smaller gaps for very small screens */
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 1px;
     }
     
     .time-slots {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .time-slot {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        min-height: 48px;
+    }
+    
+    .calendar-legend {
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .legend-item {
+        font-size: 0.65rem;
+        min-height: 20px;
+    }
+    
+    .legend-indicator {
+        width: 6px;
+        height: 6px;
+        min-width: 6px;
+        min-height: 6px;
     }
     
     .address-suggestions {
@@ -973,6 +1411,89 @@
     
     .required-hint {
         font-size: 11px;
+    }
+}
+
+@media (max-width: 360px) {
+    .booking-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .step {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+        min-width: 60px;
+    }
+    
+    .booking-step h3 {
+        font-size: 1.1rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 6px;
+        font-size: 0.85rem;
+    }
+    
+    .image-preview {
+        width: 60px;
+        height: 60px;
+    }
+    
+    /* Minimal mobile calendar */
+    .calendar-container {
+        padding: 0.5rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .calendar-weekdays span {
+        font-size: 0.65rem;
+        padding: 0.3rem 0;
+        min-height: 24px;
+    }
+    
+    .calendar-day {
+        min-height: 40px;
+        font-size: 0.8rem;
+        border-radius: 3px;
+    }
+    
+    /* Minimal gaps */
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 1px;
+    }
+    
+    .calendar-legend {
+        gap: 0.4rem;
+        padding: 0.4rem;
+    }
+    
+    .legend-item {
+        font-size: 0.6rem;
+        min-height: 18px;
+    }
+    
+    .legend-indicator {
+        width: 5px;
+        height: 5px;
+        min-width: 5px;
+        min-height: 5px;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+    
+    .time-slot {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        min-height: 44px;
     }
 }
 
@@ -1141,4 +1662,2202 @@
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* Existing Bookings Info Styling - More subtle */
+.existing-bookings-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 4px;
+    font-size: 8px;
+    border-radius: 0 0 4px 4px;
+    z-index: 10;
+    max-height: 40px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.existing-bookings-info:hover {
+    max-height: 80px;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.existing-bookings-title {
+    font-weight: 600;
+    color: #8cc63f;
+    margin-bottom: 1px;
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.existing-bookings-details {
+    font-size: 7px;
+    line-height: 1.1;
+    color: #e0e0e0;
+    word-wrap: break-word;
+}
+
+/* Mobile responsive for existing bookings info */
+@media (max-width: 768px) {
+    .existing-bookings-info {
+        padding: 1px 2px !important;
+        font-size: 6px !important;
+        max-height: 30px !important;
+    }
+    
+    .existing-bookings-info:hover {
+        max-height: 60px !important;
+    }
+    
+    .existing-bookings-title {
+        font-size: 5px !important;
+        margin-bottom: 0.5px !important;
+    }
+    
+    .existing-bookings-details {
+        font-size: 5px !important;
+        line-height: 1 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .existing-bookings-info {
+        padding: 1px !important;
+        font-size: 5px !important;
+        max-height: 25px !important;
+    }
+    
+    .existing-bookings-info:hover {
+        max-height: 50px !important;
+    }
+    
+    .existing-bookings-title {
+        font-size: 4px !important;
+    }
+    
+    .existing-bookings-details {
+        font-size: 4px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .existing-bookings-info {
+        font-size: 4px !important;
+        max-height: 20px !important;
+    }
+    
+    .existing-bookings-info:hover {
+        max-height: 40px !important;
+    }
+    
+    .existing-bookings-title {
+        font-size: 3px !important;
+    }
+    
+    .existing-bookings-details {
+        font-size: 3px !important;
+    }
+}
+
+/* Full Day Job Blocking Styling - Updated for sleek design */
+.calendar-day.job-blocked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+    position: relative;
+}
+
+.calendar-day.job-blocked .blocking-info {
+    background: rgba(220, 53, 69, 0.9) !important;
+    border: 1px solid #fff;
+    border-radius: 3px;
+    padding: 2px 4px;
+    text-align: center;
+}
+
+.calendar-day.job-blocked .blocking-icon {
+    font-size: 12px;
+    margin-bottom: 2px;
+    display: none; /* Remove icon for cleaner look */
+}
+
+.calendar-day.job-blocked .blocking-text {
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.calendar-day.job-blocked .job-details {
+    font-size: 9px;
+    opacity: 0.9;
+    line-height: 1.2;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+/* Ensure job-blocked days are clearly visible */
+.calendar-day.job-blocked:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    z-index: 5;
+}
+
+/* Legend indicator for job-blocked days */
+.legend-indicator.job-blocked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 } 
+
+/* Mobile-friendly responsive design for calendar - Consolidated and Fixed */
+@media (max-width: 768px) {
+    /* Calendar container adjustments */
+    .calendar-container {
+        padding: 15px !important;
+        margin: 10px 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    .calendar-header {
+        flex-direction: column !important;
+        gap: 15px !important;
+        text-align: center !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.5rem !important;
+        margin: 0 !important;
+        order: 1 !important;
+    }
+    
+    .calendar-nav {
+        gap: 15px !important;
+        order: 2 !important;
+    }
+    
+    .btn {
+        padding: 10px 20px !important;
+        font-size: 1rem !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Calendar grid adjustments for mobile - fix clipping */
+    .calendar-grid {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    .calendar-weekdays {
+        gap: 3px !important;
+        margin-bottom: 8px !important;
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+    }
+    
+    .calendar-weekdays span {
+        font-size: 0.75rem !important;
+        padding: 6px 0 !important;
+        text-align: center !important;
+        font-weight: 600 !important;
+        color: var(--accent-color) !important;
+        min-height: 28px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+    }
+    
+    .calendar-days {
+        gap: 3px !important;
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+    }
+    
+    /* Mobile calendar day sizing - prevent clipping */
+    .calendar-day {
+        min-height: 55px !important;
+        font-size: 0.85rem !important;
+        border-radius: 6px !important;
+        position: relative !important;
+        aspect-ratio: 1 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        word-break: keep-all !important;
+    }
+    
+    /* Mobile indicator adjustments - prevent overflow */
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 2px 3px !important;
+        font-size: 0.4rem !important;
+        line-height: 1 !important;
+        border-radius: 0 0 6px 6px !important;
+        opacity: 0.9 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+    }
+    
+    .calendar-day .booking-count {
+        font-size: 0.5rem !important;
+        display: block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .calendar-day .booking-preview,
+    .calendar-day .blocking-text,
+    .calendar-day .availability-text {
+        font-size: 0.35rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+    }
+    
+    /* Mobile legend adjustments - more compact and mobile-friendly */
+    .calendar-legend {
+        gap: 0.5rem !important;
+        padding: 0.75rem !important;
+        margin-top: 1rem !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-radius: 8px !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-gap: 0.5rem !important;
+    }
+    
+    .legend-item {
+        font-size: 0.65rem !important;
+        gap: 0.25rem !important;
+        min-height: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .legend-indicator {
+        width: 6px !important;
+        height: 6px !important;
+        min-width: 6px !important;
+        min-height: 6px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Mobile time selection adjustments */
+    .time-selection {
+        margin-top: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        padding: 1rem !important;
+    }
+    
+    .selected-date {
+        margin-bottom: 1rem !important;
+        padding: 0.75rem !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.5rem !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+        gap: 0.75rem !important;
+    }
+    
+    .time-slot {
+        padding: 0.75rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Touch-friendly improvements for mobile */
+    .calendar-day {
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3) !important;
+        touch-action: manipulation !important;
+    }
+    
+    .calendar-day:hover:not(.disabled) {
+        transform: none !important; /* Remove hover effects on mobile */
+    }
+    
+    .calendar-day:active:not(.disabled) {
+        background: rgba(140, 198, 63, 0.3) !important;
+        transform: scale(0.95) !important;
+    }
+    
+    .time-slot {
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3) !important;
+        touch-action: manipulation !important;
+    }
+    
+    .time-slot:hover:not(.disabled) {
+        transform: none !important; /* Remove hover effects on mobile */
+    }
+    
+    .time-slot:active:not(.disabled) {
+        background: rgba(140, 198, 63, 0.2) !important;
+        transform: scale(0.95) !important;
+    }
+    
+    .btn {
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3) !important;
+        touch-action: manipulation !important;
+    }
+    
+    .btn:active {
+        transform: scale(0.95) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-container {
+        padding: 10px !important;
+        /* Critical: Ensure container fits very small screens */
+        max-width: calc(100vw - 1rem) !important;
+        margin: 0 !important;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.3rem !important;
+    }
+    
+    /* Reduce gaps for small mobile screens */
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 2px !important;
+        /* Critical: Ensure grid fits on small screens */
+        max-width: calc(100vw - 2rem) !important;
+    }
+    
+    .calendar-day {
+        min-height: 48px !important;
+        font-size: 0.8rem !important;
+        /* Critical: Ensure each day fits */
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        font-size: 0.35rem !important;
+        padding: 1px 2px !important;
+        /* Critical: Prevent indicator overflow */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .calendar-day .booking-count {
+        font-size: 0.45rem !important;
+    }
+    
+    .calendar-day .booking-preview,
+    .calendar-day .blocking-text,
+    .calendar-day .availability-text {
+        font-size: 0.3rem !important;
+    }
+    
+    /* Compact legend for small mobile */
+    .calendar-legend {
+        gap: 0.4rem !important;
+        padding: 0.5rem !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-gap: 0.4rem !important;
+        /* Critical: Prevent legend overflow */
+        max-width: calc(100vw - 2rem) !important;
+        overflow: hidden !important;
+    }
+    
+    .legend-item {
+        font-size: 0.6rem !important;
+        min-height: 18px !important;
+        /* Critical: Ensure legend items fit */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .legend-indicator {
+        width: 5px !important;
+        height: 5px !important;
+        min-width: 5px !important;
+        min-height: 5px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+    
+    .time-slot {
+        padding: 0.6rem !important;
+        font-size: 0.8rem !important;
+        min-height: 44px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .calendar-day {
+        min-height: 42px !important;
+        font-size: 0.75rem !important;
+        /* Critical: Ensure very small screens fit */
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        font-size: 0.3rem !important;
+        padding: 1px !important;
+        /* Critical: Prevent indicator overflow on very small screens */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .calendar-day .booking-count {
+        font-size: 0.4rem !important;
+    }
+    
+    .calendar-day .booking-preview,
+    .calendar-day .blocking-text,
+    .calendar-day .availability-text {
+        font-size: 0.25rem !important;
+    }
+    
+    /* Very compact legend for very small screens */
+    .calendar-legend {
+        gap: 0.3rem !important;
+        padding: 0.4rem !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-gap: 0.3rem !important;
+        /* Critical: Ensure legend fits on very small screens */
+        max-width: calc(100vw - 1.5rem) !important;
+        overflow: hidden !important;
+    }
+    
+    .legend-item {
+        font-size: 0.55rem !important;
+        min-height: 16px !important;
+        /* Critical: Ensure legend items fit */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .legend-indicator {
+        width: 4px !important;
+        height: 4px !important;
+        min-width: 4px !important;
+        min-height: 4px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr !important;
+        gap: 0.4rem !important;
+    }
+    
+    .time-slot {
+        padding: 0.5rem !important;
+        font-size: 0.75rem !important;
+        min-height: 40px !important;
+    }
+}
+
+@media (max-width: 320px) {
+    .calendar-container {
+        padding: 0.4rem !important;
+        /* Critical: Ensure container fits on ultra-small screens */
+        max-width: calc(100vw - 0.8rem) !important;
+        margin: 0 !important;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1rem !important;
+    }
+    
+    .calendar-weekdays span {
+        font-size: 0.6rem !important;
+        padding: 0.25rem 0 !important;
+        min-height: 20px !important;
+        /* Critical: Ensure weekdays fit */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .calendar-day {
+        min-height: 36px !important;
+        font-size: 0.7rem !important;
+        border-radius: 2px !important;
+        /* Critical: Ensure each day fits on ultra-small screens */
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 1px !important;
+        /* Critical: Ensure grid fits on ultra-small screens */
+        max-width: calc(100vw - 1.5rem) !important;
+        overflow: hidden !important;
+    }
+    
+    /* Ultra-compact legend for very small screens */
+    .calendar-legend {
+        gap: 0.25rem !important;
+        padding: 0.3rem !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-gap: 0.25rem !important;
+        /* Critical: Ensure legend fits on ultra-small screens */
+        max-width: calc(100vw - 1.5rem) !important;
+        overflow: hidden !important;
+    }
+    
+    .legend-item {
+        font-size: 0.5rem !important;
+        min-height: 14px !important;
+        /* Critical: Ensure legend items fit */
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    .legend-indicator {
+        width: 3px !important;
+        height: 3px !important;
+        min-width: 3px !important;
+        min-height: 3px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr !important;
+        gap: 0.3rem !important;
+    }
+    
+    .time-slot {
+        padding: 0.4rem !important;
+        font-size: 0.7rem !important;
+        min-height: 36px !important;
+    }
+    
+    .booking-form-container {
+        padding: 1rem !important;
+    }
+    
+    .booking-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .booking-header p {
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    .calendar-container {
+        padding: 10px !important;
+    }
+    
+    .calendar-header {
+        flex-direction: row !important;
+        gap: 20px !important;
+    }
+    
+    .calendar-day {
+        min-height: 55px !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .calendar-container {
+        padding: 18px !important;
+    }
+    
+    .calendar-day {
+        min-height: 70px !important;
+    }
+    
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        font-size: 0.45rem !important;
+        padding: 1px 2px !important;
+    }
+    
+    .calendar-day .booking-count {
+        font-size: 0.55rem !important;
+    }
+    
+    .calendar-day .booking-preview,
+    .calendar-day .blocking-text,
+    .calendar-day .availability-text {
+        font-size: 0.4rem !important;
+    }
+    
+    .calendar-legend {
+        gap: 1.25rem !important;
+        padding: 0.6rem !important;
+    }
+    
+    .legend-item {
+        font-size: 0.8rem !important;
+    }
+    
+    .legend-indicator {
+        width: 7px !important;
+        height: 7px !important;
+    }
+}
+
+/* Touch-friendly improvements for mobile */
+@media (max-width: 768px) {
+    .calendar-day {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3);
+        touch-action: manipulation;
+    }
+    
+    .calendar-day:hover:not(.disabled) {
+        transform: none; /* Remove hover effects on mobile */
+    }
+    
+    .calendar-day:active:not(.disabled) {
+        background: rgba(140, 198, 63, 0.3);
+        transform: scale(0.95);
+    }
+    
+    .time-slot {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3);
+        touch-action: manipulation;
+    }
+    
+    .time-slot:hover:not(.disabled) {
+        transform: none; /* Remove hover effects on mobile */
+    }
+    
+    .time-slot:active:not(.disabled) {
+        background: rgba(140, 198, 63, 0.2);
+        transform: scale(0.95);
+    }
+    
+    .btn {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(140, 198, 63, 0.3);
+        touch-action: manipulation;
+        min-height: 44px; /* Minimum touch target size */
+        min-width: 44px;
+    }
+    
+    .btn:active {
+        transform: scale(0.95);
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        border: 0.5px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .legend-indicator {
+        border: 0.5px solid rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+    .calendar-day:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 1px;
+    }
+    
+    .time-slot:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 1px;
+    }
+    
+    .btn:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+} 
+
+/* Ensure calendar days can accommodate the new info */
+.calendar-day {
+    position: relative;
+    min-height: 80px;
+}
+
+.calendar-day.booked .existing-bookings-info,
+.calendar-day.partially-booked .existing-bookings-info {
+    background: rgba(220, 53, 69, 0.7);
+}
+
+.calendar-day.available .existing-bookings-info {
+    background: rgba(40, 167, 69, 0.7);
+}
+
+.calendar-day.blocked .existing-bookings-info {
+    background: rgba(108, 117, 125, 0.7);
+}
+
+.calendar-day.weekend .existing-bookings-info {
+    background: rgba(108, 117, 125, 0.7);
+}
+
+.calendar-day.job-blocked .existing-bookings-info {
+    background: rgba(220, 53, 69, 0.7);
+}
+
+/* Mobile responsive for existing bookings info */
+
+/* Mobile responsive for overall booking form */
+@media (max-width: 768px) {
+    .booking-container {
+        padding: 15px;
+        margin: 10px;
+    }
+    
+    .booking-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .booking-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+    
+    .booking-header p {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+    
+    .booking-steps {
+        margin-bottom: 20px;
+    }
+    
+    .step-indicator {
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .step {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-width: 80px;
+    }
+    
+    .step.active {
+        padding: 10px 14px;
+    }
+    
+    .booking-step {
+        padding: 20px 15px;
+    }
+    
+    .booking-step h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        display: block;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 10px;
+        font-size: 1rem;
+        border-radius: 6px;
+    }
+    
+    .step-buttons {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        min-height: 48px;
+    }
+    
+    /* Image upload mobile adjustments */
+    .image-upload-container {
+        margin-top: 10px;
+    }
+    
+    .image-upload-area {
+        padding: 20px 15px;
+        text-align: center;
+    }
+    
+    .image-upload-area i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .image-upload-area p {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    
+    .upload-hint {
+        font-size: 0.8rem;
+    }
+    
+    .image-preview-container {
+        gap: 8px;
+        margin-top: 15px;
+    }
+    
+    .image-preview {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .image-preview .remove-image {
+        top: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .booking-container {
+        padding: 10px;
+        margin: 5px;
+    }
+    
+    .booking-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .booking-header p {
+        font-size: 0.9rem;
+    }
+    
+    .step {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        min-width: 70px;
+    }
+    
+    .step.active {
+        padding: 8px 12px;
+    }
+    
+    .booking-step {
+        padding: 15px 10px;
+    }
+    
+    .booking-step h3 {
+        font-size: 1.2rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px;
+        font-size: 0.9rem;
+        min-height: 44px;
+    }
+    
+    .image-preview {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media (max-width: 360px) {
+    .booking-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .step {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+        min-width: 60px;
+    }
+    
+    .booking-step h3 {
+        font-size: 1.1rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 6px;
+        font-size: 0.85rem;
+    }
+    
+    .image-preview {
+        width: 60px;
+        height: 60px;
+    }
+    
+    /* Minimal mobile calendar */
+    .calendar-container {
+        padding: 0.5rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .calendar-weekdays span {
+        font-size: 0.65rem;
+        padding: 0.3rem 0;
+        min-height: 24px;
+    }
+    
+    .calendar-day {
+        min-height: 40px;
+        font-size: 0.8rem;
+        border-radius: 3px;
+    }
+    
+    /* Minimal gaps */
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 1px;
+    }
+    
+    .calendar-legend {
+        gap: 0.4rem;
+        padding: 0.4rem;
+    }
+    
+    .legend-item {
+        font-size: 0.6rem;
+        min-height: 18px;
+    }
+    
+    .legend-indicator {
+        width: 5px;
+        height: 5px;
+        min-width: 5px;
+        min-height: 5px;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+    
+    .time-slot {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        min-height: 44px;
+    }
+}
+
+/* Landscape mobile orientation for form */
+@media (max-width: 768px) and (orientation: landscape) {
+    .booking-container {
+        padding: 20px;
+    }
+    
+    .step-buttons {
+        flex-direction: row;
+        gap: 15px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: auto;
+        flex: 1;
+    }
+}
+
+/* Tablet adjustments for form */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .booking-container {
+        padding: 25px;
+        margin: 20px;
+    }
+    
+    .booking-header h1 {
+        font-size: 2rem;
+    }
+    
+    .step {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 12px;
+        font-size: 1rem;
+    }
+}
+
+/* Touch-friendly improvements for form elements */
+@media (max-width: 768px) {
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+    
+    .image-upload-area:active {
+        background: rgba(140, 198, 63, 0.1);
+        transform: scale(0.98);
+    }
+    
+    .image-preview .remove-image:active {
+        transform: scale(0.9);
+    }
+}
+
+/* Mobile responsive for address suggestions and interactive elements */
+@media (max-width: 768px) {
+    .address-suggestions {
+        max-height: 200px;
+        top: 100%;
+        left: 0;
+        right: 0;
+        border-radius: 0 0 6px 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .address-suggestion {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .address-suggestion:last-child {
+        border-bottom: none;
+    }
+    
+    .address-suggestion:hover,
+    .address-suggestion.selected {
+        background: rgba(140, 198, 63, 0.2);
+    }
+    
+    .address-loading-spinner {
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .required-hint {
+        font-size: 0.75rem;
+        margin-top: 4px;
+        display: block;
+    }
+    
+    /* Service selection mobile adjustments */
+    .service-options {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .service-option {
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    .service-option.selected {
+        transform: scale(1.02);
+    }
+    
+    .service-option .service-icon {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+    
+    .service-option .service-name {
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+    
+    .service-option .service-description {
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
+    
+    /* Date selection mobile adjustments */
+    .date-selection {
+        margin-bottom: 20px;
+    }
+    
+    .date-selection h3 {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .date-selection p {
+        font-size: 0.9rem;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .address-suggestions {
+        max-height: 180px;
+    }
+    
+    .address-suggestion {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+    
+    .service-option {
+        padding: 12px;
+    }
+    
+    .service-option .service-icon {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+    
+    .service-option .service-name {
+        font-size: 0.9rem;
+    }
+    
+    .service-option .service-description {
+        font-size: 0.8rem;
+    }
+    
+    .date-selection h3 {
+        font-size: 1.1rem;
+    }
+    
+    .date-selection p {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .address-suggestions {
+        max-height: 160px;
+    }
+    
+    .address-suggestion {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .service-option {
+        padding: 10px;
+    }
+    
+    .service-option .service-icon {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+    
+    .service-option .service-name {
+        font-size: 0.85rem;
+    }
+    
+    .service-option .service-description {
+        font-size: 0.75rem;
+    }
+    
+    .date-selection h3 {
+        font-size: 1rem;
+    }
+    
+    .date-selection p {
+        font-size: 0.8rem;
+    }
+}
+
+/* Landscape mobile orientation for interactive elements */
+@media (max-width: 768px) and (orientation: landscape) {
+    .address-suggestions {
+        max-height: 150px;
+    }
+    
+    .service-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .service-option {
+        padding: 12px;
+    }
+}
+
+/* Tablet adjustments for interactive elements */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .address-suggestions {
+        max-height: 250px;
+    }
+    
+    .address-suggestion {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+    
+    .service-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .service-option {
+        padding: 20px;
+    }
+    
+    .service-option .service-icon {
+        font-size: 1.8rem;
+    }
+    
+    .service-option .service-name {
+        font-size: 1.1rem;
+    }
+    
+    .service-option .service-description {
+        font-size: 0.9rem;
+    }
+}
+
+/* Touch-friendly improvements for interactive elements */
+@media (max-width: 768px) {
+    .address-suggestion:active {
+        background: rgba(140, 198, 63, 0.3);
+        transform: scale(0.98);
+    }
+    
+    .service-option:active {
+        transform: scale(0.98);
+        background: rgba(140, 198, 63, 0.15);
+    }
+    
+    .form-group input:active,
+    .form-group textarea:active,
+    .form-group select:active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* Additional mobile-specific calendar improvements */
+@media (max-width: 768px) {
+    /* Ensure calendar grid is responsive */
+    .calendar-days {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+    
+    /* Make calendar container responsive */
+    .calendar-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ensure calendar header is properly stacked on mobile */
+    .calendar-header {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Make navigation buttons touch-friendly */
+    .calendar-nav {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .calendar-nav .btn {
+        flex: 1 !important;
+        max-width: 120px !important;
+    }
+    
+    /* Ensure legend wraps properly on mobile */
+    .calendar-legend {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        justify-content: center !important;
+    }
+    
+    /* Make legend items stack on very small screens */
+    .legend-item {
+        min-width: 80px !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further reduce spacing for small mobile */
+    .calendar-days {
+        gap: 3px !important;
+    }
+    
+    .calendar-weekdays {
+        gap: 3px !important;
+    }
+    
+    .calendar-weekdays span {
+        padding: 6px 0 !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Ensure buttons don't overflow */
+    .calendar-nav .btn {
+        max-width: 100px !important;
+        padding: 8px 16px !important;
+    }
+    
+    /* Stack legend items in two rows on small mobile */
+    .calendar-legend {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .legend-item {
+        min-width: auto !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 360px) {
+    /* Minimal spacing for very small screens */
+    .calendar-days {
+        gap: 2px !important;
+    }
+    
+    .calendar-weekdays {
+        gap: 2px !important;
+    }
+    
+    .calendar-weekdays span {
+        padding: 4px 0 !important;
+        font-size: 0.7rem !important;
+    }
+    
+    /* Ensure calendar fits on very small screens */
+    .calendar-container {
+        padding: 8px !important;
+    }
+    
+    .calendar-header h2 {
+        font-size: 1.2rem !important;
+    }
+    
+    .calendar-nav .btn {
+        max-width: 80px !important;
+        padding: 6px 12px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Landscape mobile orientation improvements */
+@media (max-width: 768px) and (orientation: landscape) {
+    .calendar-container {
+        padding: 12px !important;
+    }
+    
+    .calendar-header {
+        flex-direction: row !important;
+        gap: 20px !important;
+        align-items: center !important;
+    }
+    
+    .calendar-header h2 {
+        margin: 0 !important;
+        flex: 1 !important;
+        text-align: left !important;
+    }
+    
+    .calendar-nav {
+        flex: 0 0 auto !important;
+    }
+    
+    .calendar-days {
+        gap: 6px !important;
+    }
+    
+    .calendar-day {
+        min-height: 55px !important;
+    }
+    
+    /* Optimize legend for landscape */
+    .calendar-legend {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 1rem !important;
+    }
+}
+
+/* Ensure proper touch targets on all mobile devices */
+@media (max-width: 768px) {
+    .calendar-day,
+    .time-slot,
+    .btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Prevent text selection on touch */
+    .calendar-day,
+    .time-slot,
+    .btn {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+    }
+    
+    /* Improve touch feedback */
+    .calendar-day:active,
+    .time-slot:active,
+    .btn:active {
+        -webkit-transform: scale(0.95) !important;
+        transform: scale(0.95) !important;
+        transition: transform 0.1s ease !important;
+    }
+}
+
+/* Mobile calendar day state styles - Enhanced for better visibility */
+@media (max-width: 768px) {
+    .calendar-day.booked {
+        background: rgba(220, 53, 69, 0.25);
+        color: #ff6b6b;
+        border-color: #dc3545;
+    }
+    
+    .calendar-day.blocked {
+        background: rgba(108, 117, 125, 0.25);
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .calendar-day.partially-booked {
+        background: rgba(255, 193, 7, 0.25);
+        border-color: #ffc107;
+    }
+    
+    .calendar-day.available {
+        background: rgba(40, 167, 69, 0.25);
+        border-color: #28a745;
+    }
+    
+    .calendar-day.fully-booked {
+        background: rgba(220, 53, 69, 0.35);
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    
+    .calendar-day.weekend {
+        background: rgba(108, 117, 125, 0.35);
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+    
+    .calendar-day.job-blocked {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    /* Enhanced mobile indicators */
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        color: white;
+        border-radius: 0 0 6px 6px;
+        padding: 3px 4px;
+        font-size: 0.5rem;
+        text-align: center;
+        line-height: 1.1;
+        opacity: 0.95;
+        transition: opacity 0.2s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .calendar-day:hover .booking-info,
+    .calendar-day:hover .blocking-info,
+    .calendar-day:hover .availability-info {
+        opacity: 1;
+    }
+    
+    /* Mobile indicator colors */
+    .calendar-day.booked .booking-info {
+        background: rgba(220, 53, 69, 0.9);
+    }
+    
+    .calendar-day.partially-booked .booking-info {
+        background: rgba(255, 193, 7, 0.9);
+        color: #212529;
+    }
+    
+    .calendar-day.available .availability-info {
+        background: rgba(40, 167, 69, 0.9);
+    }
+    
+    .calendar-day.blocked .blocking-info {
+        background: rgba(108, 117, 125, 0.9);
+    }
+    
+    .calendar-day.weekend .blocking-info {
+        background: rgba(108, 117, 125, 0.9);
+    }
+    
+    .calendar-day.job-blocked .blocking-info {
+        background: rgba(220, 53, 69, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Mobile touch feedback improvements */
+    .calendar-day:active:not(.disabled) {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    .calendar-day.selected {
+        background: var(--accent-color);
+        color: var(--primary-color);
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(140, 198, 63, 0.3);
+    }
+    
+    .calendar-day.today {
+        border: 2px solid var(--accent-color);
+        background: rgba(140, 198, 63, 0.1);
+    }
+    
+    /* Mobile navigation improvements */
+    .calendar-nav {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-color);
+        transition: all 0.2s ease;
+    }
+    
+    .calendar-nav:active {
+        background: var(--accent-color);
+        color: var(--primary-color);
+        transform: scale(0.95);
+    }
+    
+    .calendar-nav:hover {
+        background: rgba(140, 198, 63, 0.2);
+        border-color: var(--accent-color);
+    }
+}
+
+/* Mobile time slot improvements */
+@media (max-width: 768px) {
+    .time-selection {
+        background: rgba(140, 198, 63, 0.08);
+        border: 1px solid rgba(140, 198, 63, 0.25);
+        border-radius: 12px;
+        margin: 1.5rem 0;
+    }
+    
+    .selected-date {
+        background: rgba(140, 198, 63, 0.15);
+        border: 1px solid rgba(140, 198, 63, 0.35);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .time-slot {
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        min-height: 48px;
+        min-width: 48px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .time-slot:hover:not(.disabled) {
+        background: rgba(140, 198, 63, 0.15);
+        border-color: var(--accent-color);
+        transform: translateY(-1px);
+    }
+    
+    .time-slot:active:not(.disabled) {
+        transform: scale(0.95);
+        background: rgba(140, 198, 63, 0.2);
+    }
+    
+    .time-slot.selected {
+        background: var(--accent-color);
+        color: var(--primary-color);
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
+    }
+    
+    .time-slot.disabled {
+        background: rgba(255, 0, 0, 0.1);
+        border-color: #ff4444;
+        color: #ff6b6b;
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .time-slot.disabled.job-blocked {
+        background: rgba(220, 53, 69, 0.15);
+        border-color: #dc3545;
+        color: #dc3545;
+        opacity: 0.8;
+    }
+    
+    /* Mobile form improvements */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-color);
+        min-height: 48px;
+        transition: all 0.2s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(140, 198, 63, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    /* Mobile button improvements */
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: var(--accent-color);
+        color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background: #9bc84a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
+    }
+    
+    .btn-primary:active {
+        transform: scale(0.98);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-secondary:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Very small mobile screens (320px and below) */
+@media (max-width: 320px) {
+    .calendar-container {
+        padding: 0.4rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1rem;
+    }
+    
+    .calendar-weekdays span {
+        font-size: 0.6rem;
+        padding: 0.25rem 0;
+        min-height: 20px;
+    }
+    
+    .calendar-day {
+        min-height: 36px;
+        font-size: 0.75rem;
+        border-radius: 2px;
+    }
+    
+    .calendar-weekdays,
+    .calendar-days {
+        gap: 1px;
+    }
+    
+    .calendar-legend {
+        gap: 0.3rem;
+        padding: 0.3rem;
+    }
+    
+    .legend-item {
+        font-size: 0.55rem;
+        min-height: 16px;
+    }
+    
+    .legend-indicator {
+        width: 4px;
+        height: 4px;
+        min-width: 4px;
+        min-height: 4px;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+    }
+    
+    .time-slot {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        min-height: 40px;
+    }
+    
+    .booking-form-container {
+        padding: 1rem;
+    }
+    
+    .booking-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .booking-header p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Landscape mobile orientation - Optimized for better calendar display */
+@media (max-width: 768px) and (orientation: landscape) {
+    .calendar-container {
+        padding: 0.75rem !important;
+        margin: 0.5rem 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+    
+    .calendar-header {
+        flex-direction: row !important;
+        gap: 1rem !important;
+        align-items: center !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .calendar-header h4 {
+        margin: 0 !important;
+        flex: 1 !important;
+        text-align: center !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .calendar-nav {
+        flex: 0 0 auto !important;
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+    
+    .calendar-days {
+        gap: 3px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+    
+    .calendar-day {
+        min-height: 48px !important;
+        font-size: 0.85rem !important;
+        aspect-ratio: 1 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    /* Optimize legend for landscape - more compact */
+    .calendar-legend {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 0.75rem !important;
+        padding: 0.5rem !important;
+        margin-top: 0.75rem !important;
+        display: flex !important;
+        grid-template-columns: unset !important;
+        grid-gap: unset !important;
+    }
+    
+    .legend-item {
+        font-size: 0.65rem !important;
+        min-height: 20px !important;
+        flex: 0 0 auto !important;
+    }
+    
+    .legend-indicator {
+        width: 6px !important;
+        height: 6px !important;
+        min-width: 6px !important;
+        min-height: 6px !important;
+    }
+    
+    /* Landscape time selection */
+    .time-selection {
+        margin: 1rem 0 !important;
+        padding: 0.75rem !important;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+    
+    .time-slot {
+        padding: 0.75rem !important;
+        font-size: 0.85rem !important;
+        min-height: 44px !important;
+    }
+    
+    /* Landscape form adjustments */
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.6rem !important;
+        min-height: 44px !important;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.75rem 1.25rem !important;
+        min-height: 44px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Ensure proper touch targets and prevent overflow on all mobile devices */
+@media (max-width: 768px) {
+    /* Prevent horizontal overflow */
+    .booking-container,
+    .calendar-container,
+    .calendar-grid,
+    .calendar-weekdays,
+    .calendar-days {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ensure calendar fits within viewport */
+    .calendar-days {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 3px !important;
+    }
+    
+    .calendar-weekdays {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 3px !important;
+    }
+    
+    /* Prevent text wrapping in calendar days */
+    .calendar-day {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        word-break: keep-all !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+    }
+    
+    /* Ensure indicators don't overflow */
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+    
+    /* Mobile scroll improvements */
+    .booking-form-container {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Prevent zoom on input focus for iOS */
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px !important;
+    }
+    
+    /* Ensure calendar navigation buttons don't overflow */
+    .calendar-nav {
+        flex-shrink: 0 !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        max-width: 44px !important;
+        max-height: 44px !important;
+    }
+    
+    /* Prevent legend overflow */
+    .calendar-legend {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    .legend-item {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* Critical: Final mobile calendar overflow prevention */
+@media (max-width: 768px) {
+    /* Prevent horizontal overflow on all mobile devices */
+    .booking-container,
+    .booking-form-container,
+    .date-selection,
+    .calendar-container,
+    .calendar-grid,
+    .calendar-weekdays,
+    .calendar-days {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+        /* Critical: Force calendar to fit within viewport */
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    
+    /* Ensure calendar grid fits perfectly */
+    .calendar-grid {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+    
+    /* Force 7-column grid to fit */
+    .calendar-weekdays,
+    .calendar-days {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 0.25rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ensure each calendar day fits within its grid cell */
+    .calendar-day {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+        flex-shrink: 1 !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    /* Prevent text wrapping and overflow in calendar days */
+    .calendar-day,
+    .calendar-weekdays span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        word-break: keep-all !important;
+    }
+    
+    /* Ensure indicators don't overflow */
+    .calendar-day .booking-info,
+    .calendar-day .blocking-info,
+    .calendar-day .availability-info {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+    
+    /* Prevent any horizontal scrolling */
+    .booking-form-container {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure calendar navigation buttons don't overflow */
+    .calendar-nav {
+        flex-shrink: 0 !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        max-width: 44px !important;
+        max-height: 44px !important;
+    }
+    
+    /* Prevent legend overflow */
+    .calendar-legend {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+    
+    .legend-item {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
