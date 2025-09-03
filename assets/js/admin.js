@@ -5,9 +5,21 @@ let currentYear = new Date().getFullYear();
 let blockedDates = [];
 let selectedDate = null;
 
+// Make variables globally accessible
+window.allBookings = allBookings;
+window.currentFilter = currentFilter;
+window.currentMonth = currentMonth;
+window.currentYear = currentYear;
+window.blockedDates = blockedDates;
+window.selectedDate = selectedDate;
+
 // Customer Management Variables
 let allCustomers = [];
 let currentCustomerId = null;
+
+// Make customer variables globally accessible
+window.allCustomers = allCustomers;
+window.currentCustomerId = currentCustomerId;
 
 // Helper function to format date without timezone issues
 function formatBookingDate(dateString) {
@@ -66,6 +78,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         clearFormFields();
         // Load bookings immediately if authenticated
         loadBookings();
+        
+        // Also load calendar events when authenticated
+        if (window.adminCalendarEvents) {
+            window.adminCalendarEvents.loadEventsWhenAuthenticated();
+        }
+    }
+    
+    // Initialize calendar events if not already done
+    if (window.AdminCalendarEvents && !window.adminCalendarEvents) {
+        console.log('🔄 Initializing calendar events immediately...');
+        window.adminCalendarEvents = new AdminCalendarEvents();
     }
     
     // Add a fallback to load bookings after a short delay
@@ -74,8 +97,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (window.simpleGoogleAuth && window.simpleGoogleAuth.isUserAuthenticated() && (!allBookings || allBookings.length === 0)) {
             console.log('🔄 Fallback: Loading bookings...');
             loadBookings();
+            
+            // Also load calendar events when authenticated
+            if (window.adminCalendarEvents) {
+                window.adminCalendarEvents.loadEventsWhenAuthenticated();
+            }
         }
     }, 2000);
+    
+    // Initialize calendar events after a delay to ensure all scripts are loaded
+    setTimeout(() => {
+        if (window.AdminCalendarEvents && !window.adminCalendarEvents) {
+            console.log('🔄 Initializing calendar events...');
+            window.adminCalendarEvents = new AdminCalendarEvents();
+        }
+    }, 1000);
 });
 
 // Clear cached quote and invoice data

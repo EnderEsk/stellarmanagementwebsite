@@ -476,11 +476,11 @@ function requireAdminAuth(req, res, next) {
 
 // API Routes
 
-// Get all bookings (admin only for full list)
+// Get all bookings (admin only for full list) - excludes archived bookings
 app.get('/api/bookings', requireAdminAuth, async (req, res) => {
     try {
         const bookings = await db.collection('bookings')
-            .find({})
+            .find({ archived: { $ne: true } }) // Exclude archived bookings
             .sort({ date: 1, time: 1 })
             .toArray();
         res.json(bookings);
@@ -490,12 +490,15 @@ app.get('/api/bookings', requireAdminAuth, async (req, res) => {
     }
 });
 
-// Get bookings for a specific date
+// Get bookings for a specific date (excludes archived bookings)
 app.get('/api/bookings/date/:date', async (req, res) => {
     try {
         const { date } = req.params;
         const bookings = await db.collection('bookings')
-            .find({ date: date })
+            .find({ 
+                date: date,
+                archived: { $ne: true } // Exclude archived bookings
+            })
             .sort({ time: 1 })
             .toArray();
         res.json(bookings);
@@ -555,11 +558,12 @@ app.get('/api/availability', async (req, res) => {
             return res.status(400).json({ error: 'Start date and end date are required' });
         }
         
-        // Get bookings for the date range
+        // Get bookings for the date range (excludes archived bookings)
         const bookings = await db.collection('bookings')
             .find({
                 date: { $gte: start_date, $lte: end_date },
-                status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] }
+                status: { $in: ['pending', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking'] },
+                archived: { $ne: true } // Exclude archived bookings
             })
             .sort({ date: 1, time: 1 })
             .toArray();
@@ -995,6 +999,24 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
     }
 });
 
+// Get archived bookings (admin only) - MUST be before /:bookingId route
+app.get('/api/bookings/archived', requireAdminAuth, async (req, res) => {
+    try {
+        const db = getDatabase();
+        
+        // Get all archived bookings
+        const archivedBookings = await db.collection('bookings')
+            .find({ archived: true })
+            .sort({ archived_at: -1 })
+            .toArray();
+        
+        res.json(archivedBookings);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Get booking by ID
 app.get('/api/bookings/:bookingId', async (req, res) => {
     try {
@@ -1047,6 +1069,84 @@ app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+
+// Archive booking (admin only)
+app.post('/api/bookings/:bookingId/archive', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const db = getDatabase();
+        
+        // Get the booking first
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Update the booking to mark it as archived
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    archived: true,
+                    archived_at: new Date(),
+                    archived_by: req.user.email || 'admin'
+                }
+            }
+        );
+        
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({ error: 'Failed to archive booking' });
+        }
+        
+        // Get the updated booking
+        const archivedBooking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        
+        res.json(archivedBooking);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Unarchive booking (admin only)
+app.post('/api/bookings/:bookingId/unarchive', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const db = getDatabase();
+        
+        // Get the booking first
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Update the booking to remove archived status
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $unset: { 
+                    archived: "",
+                    archived_at: "",
+                    archived_by: ""
+                }
+            }
+        );
+        
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({ error: 'Failed to unarchive booking' });
+        }
+        
+        // Get the updated booking
+        const unarchivedBooking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        
+        res.json(unarchivedBooking);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
 
 // Create new booking from admin panel (admin only)
 app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
@@ -4062,22 +4162,7 @@ app.get('/booking-status/:bookingId', (req, res) => {
     }
 });
 
-// Handle legacy booking status URLs (for backward compatibility)
-app.get('/:bookingId', (req, res) => {
-    const bookingId = req.params.bookingId;
-    
-    // Check if it's a valid booking ID format and not a file extension
-    if (bookingId && bookingId.length > 0 && !bookingId.includes('.') && !bookingId.includes('/')) {
-        // Check if this looks like a booking ID (e.g., starts with ST-)
-        if (bookingId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(bookingId)) {
-            res.sendFile(path.join(__dirname, 'booking-status.html'));
-        } else {
-            res.sendFile(path.join(__dirname, 'index.html'));
-        }
-    } else {
-        res.sendFile(path.join(__dirname, 'index.html'));
-    }
-});
+
 
 // Utility function to clean up orphaned images (admin only)
 app.post('/api/cleanup-images', requireAdminAuth, async (req, res) => {
@@ -4133,9 +4218,27 @@ app.post('/api/cleanup-images', requireAdminAuth, async (req, res) => {
     }
 });
 
-// 404 handler for API routes (add this after the catch-all route)
+// 404 handler for API routes
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
+});
+
+// Handle legacy booking status URLs (for backward compatibility)
+// This route should NOT interfere with API routes
+app.get('/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+    
+    // Check if it's a valid booking ID format and not a file extension
+    if (bookingId && bookingId.length > 0 && !bookingId.includes('.') && !bookingId.includes('/')) {
+        // Check if this looks like a booking ID (e.g., starts with ST-)
+        if (bookingId.startsWith('ST-') || /^[A-Z0-9-]+$/.test(bookingId)) {
+            res.sendFile(path.join(__dirname, 'booking-status.html'));
+        } else {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        }
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
 });
 
 // Add a catch-all route for client-side routing (add this at the very end)

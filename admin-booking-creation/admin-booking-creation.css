@@ -97,31 +97,45 @@
 
 .service-item {
     background: white;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 1.5rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 1rem;
     margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
 }
 
 .service-item:hover {
-    border-color: var(--admin-accent);
-    box-shadow: 0 4px 12px rgba(140, 198, 63, 0.1);
+    border-color: #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Service Item Description */
-.item-description {
+/* Service Item Row Grid Layout */
+.item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.5rem 0;
     margin-bottom: 1rem;
+}
+
+/* Service name field - expandable with left alignment */
+.item-description {
+    width: 100%;
 }
 
 .item-description input {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
     font-size: 1rem;
-    transition: all 0.2s ease;
     background: white;
+    text-align: left;
+    transition: all 0.2s ease;
+    height: 48px;
+    box-sizing: border-box;
 }
 
 .item-description input:focus {
@@ -130,89 +144,170 @@
     box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
 }
 
-/* Quantity and Price Section */
-.item-quantity-price {
+/* Quantity field - centered with light gray background */
+.item-quantity {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    justify-content: center;
 }
 
-.quantity-section,
-.price-section {
-    flex: 1;
-}
-
-.quantity-section label,
-.price-section label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-}
-
-.item-qty-input,
-.item-price-input {
+.item-quantity input {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
     font-size: 1rem;
+    background: #f8f9fa;
+    text-align: center;
     transition: all 0.2s ease;
-    background: white;
+    height: 48px;
+    box-sizing: border-box;
 }
 
-.item-qty-input:focus,
-.item-price-input:focus {
+.item-quantity input:focus {
     outline: none;
     border-color: var(--admin-accent);
     box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
 }
 
-/* Actions and Total Section */
-.item-actions-total {
+/* Rate field - centered with light gray background */
+.item-price {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+    justify-content: center;
 }
 
-.remove-item-btn {
-    background: white;
-    color: #dc3545;
-    border: 2px solid #ffb3b3;
+.item-price input {
+    width: 100%;
     padding: 0.75rem;
-    border-radius: 8px;
-    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
     font-size: 1rem;
+    background: #f8f9fa;
+    text-align: center;
     transition: all 0.2s ease;
-    width: 50px;
-    height: 50px;
+    height: 48px;
+    box-sizing: border-box;
+}
+
+.item-price input:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+/* Total field - bold black text with transparent background */
+.item-total {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-total-amount {
+    font-weight: 700;
+    color: #000000;
+    font-size: 1rem;
+    background: transparent;
+}
+
+/* Actions field - red delete button */
+.item-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* Mobile Responsive for Service Items */
+@media (max-width: 768px) {
+    .item-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+    }
+
+    .item-description {
+        width: 100%;
+    }
+
+    .item-description input {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        min-height: 48px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .item-quantity,
+    .item-price {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .item-quantity input,
+    .item-price input {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        min-height: 48px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+    }
+
+    .item-total {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        background: transparent;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+
+    .item-total-amount {
+        font-weight: 700;
+        color: #000000;
+        font-size: 0.95rem;
+    }
+
+    .item-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+}
+
+    /* Ensure the grid layout works properly */
+    .item-row > * {
+        min-width: 0;
+    }
+
+.remove-item-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .remove-item-btn:hover {
-    background: #dc3545;
-    color: white;
-    border-color: #dc3545;
+    background: #c82333;
+    transform: scale(1.05);
 }
 
-.item-total {
-    background: #e8f5e8;
-    border: 2px solid #c3e6c3;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    text-align: center;
-    min-width: 80px;
-}
-
-.item-total-amount {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #28a745;
-}
+/* Remove duplicate styles - using the grid layout styles above */
 
 /* Photos Section */
 .item-photos {
@@ -227,25 +322,40 @@
     font-size: 0.9rem;
 }
 
-.add-photo-btn {
-    background: #ff8c00;
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
+.photo-upload-area {
+    background: rgba(249, 115, 22, 0.1);
+    border: 2px dashed #c2410c;
     border-radius: 8px;
+    padding: 20px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    justify-content: center;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
 }
 
-.add-photo-btn:hover {
-    background: #e67e00;
+.photo-upload-area:hover {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: #ea580c;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+.photo-upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #c2410c;
+}
+
+.photo-upload-content i {
+    font-size: 24px;
+    color: #c2410c;
+}
+
+.photo-upload-text {
+    font-weight: 600;
+    font-size: 14px;
+    color: #c2410c;
 }
 
 /* Add Service Item Button */
@@ -452,9 +562,16 @@
         padding: 0.6rem;
     }
     
-    .add-photo-btn {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
+    .photo-upload-area {
+        padding: 15px;
+    }
+    
+    .photo-upload-content i {
+        font-size: 20px;
+    }
+    
+    .photo-upload-text {
+        font-size: 12px;
     }
 }
 

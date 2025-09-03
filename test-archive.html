@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Archive Functionality</title>
+    <link rel="stylesheet" href="admin-archive.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Archive Functionality Test</h1>
+        
+        <div class="test-section">
+            <h3>Test 1: Archive a Booking</h3>
+            <p>Test archiving a booking with ID: <input type="text" id="archiveBookingId" placeholder="Enter booking ID" value="TEST001"></p>
+            <button class="test-button" onclick="testArchiveBooking()">Test Archive</button>
+            <div id="archiveResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2: Load Archived Bookings</h3>
+            <p>Test loading the list of archived bookings</p>
+            <button class="test-button" onclick="testLoadArchived()">Load Archived</button>
+            <div id="loadResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 3: Unarchive a Booking</h3>
+            <p>Test unarchiving a booking with ID: <input type="text" id="unarchiveBookingId" placeholder="Enter booking ID" value="TEST001"></p>
+            <button class="test-button" onclick="testUnarchiveBooking()">Test Unarchive</button>
+            <div id="unarchiveResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 4: Archive UI Components</h3>
+            <p>Test the archive UI components</p>
+            <button class="test-button" onclick="testArchiveUI()">Test UI</button>
+            <div id="uiResult" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock admin archive object for testing
+        window.adminArchive = {
+            async archiveBooking(bookingId) {
+                try {
+                    const response = await fetch(`/api/bookings/${bookingId}/archive`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    throw error;
+                }
+            },
+            
+            async loadArchivedBookings() {
+                try {
+                    const response = await fetch('/api/bookings/archived');
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    throw error;
+                }
+            },
+            
+            async unarchiveBooking(bookingId) {
+                try {
+                    const response = await fetch(`/api/bookings/${bookingId}/unarchive`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    throw error;
+                }
+            }
+        };
+
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `test-result ${isError ? 'error' : 'success'}`;
+            element.style.display = 'block';
+        }
+
+        async function testArchiveBooking() {
+            const bookingId = document.getElementById('archiveBookingId').value;
+            if (!bookingId) {
+                showResult('archiveResult', 'Please enter a booking ID', true);
+                return;
+            }
+            
+            try {
+                const result = await window.adminArchive.archiveBooking(bookingId);
+                showResult('archiveResult', `Successfully archived booking: ${JSON.stringify(result, null, 2)}`);
+            } catch (error) {
+                showResult('archiveResult', `Error archiving booking: ${error.message}`, true);
+            }
+        }
+
+        async function testLoadArchived() {
+            try {
+                const archivedBookings = await window.adminArchive.loadArchivedBookings();
+                showResult('loadResult', `Successfully loaded ${archivedBookings.length} archived bookings: ${JSON.stringify(archivedBookings, null, 2)}`);
+            } catch (error) {
+                showResult('loadResult', `Error loading archived bookings: ${error.message}`, true);
+            }
+        }
+
+        async function testUnarchiveBooking() {
+            const bookingId = document.getElementById('unarchiveBookingId').value;
+            if (!bookingId) {
+                showResult('unarchiveResult', 'Please enter a booking ID', true);
+                return;
+            }
+            
+            try {
+                const result = await window.adminArchive.unarchiveBooking(bookingId);
+                showResult('unarchiveResult', `Successfully unarchived booking: ${JSON.stringify(result, null, 2)}`);
+            } catch (error) {
+                showResult('unarchiveResult', `Error unarchiving booking: ${error.message}`, true);
+            }
+        }
+
+        function testArchiveUI() {
+            try {
+                // Test if CSS classes are defined
+                const testElement = document.createElement('div');
+                testElement.className = 'archive-view';
+                testElement.style.display = 'none';
+                document.body.appendChild(testElement);
+                
+                // Test if the element has the expected styles
+                const computedStyle = window.getComputedStyle(testElement);
+                const hasStyles = computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' || 
+                                computedStyle.borderRadius !== '0px';
+                
+                document.body.removeChild(testElement);
+                
+                if (hasStyles) {
+                    showResult('uiResult', 'Archive UI components are working correctly');
+                } else {
+                    showResult('uiResult', 'Archive UI components may not be styled correctly', true);
+                }
+            } catch (error) {
+                showResult('uiResult', `Error testing UI: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

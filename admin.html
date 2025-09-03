@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="admin-archive.css">
     <link rel="stylesheet" href="admin-booking-creation/admin-booking-creation.css">
     <script src="simple-google-oauth.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
@@ -19,6 +20,8 @@
     <script src="admin-booking-creation/admin-booking-creation.js" defer></script>
     <!-- Load admin calendar events functionality -->
     <script src="admin-calendar-events.js" defer></script>
+    <!-- Load admin archive functionality -->
+    <script src="admin-archive.js" defer></script>
     
     <style>
 
@@ -466,28 +469,7 @@
                         <!-- Calendar will be populated here -->
                     </div>
                     
-                    <div class="calendar-legend">
-                        <div class="legend-item">
-                            <span class="legend-indicator available"></span>
-                            <span>Available</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator booked"></span>
-                            <span>Booked (Quote)</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator blocked"></span>
-                            <span>Blocked</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator weekend"></span>
-                            <span>Weekend</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-indicator weekend-job"></span>
-                            <span>Full Day Job (5:30 PM)</span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- Quick Quote View -->
@@ -582,9 +564,7 @@
                     </button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="window.adminCalendar.closeBlockingModal()">Close</button>
-            </div>
+            <!-- Footer removed - only header close button remains -->
         </div>
     </div>
 
@@ -833,8 +813,14 @@
     </div>
 
     <script>
+        // Variables are now declared in admin.js to avoid duplication
+        // Global state variables
         let allBookings = [];
         let currentFilter = 'all';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let blockedDates = [];
+        let selectedDate = null;
         
         // Customer Management Variables
         let allCustomers = [];
@@ -1177,10 +1163,43 @@
                 // Update section title
                 updateSectionTitle();
                 
+                // Handle archive filter
+                if (filter === 'archive') {
+                    // Hide other views
+                    const calendarView = document.getElementById('calendarView');
+                    if (calendarView) {
+                        calendarView.style.display = 'none';
+                    }
+                    
+                    const activeBookingsGrid = document.getElementById('activeBookingsGrid');
+                    if (activeBookingsGrid) {
+                        activeBookingsGrid.style.display = 'none';
+                    }
+                    
+                    // Show archive view
+                    const archiveView = document.getElementById('archiveView');
+                    if (archiveView) {
+                        archiveView.style.display = 'block';
+                    }
+                    
+                    // Load archived bookings if not already loaded
+                    if (window.adminArchive && !window.adminArchive.isLoaded) {
+                        window.adminArchive.loadArchivedBookings();
+                    }
+                    
+                    return;
+                }
+                
                 // Hide calendar view if it's showing
                 const calendarView = document.getElementById('calendarView');
                 if (calendarView) {
                     calendarView.style.display = 'none';
+                }
+                
+                // Hide archive view
+                const archiveView = document.getElementById('archiveView');
+                if (archiveView) {
+                    archiveView.style.display = 'none';
                 }
                 
                 // Customer management view - REMOVED
@@ -1209,6 +1228,11 @@
 
         // Render active bookings (pending and scheduled)
         function renderActiveBookings() {
+            // Don't render if archive filter is active
+            if (currentFilter === 'archive') {
+                return;
+            }
+            
             const grid = document.getElementById('activeBookingsGrid');
             
             // Show loading state if no bookings are loaded yet
@@ -1248,6 +1272,10 @@
             }
 
             if (filteredBookings.length === 0) {
+                // Don't show "No bookings found" if archive filter is active
+                if (currentFilter === 'archive') {
+                    return;
+                }
                 grid.innerHTML = '<div class="empty-state">No bookings found</div>';
                 return;
             }
@@ -1307,7 +1335,7 @@
                         </button>
                     `;
                 } else if (booking.status === 'pending-booking') {
-                    statusText = 'Job Scheduled - Awaiting Admin Confirmation';
+                    statusText = 'Job Scheduled - Awaiting Admin';
                     actionButtons = `
                         <button class="action-btn confirm" onclick="confirmJob('${booking.booking_id}')">
                             <i class="fas fa-check-double"></i> Confirm Job
@@ -1894,11 +1922,33 @@
                 // Show/hide appropriate view
                 if (currentFilter === 'calendar') {
                     document.getElementById('activeBookingsGrid').style.display = 'none';
+                    document.getElementById('archiveView').style.display = 'none';
                     document.getElementById('calendarView').style.display = 'block';
                     window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar(allBookings));
+                    
+                    // Load calendar events when calendar view is shown
+                    if (window.adminCalendarEvents) {
+                        window.adminCalendarEvents.loadEventsWhenAuthenticated();
+                    }
+                } else if (currentFilter === 'archive') {
+                    document.getElementById('activeBookingsGrid').style.display = 'none';
+                    document.getElementById('calendarView').style.display = 'none';
+                    document.getElementById('archiveView').style.display = 'block';
+                    
+                    // Load archived bookings if not already loaded
+                    if (window.adminArchive && !window.adminArchive.isLoaded) {
+                        window.adminArchive.loadArchivedBookings();
+                    }
+                    
+                    // Clear the active bookings grid to prevent "No bookings found" message
+                    const activeBookingsGrid = document.getElementById('activeBookingsGrid');
+                    if (activeBookingsGrid) {
+                        activeBookingsGrid.innerHTML = '';
+                    }
                 } else {
                     document.getElementById('activeBookingsGrid').style.display = 'grid';
                     document.getElementById('calendarView').style.display = 'none';
+                    document.getElementById('archiveView').style.display = 'none';
                     renderActiveBookings();
                 }
             }
@@ -1939,6 +1989,9 @@
                     break;
                 case 'calendar':
                     sectionTitle.textContent = 'Calendar';
+                    break;
+                case 'archive':
+                    sectionTitle.textContent = 'Archive';
                     break;
                 default:
                     sectionTitle.textContent = 'Request Quote';
@@ -1989,7 +2042,7 @@
 
 
 
-        function showBookingDetailsPopup(bookingId) {
+        function showDetailedBookingDetailsPopup(bookingId) {
             const booking = allBookings.find(b => b.booking_id === bookingId);
             if (!booking) return;
 
@@ -2086,6 +2139,9 @@
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending')" title="Revert to Pending">
                         <i class="fas fa-undo"></i> Revert
                     </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
+                    </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
@@ -2104,6 +2160,9 @@
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-ready')" title="Revert to Quote Ready">
                         <i class="fas fa-undo"></i> Revert
                     </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
+                    </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
@@ -2121,6 +2180,9 @@
                     </button>
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
                         <i class="fas fa-undo"></i> Revert
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
@@ -2171,6 +2233,9 @@
                 actionButtons = `
                     <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
                         <i class="fas fa-envelope"></i> Message
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
@@ -3155,12 +3220,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="item-photos-section">
-                        <div class="photos-header">
-                            <span class="photos-label">Photos:</span>
-                            <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                                <i class="fas fa-camera"></i> Add Photo
-                            </button>
+                                        <div class="item-photos-section">
+                        <div class="photo-upload-area" onclick="triggerPhotoUpload(this)">
+                            <div class="photo-upload-content">
+                                <i class="fas fa-file-image"></i>
+                                <span class="photo-upload-text">Photos: Add Photo</span>
+                            </div>
                         </div>
                         <div class="photos-container">
                             <!-- Photos will be displayed here -->
@@ -3222,11 +3287,11 @@
                     </div>
                 </div>
                 <div class="item-photos-section">
-                    <div class="photos-header">
-                        <span class="photos-label">Photos:</span>
-                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                            <i class="fas fa-camera"></i> Add Photo
-                        </button>
+                    <div class="photo-upload-area" onclick="triggerPhotoUpload(this)">
+                        <div class="photo-upload-content">
+                            <i class="fas fa-file-image"></i>
+                            <span class="photo-upload-text">Photos: Add Photo</span>
+                        </div>
                     </div>
                     <div class="photos-container">
                         <!-- Photos will be displayed here -->
@@ -3314,6 +3379,27 @@
         }
 
         // Service Item Photo Management Functions
+        
+        // Trigger photo upload when clicking the upload area
+        function triggerPhotoUpload(uploadArea) {
+            const serviceItem = uploadArea.closest('.service-item');
+            const fileInput = serviceItem.querySelector('.photo-upload-input');
+            fileInput.click();
+        }
+        
+        // Trigger photo upload for quick quotes
+        function triggerQuickQuotePhotoUpload(uploadArea) {
+            const serviceItem = uploadArea.closest('.service-item');
+            const fileInput = serviceItem.querySelector('.photo-upload-input');
+            fileInput.click();
+        }
+        
+        // Trigger photo upload for quick invoices
+        function triggerQuickInvoicePhotoUpload(uploadArea) {
+            const serviceItem = uploadArea.closest('.service-item');
+            const fileInput = serviceItem.querySelector('.photo-upload-input');
+            fileInput.click();
+        }
         
         // Add photo button click handler for regular quotes/invoices
         function addPhotoToServiceItem(button) {
@@ -3933,11 +4019,11 @@
                         </div>
                     </div>
                     <div class="item-photos-section">
-                        <div class="photos-header">
-                            <span class="photos-label">Photos:</span>
-                            <button type="button" class="add-photo-btn" onclick="addPhotoToQuickQuoteServiceItem(this)">
-                                <i class="fas fa-camera"></i> Add Photo
-                            </button>
+                        <div class="photo-upload-area" onclick="triggerQuickQuotePhotoUpload(this)">
+                            <div class="photo-upload-content">
+                                <i class="fas fa-file-image"></i>
+                                <span class="photo-upload-text">Photos: Add Photo</span>
+                            </div>
                         </div>
                         <div class="photos-container">
                             <!-- Photos will be displayed here -->
@@ -3979,11 +4065,11 @@
                         </div>
                     </div>
                     <div class="item-photos-section">
-                        <div class="photos-header">
-                            <span class="photos-label">Photos:</span>
-                            <button type="button" class="add-photo-btn" onclick="addPhotoToQuickInvoiceServiceItem(this)">
-                                <i class="fas fa-camera"></i> Add Photo
-                            </button>
+                        <div class="photo-upload-area" onclick="triggerQuickInvoicePhotoUpload(this)">
+                            <div class="photo-upload-content">
+                                <i class="fas fa-file-image"></i>
+                                <span class="photo-upload-text">Photos: Add Photo</span>
+                            </div>
                         </div>
                         <div class="photos-container">
                             <!-- Photos will be displayed here -->
@@ -4029,11 +4115,11 @@
                     </div>
                 </div>
                 <div class="item-photos-section">
-                    <div class="photos-header">
-                        <span class="photos-label">Photos:</span>
-                        <button type="button" class="add-photo-btn" onclick="addPhotoToQuickQuoteServiceItem(this)">
-                            <i class="fas fa-camera"></i> Add Photo
-                        </button>
+                    <div class="photo-upload-area" onclick="triggerQuickQuotePhotoUpload(this)">
+                        <div class="photo-upload-content">
+                            <i class="fas fa-file-image"></i>
+                            <span class="photo-upload-text">Photos: Add Photo</span>
+                        </div>
                     </div>
                     <div class="photos-container">
                         <!-- Photos will be displayed here -->
@@ -4078,11 +4164,11 @@
                     </div>
                 </div>
                 <div class="item-photos-section">
-                    <div class="photos-header">
-                        <span class="photos-label">Photos:</span>
-                        <button type="button" class="add-photo-btn" onclick="addPhotoToQuickInvoiceServiceItem(this)">
-                            <i class="fas fa-camera"></i> Add Photo
-                        </button>
+                    <div class="photo-upload-area" onclick="triggerQuickInvoicePhotoUpload(this)">
+                        <div class="photo-upload-content">
+                            <i class="fas fa-file-image"></i>
+                            <span class="photo-upload-text">Photos: Add Photo</span>
+                        </div>
                     </div>
                     <div class="photos-container">
                         <!-- Photos will be displayed here -->
@@ -5557,11 +5643,11 @@ stellartmanagement@outlook.com</span>
                         </div>
                     </div>
                     <div class="item-photos-section">
-                        <div class="photos-header">
-                            <span class="photos-label">Photos:</span>
-                            <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                                <i class="fas fa-camera"></i> Add Photo
-                            </button>
+                        <div class="photo-upload-area" onclick="triggerPhotoUpload(this)">
+                            <div class="photo-upload-content">
+                                <i class="fas fa-file-image"></i>
+                                <span class="photo-upload-text">Photos: Add Photo</span>
+                            </div>
                         </div>
                         <div class="photos-container">
                             <!-- Photos will be displayed here -->
@@ -5613,11 +5699,11 @@ stellartmanagement@outlook.com</span>
                     </div>
                 </div>
                 <div class="item-photos-section">
-                    <div class="photos-header">
-                        <span class="photos-label">Photos:</span>
-                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                            <i class="fas fa-camera"></i> Add Photo
-                        </button>
+                    <div class="photo-upload-area" onclick="triggerPhotoUpload(this)">
+                        <div class="photo-upload-content">
+                            <i class="fas fa-file-image"></i>
+                            <span class="photo-upload-text">Photos: Add Photo</span>
+                        </div>
                     </div>
                     <div class="photos-container">
                         <!-- Photos will be displayed here -->
@@ -7556,11 +7642,11 @@ stellartmanagement@outlook.com</span>
                                     </div>
                                 </div>
                                 <div class="item-photos-section">
-                                    <div class="photos-header">
-                                        <span class="photos-label">Photos:</span>
-                                        <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                                            <i class="fas fa-camera"></i> Add Photo
-                                        </button>
+                                    <div class="photo-upload-area" onclick="triggerPhotoUpload(this)">
+                                        <div class="photo-upload-content">
+                                            <i class="fas fa-file-image"></i>
+                                            <span class="photo-upload-text">Photos: Add Photo</span>
+                                        </div>
                                     </div>
                                     <div class="photos-container">
                                         <!-- Photos will be displayed here -->
@@ -7711,11 +7797,11 @@ stellartmanagement@outlook.com</span>
                                     </div>
                                 </div>
                                 <div class="item-photos-section">
-                                    <div class="photos-header">
-                                        <span class="photos-label">Photos:</span>
-                                        <button type="button" class="add-photo-btn" onclick="addPhotoToQuickQuoteServiceItem(this)">
-                                            <i class="fas fa-camera"></i> Add Photo
-                                        </button>
+                                    <div class="photo-upload-area" onclick="triggerQuickQuotePhotoUpload(this)">
+                                        <div class="photo-upload-content">
+                                            <i class="fas fa-file-image"></i>
+                                            <span class="photo-upload-text">Photos: Add Photo</span>
+                                        </div>
                                     </div>
                                     <div class="photos-container">
                                         <!-- Photos will be displayed here -->
@@ -7829,17 +7915,17 @@ stellartmanagement@outlook.com</span>
                                     </div>
                                 </div>
                                 <div class="item-photos-section">
-                                    <div class="photos-header">
-                                        <span class="photos-label">Photos:</span>
-                                        <button type="button" class="add-photo-btn" onclick="addPhotoToQuickInvoiceServiceItem(this)">
-                                            <i class="fas fa-camera"></i> Add Photo
-                                        </button>
+                                    <div class="photo-upload-area" onclick="triggerQuickInvoicePhotoUpload(this)">
+                                        <div class="photo-upload-content">
+                                            <i class="fas fa-file-image"></i>
+                                            <span class="photo-upload-text">Photos: Add Photo</span>
+                                        </div>
                                     </div>
                                     <div class="photos-container">
                                         <!-- Photos will be displayed here -->
                                     </div>
                                     <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handleQuickInvoicePhotoUpload(this)">
-                            </div>
+                                </div>
                         </div>
                         <button type="button" class="add-item-btn" onclick="addQuickInvoiceServiceItem()">
                             <i class="fas fa-plus"></i> Add Service Item
@@ -8075,37 +8161,40 @@ stellartmanagement@outlook.com</span>
             border: 1px solid #e5e7eb;
         }
         
-        .photos-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .photo-upload-area {
+            background: rgba(249, 115, 22, 0.1);
+            border: 2px dashed #c2410c;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             margin-bottom: 15px;
         }
         
-        .photos-label {
-            font-weight: 600;
-            color: #2a2a2a;
-            font-size: 14px;
-        }
-        
-        .add-photo-btn {
-            background: #fd7e14;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .add-photo-btn:hover {
-            background: #ff8c42;
+        .photo-upload-area:hover {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: #ea580c;
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+        }
+        
+        .photo-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: #c2410c;
+        }
+        
+        .photo-upload-content i {
+            font-size: 24px;
+            color: #c2410c;
+        }
+        
+        .photo-upload-text {
+            font-weight: 600;
+            font-size: 14px;
+            color: #c2410c;
         }
         
         .photos-container {
@@ -8198,9 +8287,16 @@ stellartmanagement@outlook.com</span>
                 height: 60px;
             }
             
-            .add-photo-btn {
-                padding: 6px 12px;
-                font-size: 11px;
+            .photo-upload-area {
+                padding: 15px;
+            }
+            
+            .photo-upload-content i {
+                font-size: 20px;
+            }
+            
+            .photo-upload-text {
+                font-size: 12px;
             }
         }
 
@@ -8458,5 +8554,13 @@ stellartmanagement@outlook.com</span>
             </div>
         </div>
     </div>
+
+    <script>
+        // Make the detailed booking details popup globally accessible
+        window.showDetailedBookingDetailsPopup = showDetailedBookingDetailsPopup;
+        
+        // Keep the original function name for backward compatibility
+        window.showBookingDetailsPopup = showDetailedBookingDetailsPopup;
+    </script>
 </body>
 </html> 

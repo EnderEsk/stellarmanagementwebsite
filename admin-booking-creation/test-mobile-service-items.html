@@ -121,36 +121,36 @@
 
             container.innerHTML = testServiceItems.map(item => `
                 <div class="service-item" data-id="${item.id}">
-                    <div class="item-description">
-                        <input type="text" class="item-desc-input" placeholder="Service or item description" 
-                               value="${item.description}" 
-                               onchange="updateTestServiceItem(${item.id}, 'description', this.value)">
-                    </div>
-                    <div class="item-quantity-price">
-                        <div class="quantity-section">
-                            <label>Quantity</label>
+                    <div class="item-row">
+                        <div class="item-description">
+                            <input type="text" class="item-desc-input" placeholder="Service or item description" 
+                                   value="${item.description}" 
+                                   onchange="updateTestServiceItem(${item.id}, 'description', this.value)">
+                        </div>
+                        <div class="item-quantity">
                             <input type="number" class="item-qty-input" value="${item.quantity}" min="1" placeholder="1"
                                    onchange="updateTestServiceItem(${item.id}, 'quantity', this.value)">
                         </div>
-                        <div class="price-section">
-                            <label>Price</label>
+                        <div class="item-price">
                             <input type="number" class="item-price-input" value="${item.unitPrice}" min="0" step="0.01" placeholder="Price"
                                    onchange="updateTestServiceItem(${item.id}, 'unitPrice', this.value)">
                         </div>
-                    </div>
-                    <div class="item-actions-total">
-                        <button type="button" class="remove-item-btn" onclick="removeTestServiceItem(${item.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
                         <div class="item-total">
                             <span class="item-total-amount">$${(item.quantity * item.unitPrice).toFixed(2)}</span>
                         </div>
+                        <div class="item-actions">
+                            <button type="button" class="remove-item-btn" onclick="removeTestServiceItem(${item.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="item-photos">
-                        <label>Photos:</label>
-                        <button type="button" class="add-photo-btn">
-                            <i class="fas fa-camera"></i> Add Photo
-                        </button>
+                        <div class="photo-upload-area" onclick="alert('Photo upload clicked!')">
+                            <div class="photo-upload-content">
+                                <i class="fas fa-file-image"></i>
+                                <span class="photo-upload-text">Photos: Add Photo</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join('');

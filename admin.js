@@ -269,9 +269,6 @@ async function waitForCalendarEvents() {
     if (window.adminCalendarEvents) {
         // Wait for events to be loaded
         await window.adminCalendarEvents.loadEvents();
-        console.log('✅ Calendar events loaded before rendering calendar');
-    } else {
-        console.warn('⚠️ AdminCalendarEvents not available, proceeding without events');
     }
 }
 
@@ -571,7 +568,7 @@ function renderCalendar() {
 
 function handleDayClick(date, bookings) {
     // Implement modal logic here
-    console.log('Clicked on', date, bookings);
+    // Handle day click
 }
 
 function previousMonth() {
@@ -1329,7 +1326,7 @@ async function sendInvoiceFromBooking(bookingId) {
 // Customer management functions - REMOVED
 function moveBooking() { console.log('moveBooking'); }
 function changeMoveMonth(month) { console.log('changeMoveMonth', month); }
-function renderMoveCalendar() { console.log('renderMoveCalendar'); }
+function renderMoveCalendar() { /* TODO: Implement move calendar rendering */ }
 function toggleDateBlock() { console.log('toggleDateBlock'); }
 function unblockDate() { console.log('unblockDate'); }
 function showBookingDetailsPopup(bookingId) { console.log('showBookingDetailsPopup', bookingId); }

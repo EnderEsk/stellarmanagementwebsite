@@ -14,15 +14,9 @@
 
     // Calendar functions
     async function renderCalendar(bookings = []) {
-        console.log('📅 renderCalendar called with bookings:', bookings.length);
-        
         // Wait for calendar events to be loaded before rendering
         if (window.adminCalendarEvents && typeof window.adminCalendarEvents.loadEvents === 'function') {
-            console.log('🔄 Waiting for calendar events to load...');
             await window.adminCalendarEvents.loadEvents();
-            console.log('✅ Calendar events loaded, proceeding with render');
-        } else {
-            console.log('⚠️ AdminCalendarEvents not available, proceeding without events');
         }
         
         const grid = document.getElementById('calendarGrid');
@@ -47,8 +41,6 @@
             // Desktop calendar (original grid layout)
             renderDesktopCalendar(grid, bookings);
         }
-        
-        console.log('✅ Calendar rendered successfully');
     }
 
     function renderMobileCalendar(grid, bookings = []) {
@@ -119,7 +111,7 @@
             
             dateColumn.innerHTML = `
                 <div class="day-name">${dayName}</div>
-                <div class="day-number">${dayNumber}</div>
+                <div class="day-number-mobile">${dayNumber}</div>
             `;
             
             // Create events column
@@ -143,6 +135,9 @@
             
             const allDayBookings = [...regularBookings, ...jobBookings];
             
+            // Check for events on this date
+            let dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateString) : [];
+            
             if (allDayBookings.length > 0) {
                 // Check if any of the bookings are weekend job bookings
                 const hasWeekendJob = jobBookings.some(booking => 
@@ -154,6 +149,11 @@
                     timelineDot.classList.add('weekend-job');
                 } else {
                     timelineDot.classList.add('booked');
+                }
+                
+                // If there are also events on this day, add mixed indicator
+                if (dayEvents.length > 0) {
+                    timelineDot.classList.add('has-events');
                 }
                 
                 // Create booking events
@@ -198,8 +198,42 @@
                     
                     eventsColumn.appendChild(eventBlock);
                 });
-            } else {
-                // Show availability status
+            } else if (dayEvents.length > 0) {
+                // If no bookings but there are events, mark as having events
+                timelineDot.classList.add('has-events');
+            }
+            
+            // Reuse dayEvents variable from above scope for events display
+            
+            if (dayEvents.length > 0) {
+                // Add events to the events column
+                dayEvents.forEach(event => {
+                    const eventBlock = document.createElement('div');
+                    eventBlock.className = 'event-block calendar-event';
+                    eventBlock.style.borderLeftColor = event.color || '#007bff';
+                    
+                    const timeSlot = event.startTime && event.endTime ? `${event.startTime} - ${event.endTime}` : 'Time TBD';
+                    
+                    eventBlock.innerHTML = `
+                        <div class="event-time">${timeSlot}</div>
+                        <div class="event-customer">${event.title}</div>
+                        <div class="event-status">${event.type}</div>
+                    `;
+                    
+                    // Add click handler for event details
+                    eventBlock.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (window.adminCalendarEvents && typeof window.adminCalendarEvents.showEventDetails === 'function') {
+                            window.adminCalendarEvents.showEventDetails(event);
+                        }
+                    });
+                    
+                    eventsColumn.appendChild(eventBlock);
+                });
+            }
+            
+            // Show availability status only if no bookings AND no events
+            if (allDayBookings.length === 0 && dayEvents.length === 0) {
                 let statusText = 'Available';
                 let statusClass = 'available';
                 
@@ -215,11 +249,6 @@
                 statusBlock.className = `status-block ${statusClass}`;
                 statusBlock.textContent = statusText;
                 eventsColumn.appendChild(statusBlock);
-            }
-            
-            // Add event indicators if available
-            if (window.adminCalendarEvents && typeof window.adminCalendarEvents.renderEventIndicators === 'function') {
-                window.adminCalendarEvents.renderEventIndicators(timelineItem, dateString);
             }
             
             // Add click handler for day management
@@ -268,8 +297,13 @@
             
             const dayElement = document.createElement('div');
             dayElement.className = 'day';
-            dayElement.textContent = currentDate.getDate();
             dayElement.dataset.date = dateString;
+            
+            // Create day number element positioned in top left
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = currentDate.getDate();
+            dayElement.appendChild(dayNumber);
             
             // Check if it's current month
             if (currentDate.getMonth() !== currentMonth) {
@@ -328,9 +362,6 @@
             
             if (allDayBookings.length > 0) {
                 dayElement.classList.add('booked');
-                // Add booking info to the day
-                const bookingInfo = document.createElement('div');
-                bookingInfo.className = 'booking-info';
                 
                 // Check if any of the bookings are weekend job bookings
                 const hasWeekendJob = jobBookings.some(booking => 
@@ -338,35 +369,62 @@
                     (booking.job_time && booking.job_time.includes('Full-day'))
                 );
                 
-
-                
                 if (hasWeekendJob) {
-                    // Weekend job booking - show as full-day
-                    bookingInfo.innerHTML = `
-                        <div class="booking-count">${allDayBookings.length}</div>
-                        <div class="booking-preview">Full Day Job</div>
-                    `;
                     dayElement.classList.add('weekend-job');
-                } else {
-                    // Regular time-slot bookings
-                    const timeSlots = ['5:30 PM', '6:30 PM', '7:30 PM'];
-                    const bookedTimeSlots = timeSlots.filter(time =>
-                        allDayBookings.some(booking => 
-                            (booking.time === time) || (booking.job_time === time)
-                        )
-                    );
-                    
-                    bookingInfo.innerHTML = `
-                        <div class="booking-count">${allDayBookings.length}</div>
-                        <div class="booking-preview">${bookedTimeSlots.join(', ')}</div>
-                    `;
                 }
-                dayElement.appendChild(bookingInfo);
+                
+                // Create unified calendar items container
+                const calendarItemsContainer = document.createElement('div');
+                calendarItemsContainer.className = 'calendar-events-container';
+                calendarItemsContainer.style.cssText = `
+                    position: absolute;
+                    top: 32px;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    padding: 4px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1px;
+                    pointer-events: none;
+                    z-index: 15;
+                `;
+                
+                // Create booking cards (limit to 3 to avoid clutter)
+                allDayBookings.forEach((booking, index) => {
+                    if (index < 3) {
+                        const bookingCard = createBookingCard(booking, hasWeekendJob);
+                        calendarItemsContainer.appendChild(bookingCard);
+                    }
+                });
+                
+                // Add more indicator if there are more bookings
+                if (allDayBookings.length > 3) {
+                    const moreIndicator = document.createElement('div');
+                    moreIndicator.className = 'more-events-indicator';
+                    moreIndicator.style.cssText = `
+                        background: rgba(108, 117, 125, 0.9);
+                        color: white;
+                        font-size: 7px;
+                        padding: 1px 4px;
+                        border-radius: 4px;
+                        text-align: center;
+                        font-weight: 600;
+                        backdrop-filter: blur(4px);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                    `;
+                    moreIndicator.textContent = `+${allDayBookings.length - 3}`;
+                    moreIndicator.title = `${allDayBookings.length - 3} more bookings`;
+                    calendarItemsContainer.appendChild(moreIndicator);
+                }
+                
+                // Store the container reference for events to use
+                dayElement.dataset.calendarItemsContainer = 'true';
+                dayElement.appendChild(calendarItemsContainer);
             }
             
-
-            
-            // Add event indicators if available
+            // Add event indicators if available - they will use the existing container if available
             if (window.adminCalendarEvents && typeof window.adminCalendarEvents.renderEventIndicators === 'function') {
                 window.adminCalendarEvents.renderEventIndicators(dayElement, dateString);
             }
@@ -476,6 +534,62 @@
 
     function showBookingDetails(date, bookings) {
         showCalendarPopup(date, bookings);
+    }
+
+    function showBookingDetailsPopup(bookingId) {
+        // Find the booking by ID
+        const booking = (window.allBookings || []).find(b => b.booking_id === bookingId || b.id === bookingId);
+        if (!booking) {
+            console.error('Booking not found:', bookingId);
+            return;
+        }
+
+        // Call the proper booking details popup from admin.html
+        if (typeof window.showDetailedBookingDetailsPopup === 'function') {
+            window.showDetailedBookingDetailsPopup(bookingId);
+        } else if (typeof window.showBookingDetailsPopup === 'function') {
+            window.showBookingDetailsPopup(bookingId);
+        } else {
+            // Fallback to showing basic booking info
+            const modal = document.getElementById('bookingDetailsModal');
+            const modalContent = modal.querySelector('.modal-content');
+            
+            const dateTime = new Date(booking.date + 'T' + booking.time).toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+
+            const statusClass = `status-${booking.status}`;
+            let statusText = booking.status.charAt(0).toUpperCase() + booking.status.slice(1);
+
+            const popupContent = `
+                <div class="calendar-popup-compact">
+                    <div class="calendar-popup-header">
+                        <div class="calendar-popup-date">${dateTime}</div>
+                        <button class="calendar-popup-btn" onclick="closeModal('bookingDetailsPopupModal')">&times;</button>
+                    </div>
+                    <div class="calendar-popup-content">
+                        <div class="calendar-booking-preview">
+                            <h4>${booking.service || 'Tree Service'}</h4>
+                            <p>${booking.time || 'Time TBD'} • ${booking.name}</p>
+                            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span></p>
+                            <p><strong>Customer:</strong> ${booking.name}</p>
+                            <p><strong>Email:</strong> ${booking.email}</p>
+                            <p><strong>Phone:</strong> ${booking.phone || 'Not provided'}</p>
+                            <p><strong>Address:</strong> ${booking.address || 'Not provided'}</p>
+                            ${booking.notes ? `<p><strong>Notes:</strong> ${booking.notes}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modalContent.innerHTML = popupContent;
+            openModal('bookingDetailsPopupModal');
+        }
     }
 
     function showBlockingModal(date, isBlocked) {
@@ -613,9 +727,6 @@
             <div class="day-management-modal">
                 <div class="day-management-header">
                     <h3><i class="fas fa-calendar-day"></i> ${formattedDate}</h3>
-                    <button class="modal-close" onclick="closeDayManagementModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
                 <div class="day-management-content">
                     <!-- Add Event Button -->
@@ -1243,6 +1354,60 @@
         }
     }
 
+    // Helper function to create booking cards similar to event cards
+    function createBookingCard(booking, hasWeekendJob) {
+        const bookingCard = document.createElement('div');
+        bookingCard.className = 'calendar-event-card booking-card';
+        bookingCard.dataset.bookingId = booking.id || booking.booking_id;
+        bookingCard.title = `${booking.name} - ${booking.service}`;
+        
+        // Use consistent styling for all booking cards (same as regular events)
+        // Colors and styling are now handled by CSS for consistency
+        
+        // Create booking content
+        const bookingContent = document.createElement('div');
+        bookingContent.className = 'event-content';
+        
+        // Booking title with icon and name
+        const bookingTitle = document.createElement('div');
+        bookingTitle.className = 'event-title';
+        
+        // Use different icon for booking cards to distinguish them from regular events
+        let icon = 'fa-calendar-check';
+        
+        // Show customer name prominently
+        bookingTitle.innerHTML = `
+            <i class="fas ${icon} event-icon"></i>
+            <span>${booking.name}</span>
+        `;
+        
+        // Assemble booking card - only title, no time
+        bookingContent.appendChild(bookingTitle);
+        bookingCard.appendChild(bookingContent);
+        
+        // Add enhanced tooltip with service and time info
+        let tooltipText = `${booking.name} - ${booking.service}`;
+        if (hasWeekendJob || (booking.job_time && booking.job_time.includes('Full-day'))) {
+            tooltipText += ' (Full Day Job)';
+        } else if (booking.time || booking.job_time) {
+            tooltipText += ` - ${booking.time || booking.job_time}`;
+        }
+        bookingCard.title = tooltipText;
+        
+        // Add click handler for booking details
+        bookingCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showBookingDetailsPopup(booking.booking_id || booking.id);
+        });
+        
+        // Enable pointer events for the card
+        bookingCard.style.pointerEvents = 'auto';
+        
+        return bookingCard;
+    }
+    
+
+
     // Export functions for use in other files
     window.adminCalendar = {
         renderCalendar,
@@ -1251,6 +1416,7 @@
         handleDayClick,
         showCalendarPopup,
         showBookingDetails,
+        showBookingDetailsPopup,
         showBlockingModal,
         closeBlockingModal,
         showMoveBookingModal,
@@ -1286,4 +1452,7 @@
         // Getter for blockedDates
         get blockedDates() { return blockedDates; }
     };
+
+    // Make showBookingDetailsPopup globally accessible for HTML onclick handlers
+    window.showBookingDetailsPopup = showBookingDetailsPopup;
 })();

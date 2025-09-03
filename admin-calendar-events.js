@@ -15,13 +15,10 @@ class AdminCalendarEvents {
     }
 
     init() {
-        console.log('🚀 Initializing Admin Calendar Events system...');
         this.createModal();
         this.bindEvents();
-        this.loadEvents().then(() => {
-            console.log('✅ Admin Calendar Events system fully initialized with events loaded');
-        });
-        console.log('✅ Admin Calendar Events system initialized');
+        // Don't load events immediately - wait for authentication
+        // this.loadEvents();
     }
 
     createModal() {
@@ -497,20 +494,26 @@ class AdminCalendarEvents {
 
     async loadEvents() {
         try {
-            console.log('🔄 Loading calendar events...');
+            // Only load events if user is authenticated
+            if (!window.simpleGoogleAuth || !window.simpleGoogleAuth.isUserAuthenticated()) {
+                console.log('Calendar events: User not authenticated, skipping load');
+                return;
+            }
+
             const response = await fetch('/api/calendar-events', {
                 headers: this.getAuthHeaders()
             });
 
             if (response.ok) {
                 this.events = await response.json();
-                console.log('✅ Calendar events loaded:', this.events.length, 'events');
-                console.log('📅 Events data:', this.events);
+                console.log('Calendar events loaded successfully:', this.events.length);
+            } else if (response.status === 401) {
+                console.log('Calendar events: Authentication required, skipping load');
             } else {
-                console.warn('⚠️ Failed to load calendar events:', response.status, response.statusText);
+                console.warn('Calendar events: Failed to load, status:', response.status);
             }
         } catch (error) {
-            console.error('❌ Error loading calendar events:', error);
+            console.log('Calendar events: Error loading events:', error.message);
         }
     }
 
@@ -552,11 +555,7 @@ class AdminCalendarEvents {
 
     getEventsForDate(dateString) {
         const dayEvents = this.events.filter(event => event.date === dateString);
-        console.log(`🔍 Looking for events on ${dateString}:`, {
-            totalEvents: this.events.length,
-            matchingEvents: dayEvents.length,
-            allEvents: this.events
-        });
+
         return dayEvents;
     }
 
@@ -565,6 +564,13 @@ class AdminCalendarEvents {
             return window.simpleGoogleAuth.getAuthHeaders();
         }
         return {};
+    }
+
+    // Method to load events when authentication is confirmed
+    loadEventsWhenAuthenticated() {
+        if (window.simpleGoogleAuth && window.simpleGoogleAuth.isUserAuthenticated()) {
+            this.loadEvents();
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -591,29 +597,37 @@ class AdminCalendarEvents {
 
     // Method to render event indicators on calendar days
     renderEventIndicators(dayElement, dateString) {
+        // Skip rendering for mobile timeline view - events are handled directly in mobile calendar
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && dayElement.classList.contains('timeline-item')) {
+            return;
+        }
+        
         const dayEvents = this.getEventsForDate(dateString);
         
-        console.log(`🎯 Rendering event indicators for ${dateString}:`, dayEvents.length, 'events');
-        
         if (dayEvents.length > 0) {
-            console.log(`📅 Events for ${dateString}:`, dayEvents);
+            // Check if there's already a calendar items container
+            let eventsContainer = dayElement.querySelector('.calendar-events-container');
             
-            // Create events container
-            const eventsContainer = document.createElement('div');
-            eventsContainer.className = 'calendar-events-container';
-            eventsContainer.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                padding: 4px;
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                pointer-events: none;
-                z-index: 10;
-            `;
+            if (!eventsContainer) {
+                // Create new events container if none exists
+                eventsContainer = document.createElement('div');
+                eventsContainer.className = 'calendar-events-container';
+                eventsContainer.style.cssText = `
+                    position: absolute;
+                    top: 32px;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    padding: 4px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1px;
+                    pointer-events: none;
+                    z-index: 15;
+                `;
+                dayElement.appendChild(eventsContainer);
+            }
 
             // Add event cards
             dayEvents.forEach((event, index) => {
@@ -628,23 +642,23 @@ class AdminCalendarEvents {
                 const moreIndicator = document.createElement('div');
                 moreIndicator.className = 'more-events-indicator';
                 moreIndicator.style.cssText = `
-                    background: rgba(108, 117, 125, 0.8);
+                    background: rgba(108, 117, 125, 0.9);
                     color: white;
-                    font-size: 10px;
-                    padding: 2px 6px;
-                    border-radius: 8px;
+                    font-size: 7px;
+                    padding: 1px 4px;
+                    border-radius: 4px;
                     text-align: center;
                     font-weight: 600;
                     backdrop-filter: blur(4px);
-                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                 `;
-                moreIndicator.textContent = `+${dayEvents.length - 5} more`;
+                moreIndicator.textContent = `+${dayEvents.length - 5}`;
                 moreIndicator.title = `${dayEvents.length - 5} more events`;
                 eventsContainer.appendChild(moreIndicator);
             }
 
             dayElement.appendChild(eventsContainer);
-            console.log(`✅ Event cards added for ${dateString}`);
         }
     }
 
@@ -663,64 +677,46 @@ class AdminCalendarEvents {
         // Set semi-transparent background based on event color
         const rgb = this.hexToRgb(eventColor);
         if (rgb) {
-            eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`;
+            eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`;
             
             // Add hover effect
             eventCard.addEventListener('mouseenter', () => {
-                eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`;
+                eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
             });
             
             eventCard.addEventListener('mouseleave', () => {
-                eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`;
+                eventCard.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`;
             });
         }
         
-        // Create event content
+        // Create event content with sleeker layout
         const eventContent = document.createElement('div');
         eventContent.className = 'event-content';
         
-        // Event title
+        // Event title with icon
         const eventTitle = document.createElement('div');
         eventTitle.className = 'event-title';
-        eventTitle.textContent = event.title;
-        
-        // Event time with clock icon
-        const eventTime = document.createElement('div');
-        eventTime.className = 'event-time';
-        eventTime.innerHTML = `
-            <i class="fas fa-clock"></i>
-            <span>${this.formatEventTime(event.startTime, event.endTime)}</span>
-        `;
-        
-        // Event participants (mock data for now)
-        const eventParticipants = document.createElement('div');
-        eventParticipants.className = 'event-participants';
-        eventParticipants.innerHTML = `
-            <div class="participant-avatars">
-                <div class="participant-avatar" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52);">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="participant-avatar" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="participant-avatar" style="background: linear-gradient(135deg, #45b7d1, #96c93d);">
-                    <i class="fas fa-user"></i>
-                </div>
-            </div>
-            <span class="participant-count">+2 Other</span>
+        eventTitle.innerHTML = `
+            <i class="fas fa-calendar-day event-icon"></i>
+            <span>${event.title}</span>
         `;
         
         // Assemble event card
         eventContent.appendChild(eventTitle);
-        eventContent.appendChild(eventTime);
-        eventContent.appendChild(eventParticipants);
         eventCard.appendChild(eventContent);
+        
+
         
         // Add click handler for event details
         eventCard.addEventListener('click', (e) => {
             e.stopPropagation();
             this.showEventDetails(event);
         });
+
+        // Add tooltip for truncated titles
+        if (event.title.length > 15) {
+            eventCard.title = event.title;
+        }
         
         return eventCard;
     }
@@ -795,7 +791,6 @@ class AdminCalendarEvents {
                 </p>` : ''}
             </div>
             <div style="display: flex; gap: 8px;">
-                <button onclick="this.closest('.event-details-modal').remove()" style="flex: 1; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; cursor: pointer;">Close</button>
                 <button onclick="window.adminCalendarEvents.editEvent('${event.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: ${event.color || '#007bff'}; color: white; cursor: pointer;">Edit</button>
             </div>
         `;
@@ -813,7 +808,6 @@ class AdminCalendarEvents {
 
     // Method to edit event (placeholder for now)
     editEvent(eventId) {
-        console.log('Edit event:', eventId);
         // TODO: Implement event editing
         // This could open the existing modal with pre-filled data
     }

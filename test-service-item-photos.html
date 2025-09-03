@@ -30,34 +30,40 @@
             border-radius: 8px;
             border: 1px solid #e5e7eb;
         }
-        .photos-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .photo-upload-area {
+            background: rgba(249, 115, 22, 0.1);
+            border: 2px dashed #c2410c;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             margin-bottom: 15px;
         }
-        .photos-label {
-            font-weight: 600;
-            color: #2a2a2a;
-            font-size: 14px;
-        }
-        .add-photo-btn {
-            background: #fd7e14;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .add-photo-btn:hover {
-            background: #ff8c42;
+        
+        .photo-upload-area:hover {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: #ea580c;
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+        }
+        
+        .photo-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: #c2410c;
+        }
+        
+        .photo-upload-content i {
+            font-size: 24px;
+            color: #c2410c;
+        }
+        
+        .photo-upload-text {
+            font-weight: 600;
+            font-size: 14px;
+            color: #c2410c;
         }
         .photos-container {
             display: grid;
@@ -141,11 +147,11 @@
                 <p>Professional tree trimming and maintenance</p>
             </div>
             <div class="item-photos-section">
-                <div class="photos-header">
-                    <span class="photos-label">Photos:</span>
-                    <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                        📷 Add Photo
-                    </button>
+                <div class="photo-upload-area" onclick="addPhotoToServiceItem(this)">
+                    <div class="photo-upload-content">
+                        <i class="fas fa-file-image"></i>
+                        <span class="photo-upload-text">Photos: Add Photo</span>
+                    </div>
                 </div>
                 <div class="photos-container">
                     <span class="no-photos">No photos added yet</span>
@@ -160,11 +166,11 @@
                 <p>Complete stump grinding and removal service</p>
             </div>
             <div class="item-photos-section">
-                <div class="photos-header">
-                    <span class="photos-label">Photos:</span>
-                    <button type="button" class="add-photo-btn" onclick="addPhotoToServiceItem(this)">
-                        📷 Add Photo
-                    </button>
+                <div class="photo-upload-area" onclick="addPhotoToServiceItem(this)">
+                    <div class="photo-upload-content">
+                        <i class="fas fa-file-image"></i>
+                        <span class="photo-upload-text">Photos: Add Photo</span>
+                    </div>
                 </div>
                 <div class="photos-container">
                     <span class="no-photos">No photos added yet</span>
