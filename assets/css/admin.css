@@ -2230,7 +2230,7 @@
             align-items: center;
             gap: 0.5rem;
             max-width: 300px;
-            color: #333;
+            color: #000000 !important;
         }
 
         .notification.show {

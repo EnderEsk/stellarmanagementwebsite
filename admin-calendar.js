@@ -193,7 +193,7 @@
                     // Add click handler for booking details
                     eventBlock.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        showBookingDetails(booking);
+                        showBookingDetailsPopup(booking.booking_id || booking.id);
                     });
                     
                     eventsColumn.appendChild(eventBlock);

@@ -24,6 +24,37 @@
     <script src="admin-archive.js" defer></script>
     
     <style>
+        
+        /* Fix notification text color - ensure black text on white background */
+        .notification,
+        .notification.info,
+        .notification.success,
+        .notification.error,
+        .notification.warning {
+            background: white !important;
+            color: #000000 !important;
+            border: 1px solid #dee2e6 !important;
+        }
+        
+        .notification i {
+            color: inherit !important;
+        }
+        
+        .notification.success {
+            border-left: 4px solid #28a745 !important;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #dc3545 !important;
+        }
+        
+        .notification.warning {
+            border-left: 4px solid #ffc107 !important;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #17a2b8 !important;
+        }
 
         
         /* Ensure quote modal is always visible when shown */
