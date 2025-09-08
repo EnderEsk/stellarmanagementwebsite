@@ -1477,8 +1477,8 @@
                 border-radius: 10px;
                 min-height: 44px;
                 font-weight: 500;
-                flex: 1;
-                min-width: 100px;
+                flex: 0 0 auto;
+                min-width: 120px;
                 max-width: 150px;
                 display: flex;
                 align-items: center;
@@ -2230,7 +2230,7 @@
             align-items: center;
             gap: 0.5rem;
             max-width: 300px;
-            color: #000000 !important;
+            color: #333;
         }
 
         .notification.show {
@@ -3212,7 +3212,9 @@
                 padding: 0.4rem 0.6rem;
                 font-size: 0.7rem;
                 min-height: 32px;
-                min-width: 70px;
+                min-width: 90px;
+                flex: 0 0 auto;
+                max-width: 120px;
             }
 
             /* Calendar - Extra Small Screens */
@@ -3397,7 +3399,9 @@
                 padding: 0.3rem 0.5rem;
                 font-size: 0.65rem;
                 min-height: 28px;
-                min-width: 60px;
+                min-width: 80px;
+                flex: 0 0 auto;
+                max-width: 110px;
             }
 
             .calendar-week .day {
@@ -5753,15 +5757,18 @@
         /* Mobile Responsiveness */
         @media (max-width: 600px) {
             .booking-actions {
-                gap: 0.3rem;
-                justify-content: center;
+                gap: 0.4rem;
+                justify-content: flex-start;
+                flex-wrap: wrap;
             }
 
             .action-btn {
-                padding: 0.3rem 0.6rem;
+                padding: 0.5rem 0.8rem;
                 font-size: 0.7rem;
-                min-height: 32px;
-                min-width: 32px;
+                min-height: 36px;
+                min-width: 100px;
+                flex: 0 0 auto;
+                max-width: 140px;
             }
 
             .quote-modal-content {

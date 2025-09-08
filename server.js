@@ -1891,23 +1891,26 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Validate job time - jobs can ONLY be scheduled at 5:30 PM on weekdays
-        if (jobTime !== '5:30 PM') {
-            return res.status(400).json({ 
-                error: 'Jobs can only be scheduled at 5:30 PM on weekdays' 
-            });
-        }
-
-        // Validate job date - jobs can only be scheduled on weekdays
+        // Validate job date and time based on whether it's a weekend or weekday
         const [year, month, day] = jobDate.split('-').map(Number);
         const jobDateObj = new Date(year, month - 1, day);
         const dayOfWeek = jobDateObj.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
         
         if (isWeekend) {
-            return res.status(400).json({ 
-                error: 'Jobs can only be scheduled on weekdays (Monday-Friday)' 
-            });
+            // Weekend bookings should have 'Full-day (Weekend)' as job time
+            if (jobTime !== 'Full-day (Weekend)') {
+                return res.status(400).json({ 
+                    error: 'Weekend jobs must be scheduled as full-day bookings' 
+                });
+            }
+        } else {
+            // Weekday bookings can ONLY be scheduled at 5:30 PM
+            if (jobTime !== '5:30 PM') {
+                return res.status(400).json({ 
+                    error: 'Weekday jobs can only be scheduled at 5:30 PM' 
+                });
+            }
         }
 
         // Get booking details

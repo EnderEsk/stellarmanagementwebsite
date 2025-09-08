@@ -60,6 +60,7 @@ class AdminCalendarEvents {
                                         <select id="eventType" required>
                                             <option value=""></option>
                                             <option value="mechanical">Mechanical Work</option>
+                                            <option value="quote">Quote</option>
                                             <option value="maintenance">Maintenance</option>
                                             <option value="personal">Personal Task</option>
                                             <option value="meeting">Meeting</option>
@@ -480,6 +481,11 @@ class AdminCalendarEvents {
                 if (window.adminCalendar && typeof window.adminCalendar.renderCalendar === 'function') {
                     await window.adminCalendar.renderCalendar(window.allBookings || []);
                 }
+                
+                // Also refresh mobile calendar if it's currently displayed
+                if (window.adminCalendar && typeof window.adminCalendar.refreshMobileCalendar === 'function') {
+                    window.adminCalendar.refreshMobileCalendar();
+                }
             } else {
                 const error = await response.json();
                 this.showNotification(error.error || 'Failed to create event', 'error');
@@ -507,6 +513,11 @@ class AdminCalendarEvents {
             if (response.ok) {
                 this.events = await response.json();
                 console.log('Calendar events loaded successfully:', this.events.length);
+                console.log('All loaded events:', this.events);
+                
+                // Check specifically for September 1st event
+                const sept1Events = this.events.filter(event => event.date === '2025-09-01');
+                console.log('September 1st events in loaded data:', sept1Events);
             } else if (response.status === 401) {
                 console.log('Calendar events: Authentication required, skipping load');
             } else {
@@ -543,6 +554,11 @@ class AdminCalendarEvents {
                 if (window.adminCalendar && typeof window.adminCalendar.renderCalendar === 'function') {
                     await window.adminCalendar.renderCalendar(window.allBookings || []);
                 }
+                
+                // Also refresh mobile calendar if it's currently displayed
+                if (window.adminCalendar && typeof window.adminCalendar.refreshMobileCalendar === 'function') {
+                    window.adminCalendar.refreshMobileCalendar();
+                }
             } else {
                 const error = await response.json();
                 this.showNotification(error.error || 'Failed to delete event', 'error');
@@ -555,6 +571,7 @@ class AdminCalendarEvents {
 
     getEventsForDate(dateString) {
         const dayEvents = this.events.filter(event => event.date === dateString);
+        
 
         return dayEvents;
     }
@@ -567,9 +584,9 @@ class AdminCalendarEvents {
     }
 
     // Method to load events when authentication is confirmed
-    loadEventsWhenAuthenticated() {
+    async loadEventsWhenAuthenticated() {
         if (window.simpleGoogleAuth && window.simpleGoogleAuth.isUserAuthenticated()) {
-            this.loadEvents();
+            await this.loadEvents();
         }
     }
 

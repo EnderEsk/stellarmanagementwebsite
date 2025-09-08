@@ -12,12 +12,37 @@
     let selectedMoveDate = null;
     let moveBookingData = null;
 
+    // Functions to persist selected date
+    function saveSelectedDate(date) {
+        if (date) {
+            localStorage.setItem('adminCalendarSelectedDate', date.toISOString());
+        }
+    }
+
+    function loadSelectedDate() {
+        const savedDate = localStorage.getItem('adminCalendarSelectedDate');
+        if (savedDate) {
+            try {
+                return new Date(savedDate);
+            } catch (e) {
+                console.warn('Invalid saved date, using today');
+                return new Date();
+            }
+        }
+        return new Date(); // Default to today
+    }
+
+
+
     // Calendar functions
     async function renderCalendar(bookings = []) {
         // Wait for calendar events to be loaded before rendering
         if (window.adminCalendarEvents && typeof window.adminCalendarEvents.loadEvents === 'function') {
             await window.adminCalendarEvents.loadEvents();
         }
+        
+        // Load blocked dates before rendering
+        await loadBlockedDates();
         
         const grid = document.getElementById('calendarGrid');
         const monthDisplay = document.getElementById('calendarMonth');
@@ -31,244 +56,1176 @@
         // Clear grid
         grid.innerHTML = '';
         
-        // Check if we're on mobile
-        const isMobile = window.innerWidth <= 768;
+        // Check if we're on mobile (or force mobile for testing)
+        const isMobile = window.innerWidth <= 768 || window.location.search.includes('mobile=true');
         
         if (isMobile) {
+            // Hide the original month display and controls on mobile
+            if (monthDisplay) {
+                monthDisplay.style.display = 'none';
+            }
+            // Hide original calendar controls
+            const calendarControls = document.querySelector('.calendar-controls');
+            if (calendarControls) {
+                calendarControls.style.display = 'none';
+            }
+            // Clear the grid completely for mobile
+            grid.innerHTML = '';
             // Mobile-friendly calendar with weeks
             renderMobileCalendar(grid, bookings);
         } else {
+            // Show the original month display and controls on desktop
+            if (monthDisplay) {
+                monthDisplay.style.display = 'block';
+            }
+            // Show original calendar controls
+            const calendarControls = document.querySelector('.calendar-controls');
+            if (calendarControls) {
+                calendarControls.style.display = 'flex';
+            }
             // Desktop calendar (original grid layout)
             renderDesktopCalendar(grid, bookings);
         }
     }
 
     function renderMobileCalendar(grid, bookings = []) {
-        // Create vertical timeline container
-        const timelineContainer = document.createElement('div');
-        timelineContainer.className = 'timeline-container';
         
-        // Create vertical line
-        const timelineLine = document.createElement('div');
-        timelineLine.className = 'timeline-line';
-        timelineContainer.appendChild(timelineLine);
+        // Create mobile calendar container
+        const mobileCalendarContainer = document.createElement('div');
+        mobileCalendarContainer.className = 'mobile-calendar-container';
         
-        // Get all days in the current month
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        // Create top section with date picker and navigation
+        const topSection = createMobileCalendarTopSection();
+        mobileCalendarContainer.appendChild(topSection);
+        
+        // Create horizontal weekly scroller for the current month
+        const weeklyScroller = createMonthlyWeeklyScroller(bookings);
+        mobileCalendarContainer.appendChild(weeklyScroller);
+        
+        // Create todo summary section
+        const todoSummarySection = createTodoSummarySection(bookings);
+        mobileCalendarContainer.appendChild(todoSummarySection);
+        
+        // Create time-based events section
+        const timeEventsSection = createTimeEventsSection(bookings);
+        mobileCalendarContainer.appendChild(timeEventsSection);
+        
+        grid.appendChild(mobileCalendarContainer);
+        
+        
+    }
+
+    function createMobileCalendarTopSection() {
+        const topSection = document.createElement('div');
+        topSection.className = 'mobile-calendar-top-section';
+        
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        topSection.innerHTML = `
+            <div class="month-year-display">
+                <button class="month-nav-btn" onclick="window.adminCalendar.previousMonth()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="month-year-text">${monthNames[currentMonth]} ${currentYear}</div>
+                <button class="month-nav-btn" onclick="window.adminCalendar.nextMonth()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        `;
+        
+        return topSection;
+    }
+
+    function createMonthlyWeeklyScroller(bookings) {
+        const weeklyScroller = document.createElement('div');
+        weeklyScroller.className = 'monthly-weekly-scroller';
+        
+        // Create week display container
+        const weekDisplay = document.createElement('div');
+        weekDisplay.className = 'week-display';
+        weekDisplay.id = 'weekDisplay';
+        
+        // Create week container (no need for separate weekday headers since they're in each button)
+        const weekContainer = document.createElement('div');
+        weekContainer.className = 'week-container';
+        weekContainer.id = 'weekContainer';
+        
+        weekDisplay.appendChild(weekContainer);
+        weeklyScroller.appendChild(weekDisplay);
+        
+        // Initialize with all weeks of current month for horizontal scrolling
+        // Use setTimeout to ensure the DOM is updated before rendering
+        setTimeout(() => {
+        renderAllMonthWeeks(bookings);
+        }, 0);
+        
+        return weeklyScroller;
+    }
+
+    function createTodoSummarySection(bookings) {
+        const todoSummarySection = document.createElement('div');
+        todoSummarySection.className = 'todo-summary-section';
+        todoSummarySection.id = 'todoSummarySection';
+        
+        // Set default selected date to saved date or today if none is selected
+        if (!selectedDate) {
+            selectedDate = loadSelectedDate();
+        }
+        
+        updateTodoSummarySection(selectedDate, bookings);
+        
+        return todoSummarySection;
+    }
+
+    function updateTodoSummarySection(selectedDate, bookings) {
+        const todoSummarySection = document.getElementById('todoSummarySection');
+        if (!todoSummarySection) return;
+        
+        const dateString = selectedDate.toISOString().split('T')[0];
+        
+        // Get events and bookings for the selected date
+        const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateString) : [];
+        const dayBookings = bookings.filter(booking => 
+            (booking.date === dateString || booking.job_date === dateString) &&
+            (booking.status === 'confirmed' || booking.status === 'pending' || 
+             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
+             booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
+             booking.status === 'completed')
+        );
+        
+        const eventsCount = dayEvents.length;
+        const bookingsCount = dayBookings.length;
+        
+        todoSummarySection.innerHTML = `
+            <div class="todo-summary-header">
+                <i class="fas fa-tasks todo-summary-icon"></i>
+                <h3 class="todo-summary-title">Today's to-do list</h3>
+            </div>
+            <div class="todo-summary-counters">
+                <div class="todo-counter events">
+                    <div class="todo-counter-number">${eventsCount}</div>
+                    <div class="todo-counter-label">Events</div>
+                </div>
+                <div class="todo-counter bookings">
+                    <div class="todo-counter-number">${bookingsCount}</div>
+                    <div class="todo-counter-label">Bookings</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderMonthWeek(weekIndex, bookings) {
+        const weekContainer = document.getElementById('weekContainer');
+        if (!weekContainer) {
+            return;
+        }
+        
+        weekContainer.innerHTML = '';
+        
+        // Get the specific week dates for the given week index
+        const weekDates = getMonthWeekDates(weekIndex);
+        
+        if (weekDates.length === 0) {
+            return;
+        }
+        
+        // Create date buttons for this specific week
+        weekDates.forEach(dateInfo => {
+            const dateButton = createMonthWeekDateButton(dateInfo, bookings);
+            weekContainer.appendChild(dateButton);
+        });
+    }
+
+    function renderAllMonthWeeks(bookings) {
+        const weekContainer = document.getElementById('weekContainer');
+        if (!weekContainer) {
+            return;
+        }
+        
+        
+        weekContainer.innerHTML = '';
+        
+        // Get all weeks for the current month
+        const allWeeks = getAllMonthWeeks();
+        
+        // Create date buttons for all weeks
+        allWeeks.forEach((weekDates, weekIndex) => {
+            weekDates.forEach(dateInfo => {
+                const dateButton = createMonthWeekDateButton(dateInfo, bookings);
+                weekContainer.appendChild(dateButton);
+            });
+        });
+        
+        
+        // Auto-scroll and select the appropriate date
+        setTimeout(() => {
+            // Load saved selected date or default to today
+            const savedDate = loadSelectedDate();
+            const targetDateString = savedDate.toISOString().split('T')[0];
+            
+            // Find the button for the target date
+            const targetButton = weekContainer.querySelector(`[data-date="${targetDateString}"]`);
+            
+            if (targetButton) {
+                // TEMPORARILY DISABLED: targetButton.scrollIntoView({ 
+                //     behavior: 'smooth', 
+                //     block: 'nearest', 
+                //     inline: 'center' 
+                // });
+                
+                // Select the target date
+                document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+                targetButton.classList.add('selected');
+                selectedDate = savedDate;
+                // Update timeline and todo summary
+                updateTimeEventsSection(selectedDate, bookings);
+                updateTodoSummarySection(selectedDate, bookings);
+            } else {
+                // Fallback to today if saved date not found
+                const todayButton = weekContainer.querySelector('.month-week-date-button.today');
+                if (todayButton) {
+                    // TEMPORARILY DISABLED: todayButton.scrollIntoView({ 
+                    //     behavior: 'smooth', 
+                    //     block: 'nearest', 
+                    //     inline: 'center' 
+                    // });
+                    
+                    document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+                    todayButton.classList.add('selected');
+                    selectedDate = new Date();
+                    saveSelectedDate(selectedDate);
+                    updateTimeEventsSection(selectedDate, bookings);
+                    updateTodoSummarySection(selectedDate, bookings);
+                }
+            }
+        }, 100);
+
+        // CSS should handle scrolling now - no JavaScript needed
+        
+    }
+
+    function getMonthWeekDates(weekIndex) {
+        
+        // Get first day of current month
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+        
+        // Calculate how many days are in the current month
+        const daysInMonth = lastDayOfMonth.getDate();
+        
+        // Calculate start date for the week (only show current month dates)
+        const startDate = (weekIndex * 7) + 1; // Start from day 1, then 8, 15, 22, 29, etc.
+        
+        
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const dayNumber = startDate + i;
+            
+            // Only show dates that exist in the current month
+            if (dayNumber > daysInMonth) {
+                break; // Stop if we've exceeded the month's days
+            }
+            
+            const date = new Date(currentYear, currentMonth, dayNumber);
+            
+            const dateInfo = {
+                date: date,
+                dateString: date.toISOString().split('T')[0],
+                dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                dayNumber: date.getDate(),
+                isToday: date.toDateString() === new Date().toDateString(),
+                isCurrentMonth: true, // Always true since we only show current month
+                isSelected: selectedDate && selectedDate.toDateString() === date.toDateString()
+            };
+            
+            weekDates.push(dateInfo);
+        }
+        
+        return weekDates;
+    }
+
+    function getAllMonthWeeks() {
+        
+        // Get first day of current month
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+        
+        
+        // Calculate how many weeks we need to display (only current month days)
+        const daysInMonth = lastDayOfMonth.getDate();
+        const weeksNeeded = Math.ceil(daysInMonth / 7); // Simple calculation: days divided by 7
+        
+        
+        const allWeeks = [];
+        
+        for (let weekIndex = 0; weekIndex < weeksNeeded; weekIndex++) {
+            const weekDates = getMonthWeekDates(weekIndex);
+            if (weekDates.length > 0) { // Only add weeks that have dates
+            allWeeks.push(weekDates);
+            }
+        }
+        
+        return allWeeks;
+    }
+
+    function createMonthWeekDateButton(dateInfo, bookings) {
+        
+        const dateButton = document.createElement('div');
+        dateButton.className = 'month-week-date-button';
+        dateButton.dataset.date = dateInfo.dateString;
+        
+        // Add appropriate classes
+        if (dateInfo.isToday) {
+            dateButton.classList.add('today');
+        }
+        if (dateInfo.isSelected) {
+            dateButton.classList.add('selected');
+        }
+        if (!dateInfo.isCurrentMonth) {
+            dateButton.classList.add('other-month');
+        }
+        
+        // Check if date is blocked or unblocked and add appropriate styling
+        const isWeekend = dateInfo.date.getDay() === 0 || dateInfo.date.getDay() === 6;
+        const isBlocked = blockedDates.some(blockedDate => 
+            blockedDate.date === dateInfo.dateString && blockedDate.reason !== 'unblocked_weekend'
+        );
+        const isUnblockedWeekend = blockedDates.some(blockedDate => 
+            blockedDate.date === dateInfo.dateString && blockedDate.reason === 'unblocked_weekend'
+        );
+        const isFullDayJob = blockedDates.some(blockedDate => 
+            blockedDate.date === dateInfo.dateString && blockedDate.reason === 'full_day_job'
+        );
+        
+        if (isFullDayJob) {
+            dateButton.classList.add('full-day-job');
+        } else if (isBlocked) {
+            dateButton.classList.add('blocked-date');
+        } else if (isWeekend && !isUnblockedWeekend) {
+            // Weekends are blocked by default unless explicitly unblocked
+            dateButton.classList.add('blocked-date');
+        } else if (isUnblockedWeekend) {
+            // Weekend that has been explicitly unblocked
+            dateButton.classList.add('unblocked-date');
+        } else {
+            // Regular weekday (available)
+            dateButton.classList.add('available-date');
+        }
+        
+        // Add past/future styling
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const buttonDate = new Date(dateInfo.date);
+        buttonDate.setHours(0, 0, 0, 0);
         
-        // Generate timeline for each day in the month
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-            const currentDate = new Date(currentYear, currentMonth, day);
-            const dateString = currentDate.toISOString().split('T')[0];
-            
-            // Create timeline item
-            const timelineItem = document.createElement('div');
-            timelineItem.className = 'timeline-item';
-            timelineItem.dataset.date = dateString;
-            
-            // Create timeline dot
-            const timelineDot = document.createElement('div');
-            timelineDot.className = 'timeline-dot';
-            
-            // Check if it's today
-            if (currentDate.toDateString() === today.toDateString()) {
-                timelineDot.classList.add('today');
-            }
-            
-            // Check if it's weekend
-            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-            
-            // Check if it's blocked
-            const isBlocked = blockedDates.some(blockedDate => 
-                blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
-            );
-            const isUnblockedWeekend = blockedDates.some(blockedDate => 
-                blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
-            );
-            const isFullDayJob = blockedDates.some(blockedDate => 
-                blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
-            );
-            
-            // Set dot color based on status
-            if (isFullDayJob) {
-                timelineDot.classList.add('weekend-job'); // Use weekend-job class for full-day jobs
-            } else if (isBlocked) {
-                timelineDot.classList.add('blocked');
-            } else if (isWeekend && !isUnblockedWeekend) {
-                timelineDot.classList.add('weekend');
-            } else if (isUnblockedWeekend) {
-                timelineDot.classList.add('available');
-            }
-            
-            // Create date column
-            const dateColumn = document.createElement('div');
-            dateColumn.className = 'date-column';
-            
-            const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
-            const dayNumber = currentDate.getDate();
-            
-            dateColumn.innerHTML = `
-                <div class="day-name">${dayName}</div>
-                <div class="day-number-mobile">${dayNumber}</div>
-            `;
-            
-            // Create events column
-            const eventsColumn = document.createElement('div');
-            eventsColumn.className = 'events-column';
-            
-            // Check for bookings - look for both regular bookings and job bookings
-            const regularBookings = bookings.filter(booking => 
-                booking.date === dateString && 
-                (booking.status === 'confirmed' || booking.status === 'pending' || 
-                 booking.status === 'quote-ready' || 
-                 booking.status === 'pending-booking')
-            );
-            
-            const jobBookings = bookings.filter(booking => 
-                booking.job_date === dateString && 
-                (booking.status === 'pending-booking' || booking.status === 'confirmed' || 
+        if (buttonDate < today) {
+            dateButton.classList.add('past');
+        } else if (buttonDate > today) {
+            dateButton.classList.add('future');
+        }
+        
+        // Check for events on this date
+        const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateInfo.dateString) : [];
+        const dayBookings = bookings.filter(booking => 
+            (booking.date === dateInfo.dateString || booking.job_date === dateInfo.dateString) &&
+            (booking.status === 'confirmed' || booking.status === 'pending' || 
+             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
                  booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
                  booking.status === 'completed')
             );
             
-            const allDayBookings = [...regularBookings, ...jobBookings];
             
-            // Check for events on this date
-            let dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateString) : [];
-            
-            if (allDayBookings.length > 0) {
-                // Check if any of the bookings are weekend job bookings
-                const hasWeekendJob = jobBookings.some(booking => 
-                    booking.job_time === 'Full-day (Weekend)' || 
-                    (booking.job_time && booking.job_time.includes('Full-day'))
-                );
-                
-                if (hasWeekendJob) {
-                    timelineDot.classList.add('weekend-job');
-                } else {
-                    timelineDot.classList.add('booked');
-                }
-                
-                // If there are also events on this day, add mixed indicator
-                if (dayEvents.length > 0) {
-                    timelineDot.classList.add('has-events');
-                }
-                
-                // Create booking events
-                allDayBookings.forEach(booking => {
-                    const eventBlock = document.createElement('div');
-                    let eventClass = `event-block ${booking.status}`;
-                    
-                    // Add weekend-job class for weekend job bookings
-                    if (booking.job_date && (booking.job_time === 'Full-day (Weekend)' || 
-                        (booking.job_time && booking.job_time.includes('Full-day')))) {
-                        eventClass += ' weekend-job';
-                    }
-                    
-                    eventBlock.className = eventClass;
-                    eventBlock.dataset.bookingId = booking.id || booking.booking_id;
-                    
-                    // Handle weekend job bookings vs regular time-slot bookings
-                    let timeSlot, customerName;
-                    
-                    if (booking.job_date && (booking.job_time === 'Full-day (Weekend)' || 
-                        (booking.job_time && booking.job_time.includes('Full-day')))) {
-                        // Weekend job booking
-                        timeSlot = 'Full Day Job';
-                        customerName = booking.name || 'Unknown';
-                    } else {
-                        // Regular booking
-                        timeSlot = booking.time || booking.job_time || 'TBD';
-                        customerName = booking.name || 'Unknown';
-                    }
-                    
-                    eventBlock.innerHTML = `
-                        <div class="event-time">${timeSlot}</div>
-                        <div class="event-customer">${customerName}</div>
-                        <div class="event-status">${booking.status}</div>
-                    `;
-                    
-                    // Add click handler for booking details
-                    eventBlock.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        showBookingDetailsPopup(booking.booking_id || booking.id);
-                    });
-                    
-                    eventsColumn.appendChild(eventBlock);
-                });
-            } else if (dayEvents.length > 0) {
-                // If no bookings but there are events, mark as having events
-                timelineDot.classList.add('has-events');
+        const hasEvents = dayEvents.length > 0 || dayBookings.length > 0;
+        const totalItems = dayEvents.length + dayBookings.length;
+        
+        // Create event indicator with count if more than 1 event
+        let eventIndicator = '';
+        if (hasEvents) {
+            if (totalItems > 1) {
+                eventIndicator = `<div class="month-week-event-indicator multiple" title="${totalItems} events">${totalItems}</div>`;
+            } else {
+                eventIndicator = '<div class="month-week-event-indicator" title="1 event"></div>';
             }
-            
-            // Reuse dayEvents variable from above scope for events display
-            
-            if (dayEvents.length > 0) {
-                // Add events to the events column
-                dayEvents.forEach(event => {
-                    const eventBlock = document.createElement('div');
-                    eventBlock.className = 'event-block calendar-event';
-                    eventBlock.style.borderLeftColor = event.color || '#007bff';
-                    
-                    const timeSlot = event.startTime && event.endTime ? `${event.startTime} - ${event.endTime}` : 'Time TBD';
-                    
-                    eventBlock.innerHTML = `
-                        <div class="event-time">${timeSlot}</div>
-                        <div class="event-customer">${event.title}</div>
-                        <div class="event-status">${event.type}</div>
-                    `;
-                    
-                    // Add click handler for event details
-                    eventBlock.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (window.adminCalendarEvents && typeof window.adminCalendarEvents.showEventDetails === 'function') {
-                            window.adminCalendarEvents.showEventDetails(event);
-                        }
-                    });
-                    
-                    eventsColumn.appendChild(eventBlock);
-                });
-            }
-            
-            // Show availability status only if no bookings AND no events
-            if (allDayBookings.length === 0 && dayEvents.length === 0) {
-                let statusText = 'Available';
-                let statusClass = 'available';
-                
-                if (isBlocked) {
-                    statusText = 'Blocked';
-                    statusClass = 'blocked';
-                } else if (isWeekend && !isUnblockedWeekend) {
-                    statusText = 'Weekend';
-                    statusClass = 'weekend';
-                }
-                
-                const statusBlock = document.createElement('div');
-                statusBlock.className = `status-block ${statusClass}`;
-                statusBlock.textContent = statusText;
-                eventsColumn.appendChild(statusBlock);
-            }
-            
-            // Add click handler for day management
-            timelineItem.addEventListener('click', () => handleDayClick(currentDate, allDayBookings));
-            
-            // Add drag and drop handlers
-            timelineItem.addEventListener('dragover', handleCalendarDragOver);
-            timelineItem.addEventListener('drop', handleCalendarDrop);
-            timelineItem.addEventListener('dragenter', handleCalendarDragEnter);
-            timelineItem.addEventListener('dragleave', handleCalendarDragLeave);
-            
-            // Assemble timeline item
-            timelineItem.appendChild(timelineDot);
-            timelineItem.appendChild(dateColumn);
-            timelineItem.appendChild(eventsColumn);
-            
-            timelineContainer.appendChild(timelineItem);
         }
         
-        grid.appendChild(timelineContainer);
+        // Create event dot based on events
+        let eventDot = '';
+        if (hasEvents) {
+            // Use different colors for different types of events
+            const eventColors = ['blue', 'yellow', 'green', 'red', 'purple'];
+            const colorIndex = totalItems % eventColors.length;
+            eventDot = `<div class="month-week-event-dot ${eventColors[colorIndex]}"></div>`;
+        }
+
+        dateButton.innerHTML = `
+            <div class="month-week-date-number">${dateInfo.dayNumber}</div>
+            <div class="month-week-weekday">${dateInfo.dayName}</div>
+            ${eventDot}
+        `;
+        
+        // Add click handler
+        dateButton.addEventListener('click', () => {
+            // Remove selected class from all buttons
+            document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+            // Add selected class to clicked button
+            dateButton.classList.add('selected');
+            // Update selected date
+            selectedDate = dateInfo.date;
+            // Save selected date to localStorage
+            saveSelectedDate(selectedDate);
+            // Update time events section and todo summary
+            updateTimeEventsSection(dateInfo.date, window.allBookings || []);
+            // Update todo summary section
+            updateTodoSummarySection(dateInfo.date, window.allBookings || []);
+        });
+        
+        
+        return dateButton;
+    }
+
+    // Track current week within the month
+    let currentMonthWeekIndex = 0;
+
+    // Fallback function to create date buttons if the main function fails
+    function createFallbackDateButtons(weekContainer, bookings) {
+        
+        // Create a simple week of dates for the current month
+        const today = new Date();
+        const currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const firstDayOfWeek = currentDate.getDay();
+        
+        // Start from the first day of the week that contains the first day of the month
+        const startDate = new Date(currentDate);
+        startDate.setDate(1 - firstDayOfWeek);
+        
+        // Create 35 days (5 weeks) of date buttons
+        for (let i = 0; i < 35; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            const dateButton = document.createElement('div');
+            dateButton.className = 'month-week-date-button';
+            dateButton.dataset.date = date.toISOString().split('T')[0];
+            
+            // Add appropriate classes
+            if (date.toDateString() === today.toDateString()) {
+                dateButton.classList.add('today');
+            }
+            if (date.getMonth() !== today.getMonth()) {
+                dateButton.classList.add('other-month');
+            }
+            
+            // Check for events
+            const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(date.toISOString().split('T')[0]) : [];
+            const dayBookings = bookings.filter(booking => 
+                booking.date === date.toISOString().split('T')[0] &&
+                (booking.status === 'confirmed' || booking.status === 'pending')
+            );
+            
+            const hasEvents = dayEvents.length > 0 || dayBookings.length > 0;
+            const totalItems = dayEvents.length + dayBookings.length;
+            
+            let eventIndicator = '';
+            if (hasEvents) {
+                if (totalItems > 1) {
+                    eventIndicator = `<div class="month-week-event-indicator multiple" title="${totalItems} events">${totalItems}</div>`;
+                } else {
+                    eventIndicator = '<div class="month-week-event-indicator" title="1 event"></div>';
+                }
+            }
+            
+            // Create event dot based on events
+            let eventDot = '';
+            if (hasEvents) {
+                // Use different colors for different types of events
+                const eventColors = ['blue', 'yellow', 'green', 'red', 'purple'];
+                const colorIndex = totalItems % eventColors.length;
+                eventDot = `<div class="month-week-event-dot ${eventColors[colorIndex]}"></div>`;
+            }
+
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            
+            dateButton.innerHTML = `
+                <div class="month-week-date-number">${date.getDate()}</div>
+                <div class="month-week-weekday">${dayName}</div>
+                ${eventDot}
+            `;
+            
+            dateButton.addEventListener('click', () => {
+                document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+                dateButton.classList.add('selected');
+                // Update selected date
+                selectedDate = date;
+                // Save selected date to localStorage
+                saveSelectedDate(selectedDate);
+                // Update time events section and todo summary
+                updateTimeEventsSection(date, bookings);
+                // Update todo summary section
+                updateTodoSummarySection(date, bookings);
+            });
+            
+            weekContainer.appendChild(dateButton);
+        }
+        
+    }
+
+    // Enhanced touch scrolling support
+    function addTouchScrollingSupport(container) {
+        if (!container) return;
+        
+        let startX = 0;
+        let scrollLeft = 0;
+        let isScrolling = false;
+        let velocity = 0;
+        let lastX = 0;
+        let lastTime = 0;
+        
+        container.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+            isScrolling = true;
+            velocity = 0;
+            lastX = e.touches[0].pageX;
+            lastTime = Date.now();
+        });
+        
+        container.addEventListener('touchmove', function(e) {
+            if (!isScrolling) return;
+            e.preventDefault();
+            
+            const currentX = e.touches[0].pageX;
+            const currentTime = Date.now();
+            const deltaX = currentX - lastX;
+            const deltaTime = currentTime - lastTime;
+            
+            if (deltaTime > 0) {
+                velocity = deltaX / deltaTime;
+            }
+            
+            const x = currentX - container.offsetLeft;
+            const walk = (x - startX) * 1.5; // Increased sensitivity
+            container.scrollLeft = scrollLeft - walk;
+            
+            lastX = currentX;
+            lastTime = currentTime;
+        });
+        
+        container.addEventListener('touchend', function() {
+            isScrolling = false;
+            
+            // Add momentum scrolling
+            if (Math.abs(velocity) > 0.5) {
+                const momentum = velocity * 200;
+                const targetScroll = container.scrollLeft - momentum;
+                
+                // Smooth scroll to target position
+                const startScroll = container.scrollLeft;
+                const distance = targetScroll - startScroll;
+                const duration = 300;
+                const startTime = Date.now();
+                
+                function animateScroll() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    
+                    container.scrollLeft = startScroll + (distance * easeOut);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateScroll);
+                    }
+                }
+                
+                requestAnimationFrame(animateScroll);
+            }
+        });
+        
+        // Add keyboard navigation support
+        container.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                container.scrollLeft -= 100;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                container.scrollLeft += 100;
+                e.preventDefault();
+            }
+        });
+        
+        // Make container focusable for keyboard navigation
+        container.setAttribute('tabindex', '0');
+    }
+
+    function navigateMonthWeek(direction) {
+        currentMonthWeekIndex += direction;
+        
+        // Ensure we stay within reasonable bounds
+        if (currentMonthWeekIndex < 0) currentMonthWeekIndex = 0;
+        if (currentMonthWeekIndex > 5) currentMonthWeekIndex = 5; // Max 6 weeks per month
+        
+        renderMonthWeek(currentMonthWeekIndex, window.allBookings || []);
+    }
+
+
+
+
+
+    function createTimeEventsSection(bookings) {
+        const timeEventsSection = document.createElement('div');
+        timeEventsSection.className = 'time-events-section';
+        timeEventsSection.id = 'timeEventsSection';
+        
+        // Set default selected date to saved date or today if none is selected
+        if (!selectedDate) {
+            selectedDate = loadSelectedDate();
+        }
+        
+        // Show the section and populate with events for the selected date
+        timeEventsSection.style.display = 'block';
+        updateTimeEventsSection(selectedDate, bookings);
+        
+        return timeEventsSection;
+    }
+
+    function updateTimeEventsSection(selectedDate, bookings) {
+        const timeEventsSection = document.getElementById('timeEventsSection');
+        if (!timeEventsSection) return;
+        
+        const dateString = selectedDate.toISOString().split('T')[0];
+        
+        // Show the section
+        timeEventsSection.style.display = 'block';
+        
+        // Clear existing content
+        timeEventsSection.innerHTML = '';
+        
+        // Create timeline header
+        const timelineHeader = document.createElement('div');
+        timelineHeader.className = 'timeline-header';
+        timelineHeader.innerHTML = `
+            <i class="fas fa-clock timeline-icon"></i>
+            <h3 class="timeline-title">Agenda Timeline</h3>
+        `;
+        timeEventsSection.appendChild(timelineHeader);
+        
+        // Create time labels and events
+        const timeSlots = generateTimeSlots();
+        const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(dateString) : [];
+        const dayBookings = bookings.filter(booking => 
+            (booking.date === dateString || booking.job_date === dateString) &&
+            (booking.status === 'confirmed' || booking.status === 'pending' || 
+             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
+             booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
+             booking.status === 'completed')
+        );
+        
+        // Update todo summary section
+        updateTodoSummarySection(selectedDate, bookings);
+        
+        // Group consecutive empty time slots into ranges
+        const timeSlotGroups = [];
+        let currentGroup = [];
+        let currentGroupHasEvents = false;
+        
+        timeSlots.forEach((timeSlot, index) => {
+            // Check if this time slot has events
+            const hasEvents = checkTimeSlotHasEvents(timeSlot, dayEvents, dayBookings);
+            
+            
+            if (hasEvents) {
+                // If current group has events, add to it
+                if (currentGroupHasEvents) {
+                    currentGroup.push(timeSlot);
+                } else {
+                    // Finish the empty group if it exists
+                    if (currentGroup.length > 0) {
+                        timeSlotGroups.push({
+                            type: 'empty',
+                            slots: [...currentGroup]
+                        });
+                    }
+                    // Start new group with events
+                    currentGroup = [timeSlot];
+                    currentGroupHasEvents = true;
+                }
+            } else {
+                // This time slot is empty
+                if (!currentGroupHasEvents) {
+                    // Add to current empty group
+                    currentGroup.push(timeSlot);
+                } else {
+                    // Finish the events group
+                    if (currentGroup.length > 0) {
+                        timeSlotGroups.push({
+                            type: 'events',
+                            slots: [...currentGroup]
+                        });
+                    }
+                    // Start new empty group
+                    currentGroup = [timeSlot];
+                    currentGroupHasEvents = false;
+                }
+            }
+        });
+        
+        // Add the last group
+        if (currentGroup.length > 0) {
+            timeSlotGroups.push({
+                type: currentGroupHasEvents ? 'events' : 'empty',
+                slots: [...currentGroup]
+            });
+        }
+        
+        // Render the grouped timeline
+        timeSlotGroups.forEach(group => {
+            const timeRow = document.createElement('div');
+            timeRow.className = 'time-row';
+            
+            // Create time label based on group type
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'time-label';
+            
+            if (group.type === 'empty') {
+                // Show range for empty slots (e.g., "12:00 AM - 4:00 PM")
+                if (group.slots.length === 1) {
+                    timeLabel.textContent = group.slots[0];
+                } else {
+                    timeLabel.textContent = `${group.slots[0]} - ${group.slots[group.slots.length - 1]}`;
+                }
+                timeLabel.style.cssText = `
+                    color: #9ca3af;
+                    font-size: 0.75rem;
+                    font-weight: 400;
+                    min-width: 120px;
+                    text-align: left;
+                    padding-right: 1rem;
+                    font-style: italic;
+                `;
+                timeRow.classList.add('empty-time-range');
+            } else {
+                // Show individual time for slots with events
+                timeLabel.textContent = group.slots[0]; // Show first time slot
+            timeLabel.style.cssText = `
+                color: #6b7280;
+                font-size: 0.8rem;
+                font-weight: 500;
+                min-width: 80px;
+                text-align: left;
+                padding-right: 1rem;
+            `;
+            }
+            
+            // Create divider line (thin horizontal line)
+            const dividerLine = document.createElement('div');
+            dividerLine.className = 'divider-line';
+            dividerLine.style.cssText = `
+                width: 1px;
+                background: #e5e7eb;
+                margin: 0 1rem;
+                min-height: 40px;
+            `;
+            
+            // Create events container
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'events-container';
+            eventsContainer.style.cssText = `
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            `;
+            
+            if (group.type === 'empty') {
+                // For empty time ranges, show a subtle indicator
+                const emptyIndicator = document.createElement('div');
+                emptyIndicator.textContent = 'No events';
+                emptyIndicator.style.cssText = `
+                    color: #d1d5db;
+                    font-size: 0.75rem;
+                    font-style: italic;
+                    opacity: 0.6;
+                `;
+                eventsContainer.appendChild(emptyIndicator);
+                timeRow.classList.add('empty-time-range');
+            } else {
+                // For time slots with events, show all events in the group
+                group.slots.forEach(timeSlot => {
+            const slotEvents = dayEvents.filter(event => {
+                if (!event.startTime) return false;
+                        
+                const eventHour = parseInt(event.startTime.split(':')[0]);
+                        
+                        // Parse time slot (12-hour format like "5:00 PM")
+                        let slotHour;
+                        if (timeSlot.includes('AM')) {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                            if (slotHour === 12) slotHour = 0; // 12 AM = 0
+                        } else if (timeSlot.includes('PM')) {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                            if (slotHour !== 12) slotHour += 12; // Convert to 24-hour format
+                        } else {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                        }
+                        
+                return eventHour === slotHour;
+            });
+            
+            const slotBookings = dayBookings.filter(booking => {
+                if (!booking.time && !booking.job_time) return false;
+                const bookingTime = booking.time || booking.job_time;
+                if (bookingTime === 'Full-day (Weekend)' || bookingTime.includes('Full-day')) return false;
+                
+                // Handle different time formats (HH:MM, H:MM, HH:MM AM/PM)
+                let bookingHour;
+                if (bookingTime.includes(':')) {
+                    const timeParts = bookingTime.split(':');
+                    bookingHour = parseInt(timeParts[0]);
+                    
+                    // Handle AM/PM format
+                    if (timeParts[1].toLowerCase().includes('pm') && bookingHour !== 12) {
+                        bookingHour += 12;
+                    } else if (timeParts[1].toLowerCase().includes('am') && bookingHour === 12) {
+                        bookingHour = 0;
+                    }
+                } else {
+                    // Try to parse as just hour
+                    bookingHour = parseInt(bookingTime);
+                }
+                
+                if (isNaN(bookingHour)) return false;
+                
+                        // Parse time slot (12-hour format like "5:00 PM")
+                        let slotHour;
+                        if (timeSlot.includes('AM')) {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                            if (slotHour === 12) slotHour = 0; // 12 AM = 0
+                        } else if (timeSlot.includes('PM')) {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                            if (slotHour !== 12) slotHour += 12; // Convert to 24-hour format
+                        } else {
+                            slotHour = parseInt(timeSlot.split(':')[0]);
+                        }
+                        
+                return bookingHour === slotHour;
+            });
+            
+            // Add events to container
+            const allSlotItems = [...slotEvents, ...slotBookings];
+            if (allSlotItems.length > 0) {
+                allSlotItems.forEach(item => {
+                    const eventCard = createEventCard(item);
+                    eventsContainer.appendChild(eventCard);
+                });
+                    }
+                });
+            }
+            
+            // Assemble time row
+            timeRow.appendChild(timeLabel);
+            timeRow.appendChild(dividerLine);
+            timeRow.appendChild(eventsContainer);
+            
+            // Apply styling based on group type
+            if (group.type === 'empty') {
+                timeRow.style.cssText = `
+                    margin-bottom: 0.5rem;
+                    min-height: 40px;
+                    padding: 0.5rem 0;
+                `;
+            }
+            
+            timeEventsSection.appendChild(timeRow);
+        });
+        
+        // Add action buttons below the timeline
+        const actionButtonsContainer = document.createElement('div');
+        actionButtonsContainer.className = 'timeline-action-buttons';
+        actionButtonsContainer.style.cssText = `
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 1rem;
+        `;
+        
+        // Add Event Button
+        const addEventBtn = document.createElement('button');
+        addEventBtn.className = 'action-btn primary';
+        addEventBtn.innerHTML = '<i class="fas fa-plus"></i> Add Event';
+        addEventBtn.style.cssText = `
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--admin-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        `;
+        addEventBtn.addEventListener('click', () => {
+            if (window.adminCalendarEvents && typeof window.adminCalendarEvents.showModal === 'function') {
+                window.adminCalendarEvents.showModal(dateString);
+            }
+        });
+        
+        // Dynamic Block/Unblock Date Button based on current state
+        const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
+        const isBlocked = blockedDates.some(blockedDate => 
+            blockedDate.date === dateString && blockedDate.reason !== 'unblocked_weekend'
+        );
+        const isUnblockedWeekend = blockedDates.some(blockedDate => 
+            blockedDate.date === dateString && blockedDate.reason === 'unblocked_weekend'
+        );
+        const isFullDayJob = blockedDates.some(blockedDate => 
+            blockedDate.date === dateString && blockedDate.reason === 'full_day_job'
+        );
+        
+        const blockDateBtn = document.createElement('button');
+        blockDateBtn.className = 'action-btn secondary';
+        
+        // Set button text and action based on current state
+        if (isFullDayJob) {
+            blockDateBtn.innerHTML = '<i class="fas fa-info-circle"></i> Full Day Job';
+            blockDateBtn.style.cssText = `
+                flex: 1;
+                padding: 0.75rem 1rem;
+                background: #fef3c7;
+                color: #d97706;
+                border: 1px solid #fbbf24;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: not-allowed;
+                transition: all 0.2s ease;
+            `;
+            blockDateBtn.disabled = true;
+        } else if (isWeekend) {
+            if (isUnblockedWeekend) {
+                blockDateBtn.innerHTML = '<i class="fas fa-lock"></i> Block Weekend';
+                blockDateBtn.addEventListener('click', () => {
+                    if (window.adminCalendar && typeof window.adminCalendar.reblockWeekendFromString === 'function') {
+                        window.adminCalendar.reblockWeekendFromString(dateString);
+                    }
+                });
+            } else {
+                blockDateBtn.innerHTML = '<i class="fas fa-unlock"></i> Make Available';
+                blockDateBtn.addEventListener('click', () => {
+                    if (window.adminCalendar && typeof window.adminCalendar.unblockWeekendFromString === 'function') {
+                        window.adminCalendar.unblockWeekendFromString(dateString);
+                    }
+                });
+            }
+        blockDateBtn.style.cssText = `
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #f3f4f6;
+            color: var(--admin-primary);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        `;
+        } else {
+            if (isBlocked) {
+                blockDateBtn.innerHTML = '<i class="fas fa-unlock"></i> Unblock Date';
+                blockDateBtn.addEventListener('click', () => {
+                    if (window.adminCalendar && typeof window.adminCalendar.unblockDateFromString === 'function') {
+                        window.adminCalendar.unblockDateFromString(dateString);
+                    }
+                });
+            } else {
+                blockDateBtn.innerHTML = '<i class="fas fa-lock"></i> Block Date';
+        blockDateBtn.addEventListener('click', () => {
+            if (window.adminCalendar && typeof window.adminCalendar.blockDate === 'function') {
+                window.adminCalendar.blockDate(dateString);
+            }
+        });
+            }
+            blockDateBtn.style.cssText = `
+                flex: 1;
+                padding: 0.75rem 1rem;
+                background: #f3f4f6;
+                color: var(--admin-primary);
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            `;
+        }
+        
+        // Add hover effects
+        addEventBtn.addEventListener('mouseenter', () => {
+            addEventBtn.style.background = '#1a1a1a';
+        });
+        addEventBtn.addEventListener('mouseleave', () => {
+            addEventBtn.style.background = 'var(--admin-primary)';
+        });
+        
+        blockDateBtn.addEventListener('mouseenter', () => {
+            blockDateBtn.style.background = '#e5e7eb';
+        });
+        blockDateBtn.addEventListener('mouseleave', () => {
+            blockDateBtn.style.background = '#f3f4f6';
+        });
+        
+        actionButtonsContainer.appendChild(addEventBtn);
+        actionButtonsContainer.appendChild(blockDateBtn);
+        timeEventsSection.appendChild(actionButtonsContainer);
+    }
+
+    function generateTimeSlots() {
+        const timeSlots = [];
+        for (let hour = 0; hour <= 23; hour++) {
+            let timeString;
+            if (hour === 0) {
+                timeString = '12:00 AM';
+            } else if (hour < 12) {
+                timeString = `${hour}:00 AM`;
+            } else if (hour === 12) {
+                timeString = '12:00 PM';
+            } else {
+                timeString = `${hour - 12}:00 PM`;
+            }
+            timeSlots.push(timeString);
+        }
+        return timeSlots;
+    }
+    
+    function checkTimeSlotHasEvents(timeSlot, dayEvents, dayBookings) {
+        // Check if any events match this time slot
+        const hasEvents = dayEvents.some(event => {
+            if (!event.startTime) return false;
+            
+            const eventHour = parseInt(event.startTime.split(':')[0]);
+            
+            // Parse time slot (12-hour format like "5:00 PM")
+            let slotHour;
+            if (timeSlot.includes('AM')) {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+                if (slotHour === 12) slotHour = 0; // 12 AM = 0
+            } else if (timeSlot.includes('PM')) {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+                if (slotHour !== 12) slotHour += 12; // Convert to 24-hour format
+            } else {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+            }
+            
+            return eventHour === slotHour;
+        });
+        
+        if (hasEvents) return true;
+        
+        // Check if any bookings match this time slot
+        const hasBookings = dayBookings.some(booking => {
+            if (!booking.time && !booking.job_time) return false;
+            
+            const bookingTime = booking.time || booking.job_time;
+            if (bookingTime === 'Full-day (Weekend)' || bookingTime.includes('Full-day')) return false;
+            
+            // Handle different time formats (HH:MM, H:MM, HH:MM AM/PM)
+            let bookingHour;
+            if (bookingTime.includes(':')) {
+                const timeParts = bookingTime.split(':');
+                bookingHour = parseInt(timeParts[0]);
+                
+                // Handle AM/PM format
+                if (timeParts[1].toLowerCase().includes('pm') && bookingHour !== 12) {
+                    bookingHour += 12;
+                } else if (timeParts[1].toLowerCase().includes('am') && bookingHour === 12) {
+                    bookingHour = 0;
+                }
+            } else {
+                // Try to parse as just hour
+                bookingHour = parseInt(bookingTime);
+            }
+            
+            if (isNaN(bookingHour)) return false;
+            
+            // Parse time slot (12-hour format like "5:00 PM")
+            let slotHour;
+            if (timeSlot.includes('AM')) {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+                if (slotHour === 12) slotHour = 0; // 12 AM = 0
+            } else if (timeSlot.includes('PM')) {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+                if (slotHour !== 12) slotHour += 12; // Convert to 24-hour format
+            } else {
+                slotHour = parseInt(timeSlot.split(':')[0]);
+            }
+            
+            
+            return bookingHour === slotHour;
+        });
+        
+        return hasBookings;
+    }
+
+    function createEventCard(item) {
+        const eventCard = document.createElement('div');
+        eventCard.className = 'event-card';
+        
+        // Apply rounded white card styling with subtle shadow
+        eventCard.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        `;
+        
+        // Determine if it's a calendar event or booking
+        const isCalendarEvent = item.hasOwnProperty('title');
+        
+        if (isCalendarEvent) {
+            // Calendar event
+            eventCard.style.borderLeft = `4px solid ${item.color || '#007bff'}`;
+            eventCard.innerHTML = `
+                <div class="event-title" style="font-weight: 600; color: var(--admin-primary); margin-bottom: 0.25rem; font-size: 0.9rem;">${item.title}</div>
+                <div class="event-time" style="color: #6b7280; font-size: 0.8rem; margin-bottom: 0.25rem;">${item.startTime} - ${item.endTime}</div>
+                <div class="event-type" style="color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">${item.type}</div>
+            `;
+            
+            // Add click handler for event details
+            eventCard.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.adminCalendarEvents && typeof window.adminCalendarEvents.showEventDetails === 'function') {
+                    window.adminCalendarEvents.showEventDetails(item);
+                }
+            });
+        } else {
+            // Booking
+            eventCard.style.borderLeft = '4px solid #17a2b8';
+            const timeSlot = item.time || item.job_time || 'TBD';
+            eventCard.innerHTML = `
+                <div class="event-title" style="font-weight: 600; color: var(--admin-primary); margin-bottom: 0.25rem; font-size: 0.9rem;">${item.service || 'Service'}</div>
+                <div class="event-time" style="color: #6b7280; font-size: 0.8rem; margin-bottom: 0.25rem;">${timeSlot}</div>
+                <div class="event-customer" style="color: #9ca3af; font-size: 0.75rem;">${item.name || 'Customer'}</div>
+            `;
+            
+            // Add click handler for booking details
+            eventCard.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showBookingDetailsPopup(item.booking_id || item.id);
+            });
+        }
+        
+        // Add hover effect
+        eventCard.addEventListener('mouseenter', () => {
+            eventCard.style.transform = 'translateY(-2px)';
+            eventCard.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        });
+        
+        eventCard.addEventListener('mouseleave', () => {
+            eventCard.style.transform = 'translateY(0)';
+            eventCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        });
+        
+        return eventCard;
     }
 
     function renderDesktopCalendar(grid, bookings = []) {
@@ -997,6 +1954,8 @@
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
                 await renderCalendar(window.allBookings || []);
+                // Refresh mobile calendar action buttons
+                refreshMobileCalendarActionButtons();
             } else {
                 showNotification('Failed to block date', 'error');
             }
@@ -1026,6 +1985,8 @@
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
                 await renderCalendar(window.allBookings || []);
+                // Refresh mobile calendar action buttons
+                refreshMobileCalendarActionButtons();
             } else {
                 const error = await response.json();
                 showNotification(error.message || 'Failed to make weekend available', 'error');
@@ -1049,6 +2010,8 @@
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
                 await renderCalendar(window.allBookings || []);
+                // Refresh mobile calendar action buttons
+                refreshMobileCalendarActionButtons();
             } else {
                 const error = await response.json();
                 showNotification(error.message || 'Failed to block weekend', 'error');
@@ -1075,6 +2038,8 @@
                 // Reload blocked dates and re-render calendar
                 await loadBlockedDates();
                 await renderCalendar(window.allBookings || []);
+                // Refresh mobile calendar action buttons
+                refreshMobileCalendarActionButtons();
             } else {
                 showNotification('Failed to unblock date', 'error');
             }
@@ -1090,7 +2055,12 @@
             currentMonth = 11;
             currentYear--;
         }
+        
+        // Reset week index when changing months
+        currentMonthWeekIndex = 0;
         await renderCalendar(window.allBookings || []);
+        // Update mobile calendar month display
+        updateMobileCalendarMonthDisplay();
     }
 
     async function nextMonth() {
@@ -1099,7 +2069,29 @@
             currentMonth = 0;
             currentYear++;
         }
+        
+        // Reset week index when changing months
+        currentMonthWeekIndex = 0;
         await renderCalendar(window.allBookings || []);
+        // Update mobile calendar month display
+        updateMobileCalendarMonthDisplay();
+    }
+
+    function updateMobileCalendarMonthDisplay() {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        const monthYearText = document.querySelector('.month-year-text');
+        if (monthYearText) {
+            monthYearText.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        }
+    }
+
+    function changeMonthFromDropdown(monthIndex) {
+        currentMonth = parseInt(monthIndex);
+        // Reset week index when changing months
+        currentMonthWeekIndex = 0;
+        renderCalendar(window.allBookings || []);
     }
 
     // Calendar Drag and Drop functionality
@@ -1408,6 +2400,27 @@
     
 
 
+    // Function to refresh mobile calendar when events are updated
+    function refreshMobileCalendar() {
+        const calendarView = document.getElementById('calendarView');
+        if (calendarView && calendarView.style.display !== 'none') {
+            // Re-render the mobile calendar with updated events
+            const grid = document.getElementById('calendarGrid');
+            if (grid) {
+                renderMobileCalendar(grid, window.allBookings || []);
+            }
+        }
+    }
+
+    // Function to refresh mobile calendar action buttons
+    function refreshMobileCalendarActionButtons() {
+        if (selectedDate) {
+            const dateString = selectedDate.toISOString().split('T')[0];
+            // Re-render the time events section to update action buttons
+            updateTimeEventsSection(selectedDate, window.allBookings || []);
+        }
+    }
+
     // Export functions for use in other files
     window.adminCalendar = {
         renderCalendar,
@@ -1420,6 +2433,8 @@
         showBlockingModal,
         closeBlockingModal,
         showMoveBookingModal,
+        refreshMobileCalendar,
+        refreshMobileCalendarActionButtons,
         closeMoveBookingModal,
         renderMoveCalendar,
         changeMoveMonth,
@@ -1431,6 +2446,10 @@
         unblockDate,
         previousMonth,
         nextMonth,
+        updateMobileCalendarMonthDisplay,
+        changeMonthFromDropdown,
+        createTodoSummarySection,
+        updateTodoSummarySection,
         setupCalendarDragAndDrop,
         handleCalendarDragStart,
         handleCalendarDragEnd,
@@ -1444,6 +2463,7 @@
         showDayManagementModal,
         refreshDayManagementModal,
         closeDayManagementModal,
+        renderAllMonthWeeks,
         // Wrapper functions for HTML onclick handlers
         blockDate,
         unblockDateFromString,
@@ -1456,3 +2476,4 @@
     // Make showBookingDetailsPopup globally accessible for HTML onclick handlers
     window.showBookingDetailsPopup = showBookingDetailsPopup;
 })();
+

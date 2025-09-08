@@ -95,6 +95,18 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Base modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
         /* Fix modal backdrop and ensure proper visibility */
         .modal.show {
             display: flex !important;
@@ -111,6 +123,20 @@
             background: rgba(0, 0, 0, 0.4) !important;
         }
         
+        /* Base modal content styles */
+        .modal-content {
+            position: relative;
+            z-index: 10000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 90%;
+            max-width: 800px;
+            min-width: 400px;
+        }
+        
         /* Ensure modal content is properly positioned and visible */
         .modal.show .modal-content {
             position: relative !important;
@@ -120,7 +146,38 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
             max-height: 90vh !important;
             overflow-y: auto !important;
+            width: 90% !important;
+            max-width: 800px !important;
+            min-width: 400px !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            margin: auto !important;
+            padding: 0 !important;
+            border: none !important;
         }
+        
+        /* Specific styles for quote modal content */
+        .modal.show .modal-content.quote-modal-content {
+            display: flex !important;
+            flex-direction: column !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 10000 !important;
+            background: white !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            width: 90% !important;
+            max-width: 800px !important;
+            min-width: 400px !important;
+            margin: auto !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        
         
         /* Remove the problematic ::before pseudo-element */
         .modal.show::before {
@@ -389,8 +446,91 @@
 
 
 
+        <!-- Admin Sidebar - Mobile positioned between header and booking section -->
+        <div class="admin-sidebar mobile-sidebar">
+            <div class="sidebar-header">
+            </div>
+            
+            <!-- Booking Status Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" onclick="toggleSection('booking-status')">
+                    <span class="section-title">Booking Status</span>
+                    <i class="fas fa-chevron-down section-chevron" id="booking-status-chevron"></i>
+                </div>
+                <div class="sidebar-section-content expanded" id="booking-status-content">
+                    <div class="sidebar-item active" data-filter="all">
+                        <i class="fas fa-list"></i>
+                        <span class="item-text">All Active</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="pending">
+                        <i class="fas fa-clock"></i>
+                        <span class="item-text">Pending Site Visit</span>
+                        <span class="item-count" id="pendingCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="quote-ready">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span class="item-text">Quote Ready</span>
+                        <span class="item-count" id="quoteReadyCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="quote-sent">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="item-text">Quote Sent</span>
+                        <span class="item-count" id="quoteSentCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="pending-booking">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span class="item-text">Job Scheduled</span>
+                        <span class="item-count" id="pendingBookingCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="invoice-ready">
+                        <i class="fas fa-file-invoice"></i>
+                        <span class="item-text">Invoice Ready</span>
+                        <span class="item-count" id="invoiceReadyCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="invoice-sent">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="item-text">Invoice Sent</span>
+                        <span class="item-count" id="invoiceSentCount">0</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="completed">
+                        <i class="fas fa-check-double"></i>
+                        <span class="item-text">Completed</span>
+                        <span class="item-count" id="completedCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Views Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" onclick="toggleSection('management-views')">
+                    <span class="section-title">Management Views</span>
+                    <i class="fas fa-chevron-down section-chevron" id="management-views-chevron"></i>
+                </div>
+                <div class="sidebar-section-content" id="management-views-content">
+                    <div class="sidebar-item" data-filter="all-bookings">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="item-text">All Bookings</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="calendar">
+                        <i class="fas fa-calendar-week"></i>
+                        <span class="item-text">Calendar View</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="archive">
+                        <i class="fas fa-archive"></i>
+                        <span class="item-text">Archive</span>
+                    </div>
+                    <div class="sidebar-item" data-filter="quick-quote">
+                        <i class="fas fa-bolt"></i>
+                        <span class="item-text">Quick Billing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content Area -->
         <div class="bookings-container">
+            <!-- Main Layout with Sidebar -->
+            <div class="main-layout-with-sidebar">
             <!-- Active Bookings Section -->
             <div class="active-bookings-section">
                 <div class="section-header">
@@ -405,77 +545,8 @@
                     </div>
                 </div>
 
-                <!-- Modern Filter Tabs -->
-                <div class="filter-tabs">
-                    <!-- Booking Status Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Booking Status</div>
-                        <div class="tab-row">
-                            <div class="filter-tab active" data-filter="all">
-                                <i class="fas fa-list"></i>
-                                All Active
-                            </div>
-                            <div class="filter-tab" data-filter="pending">
-                                <i class="fas fa-clock"></i>
-                                Pending Site Visit
-                                <span class="tab-count" id="pendingCount">0</span>
-                            </div>
-
-                            <div class="filter-tab" data-filter="quote-ready">
-                                <i class="fas fa-file-invoice-dollar"></i>
-                                Quote Ready
-                                <span class="tab-count" id="quoteReadyCount">0</span>
-                            </div>
-                            <div class="filter-tab" data-filter="quote-sent">
-                                <i class="fas fa-paper-plane"></i>
-                                Quote Sent
-                                <span class="tab-count" id="quoteSentCount">0</span>
-                            </div>
-
-                            <div class="filter-tab" data-filter="pending-booking">
-                                <i class="fas fa-calendar-plus"></i>
-                                Job Scheduled
-                                <span class="tab-count" id="pendingBookingCount">0</span>
-                            </div>
-                            <div class="filter-tab" data-filter="invoice-ready">
-                                <i class="fas fa-file-invoice"></i>
-                                Invoice Ready
-                                <span class="tab-count" id="invoiceReadyCount">0</span>
-                            </div>
-                            <div class="filter-tab" data-filter="invoice-sent">
-                                <i class="fas fa-paper-plane"></i>
-                                Invoice Sent
-                                <span class="tab-count" id="invoiceSentCount">0</span>
-                            </div>
-                            <div class="filter-tab" data-filter="completed">
-                                <i class="fas fa-check-double"></i>
-                                Completed
-                                <span class="tab-count" id="completedCount">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Management Views Category -->
-                    <div class="tab-category">
-                        <div class="tab-category-title">Management Views</div>
-                        <div class="tab-row">
-                            <div class="filter-tab" data-filter="all-bookings">
-                                <i class="fas fa-calendar-alt"></i>
-                                All Bookings
-                            </div>
-                            <div class="filter-tab" data-filter="calendar">
-                                <i class="fas fa-calendar-week"></i>
-                                Calendar View
-                            </div>
-                            <div class="filter-tab" data-filter="quick-quote">
-                                <i class="fas fa-bolt"></i>
-                                Quick Billing
-                            </div>
-                            <!-- Customer Management tab - REMOVED -->
-                        </div>
-                    </div>
-                </div>
-
+                    <!-- Main Content Area -->
+                    <div class="main-content-area">
                 <!-- Bookings Grid -->
                 <div class="bookings-grid" id="activeBookingsGrid">
                     <div class="empty-state">Loading bookings...</div>
@@ -499,8 +570,6 @@
                     <div class="calendar-grid" id="calendarGrid">
                         <!-- Calendar will be populated here -->
                     </div>
-                    
-
                 </div>
 
                 <!-- Quick Quote View -->
@@ -520,14 +589,96 @@
                                 <i class="fas fa-file-invoice"></i>
                                 Generate Invoice
                             </button>
+                                </div>
+                            </div>
                         </div>
                         
+                        <!-- Archive View (dynamically created) -->
+                        <div id="archiveView" style="display: none;"></div>
+                    </div>
                     </div>
                 </div>
 
-                <!-- Customer Management View - REMOVED -->
-                    <!-- Customer management controls and grid - REMOVED -->
+            <!-- Desktop Sidebar (Right Side) - Only visible on desktop -->
+            <div class="admin-sidebar desktop-sidebar">
+                <div class="sidebar-header">
                 </div>
+                
+                <!-- Booking Status Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-header" onclick="toggleSection('desktop-booking-status')">
+                        <span class="section-title">Booking Status</span>
+                        <i class="fas fa-chevron-down section-chevron" id="desktop-booking-status-chevron"></i>
+                    </div>
+                    <div class="sidebar-section-content expanded" id="desktop-booking-status-content">
+                        <div class="sidebar-item active" data-filter="all">
+                            <i class="fas fa-list"></i>
+                            <span class="item-text">All Active</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="pending">
+                            <i class="fas fa-clock"></i>
+                            <span class="item-text">Pending Site Visit</span>
+                            <span class="item-count" id="desktop-pendingCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="quote-ready">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span class="item-text">Quote Ready</span>
+                            <span class="item-count" id="desktop-quoteReadyCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="quote-sent">
+                            <i class="fas fa-paper-plane"></i>
+                            <span class="item-text">Quote Sent</span>
+                            <span class="item-count" id="desktop-quoteSentCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="pending-booking">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span class="item-text">Job Scheduled</span>
+                            <span class="item-count" id="desktop-pendingBookingCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="invoice-ready">
+                            <i class="fas fa-file-invoice"></i>
+                            <span class="item-text">Invoice Ready</span>
+                            <span class="item-count" id="desktop-invoiceReadyCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="invoice-sent">
+                            <i class="fas fa-paper-plane"></i>
+                            <span class="item-text">Invoice Sent</span>
+                            <span class="item-count" id="desktop-invoiceSentCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="completed">
+                            <i class="fas fa-check-double"></i>
+                            <span class="item-text">Completed</span>
+                            <span class="item-count" id="desktop-completedCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Views Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-header" onclick="toggleSection('desktop-management-views')">
+                        <span class="section-title">Management Views</span>
+                        <i class="fas fa-chevron-down section-chevron" id="desktop-management-views-chevron"></i>
+                    </div>
+                    <div class="sidebar-section-content" id="desktop-management-views-content">
+                        <div class="sidebar-item" data-filter="all-bookings">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="item-text">All Bookings</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="calendar">
+                            <i class="fas fa-calendar-week"></i>
+                            <span class="item-text">Calendar View</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="archive">
+                            <i class="fas fa-archive"></i>
+                            <span class="item-text">Archive</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="quick-quote">
+                            <i class="fas fa-bolt"></i>
+                            <span class="item-text">Quick Billing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             </div>
 
             <!-- History Section -->
@@ -972,7 +1123,7 @@
         // Clear cached quote and invoice data
         function clearCachedData() {
             currentQuoteData = null;
-            currentInvoiceData = null;
+            window.currentInvoiceData = null;
             console.log('Cleared cached quote and invoice data');
         }
 
@@ -981,8 +1132,8 @@
             if (currentQuoteData && currentQuoteData.bookingId !== bookingId) {
                 currentQuoteData = null;
             }
-            if (currentInvoiceData && currentInvoiceData.bookingId !== bookingId) {
-                currentInvoiceData = null;
+            if (window.currentInvoiceData && window.currentInvoiceData.bookingId !== bookingId) {
+                window.currentInvoiceData = null;
             }
             console.log(`Cleared cached data for booking: ${bookingId}`);
         }
@@ -1168,6 +1319,7 @@
                 completed: allBookings.filter(b => b.status === 'completed').length
             };
 
+            // Update mobile sidebar counts
             document.getElementById('pendingCount').textContent = stats.pending;
             document.getElementById('quoteReadyCount').textContent = stats.quoteReady;
             document.getElementById('quoteSentCount').textContent = stats.quoteSent;
@@ -1175,18 +1327,57 @@
             document.getElementById('invoiceReadyCount').textContent = stats.invoiceReady;
             document.getElementById('invoiceSentCount').textContent = stats.invoiceSent;
             document.getElementById('completedCount').textContent = stats.completed;
+
+            // Update desktop sidebar counts
+            const desktopPendingCount = document.getElementById('desktop-pendingCount');
+            const desktopQuoteReadyCount = document.getElementById('desktop-quoteReadyCount');
+            const desktopQuoteSentCount = document.getElementById('desktop-quoteSentCount');
+            const desktopPendingBookingCount = document.getElementById('desktop-pendingBookingCount');
+            const desktopInvoiceReadyCount = document.getElementById('desktop-invoiceReadyCount');
+            const desktopInvoiceSentCount = document.getElementById('desktop-invoiceSentCount');
+            const desktopCompletedCount = document.getElementById('desktop-completedCount');
+
+            if (desktopPendingCount) desktopPendingCount.textContent = stats.pending;
+            if (desktopQuoteReadyCount) desktopQuoteReadyCount.textContent = stats.quoteReady;
+            if (desktopQuoteSentCount) desktopQuoteSentCount.textContent = stats.quoteSent;
+            if (desktopPendingBookingCount) desktopPendingBookingCount.textContent = stats.pendingBooking;
+            if (desktopInvoiceReadyCount) desktopInvoiceReadyCount.textContent = stats.invoiceReady;
+            if (desktopInvoiceSentCount) desktopInvoiceSentCount.textContent = stats.invoiceSent;
+            if (desktopCompletedCount) desktopCompletedCount.textContent = stats.completed;
+        }
+
+        // Toggle expandable menu sections
+        function toggleSection(sectionId) {
+            console.log('toggleSection called with:', sectionId);
+            const content = document.getElementById(`${sectionId}-content`);
+            const chevron = document.getElementById(`${sectionId}-chevron`);
+            
+            console.log('Content element:', content);
+            console.log('Chevron element:', chevron);
+            
+            if (content && chevron) {
+                if (content.classList.contains('expanded')) {
+                    content.classList.remove('expanded');
+                    chevron.style.transform = 'rotate(-90deg)';
+                } else {
+                    content.classList.add('expanded');
+                    chevron.style.transform = 'rotate(0deg)';
+                }
+            } else {
+                console.error('Could not find elements for section:', sectionId);
+            }
         }
 
         // Filter by stat card click
         function filterByStatCard(filter) {
-            // Find the corresponding filter tab and trigger its click
-            const filterTab = document.querySelector(`.filter-tab[data-filter="${filter}"]`);
-            if (filterTab) {
-                // Remove active class from all tabs
-                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            // Find the corresponding sidebar item and trigger its click
+            const sidebarItem = document.querySelector(`.sidebar-item[data-filter="${filter}"]`);
+            if (sidebarItem) {
+                // Remove active class from all sidebar items
+                document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
                 
-                // Add active class to the clicked filter tab
-                filterTab.classList.add('active');
+                // Add active class to the clicked sidebar item
+                sidebarItem.classList.add('active');
                 
                 // Update current filter
                 currentFilter = filter;
@@ -1331,8 +1522,8 @@
                         <button class="action-btn confirm" onclick="confirmSiteVisit('${booking.booking_id}')">
                             <i class="fas fa-check"></i> Confirm Visit
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
 
@@ -1348,8 +1539,8 @@
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending')" title="Revert to Initial State">
                             <i class="fas fa-undo"></i> Revert
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else if (booking.status === 'quote-sent') {
@@ -1361,8 +1552,8 @@
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-ready')" title="Revert to Quote Ready">
                             <i class="fas fa-undo"></i> Revert
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else if (booking.status === 'pending-booking') {
@@ -1380,8 +1571,8 @@
                         <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
                             <i class="fas fa-times"></i> Cancel
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else if (booking.status === 'invoice-ready') {
@@ -1396,8 +1587,8 @@
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                             <i class="fas fa-undo"></i> Revert
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else if (booking.status === 'invoice-sent') {
@@ -1412,8 +1603,8 @@
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-ready')" title="Revert to Invoice Ready">
                             <i class="fas fa-undo"></i> Revert
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else if (booking.status === 'completed') {
@@ -1422,16 +1613,16 @@
                         <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                             <i class="fas fa-undo"></i> Revert
                         </button>
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 } else {
                     // Fallback for any other statuses
                     statusText = booking.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
                     actionButtons = `
-                        <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
                     `;
                 }
@@ -1941,13 +2132,15 @@
 
         // Filter functionality
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('filter-tab')) {
-                // Update active tab
-                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-                e.target.classList.add('active');
+            if (e.target.classList.contains('sidebar-item') || e.target.closest('.sidebar-item')) {
+                const sidebarItem = e.target.classList.contains('sidebar-item') ? e.target : e.target.closest('.sidebar-item');
+                
+                // Update active sidebar item
+                document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+                sidebarItem.classList.add('active');
                 
                 // Update filter
-                currentFilter = e.target.dataset.filter;
+                currentFilter = sidebarItem.dataset.filter;
                 updateSectionTitle();
                 
                 // Show/hide appropriate view
@@ -1955,11 +2148,16 @@
                     document.getElementById('activeBookingsGrid').style.display = 'none';
                     document.getElementById('archiveView').style.display = 'none';
                     document.getElementById('calendarView').style.display = 'block';
-                    window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar(allBookings));
                     
-                    // Load calendar events when calendar view is shown
+                    // Load calendar events first, then render calendar
                     if (window.adminCalendarEvents) {
-                        window.adminCalendarEvents.loadEventsWhenAuthenticated();
+                        window.adminCalendarEvents.loadEventsWhenAuthenticated().then(() => {
+                            // After events are loaded, load blocked dates and render calendar
+                            window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar(allBookings));
+                        });
+                    } else {
+                        // Fallback if calendar events not available
+                        window.adminCalendar.loadBlockedDates().then(() => window.adminCalendar.renderCalendar(allBookings));
                     }
                 } else if (currentFilter === 'archive') {
                     document.getElementById('activeBookingsGrid').style.display = 'none';
@@ -2115,6 +2313,9 @@
                     <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
                         <i class="fas fa-arrows-alt"></i> Move
                     </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
+                    </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
@@ -2125,8 +2326,11 @@
                     <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
                         <i class="fas fa-envelope"></i> Message
                     </button>
-                                            <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
+                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                         <i class="fas fa-undo"></i> Revert
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
@@ -2151,6 +2355,9 @@
                     </button>
                     <button class="action-btn move" onclick="window.adminCalendar.showMoveBookingModal('${booking.booking_id}', '${booking.date}')">
                         <i class="fas fa-arrows-alt"></i> Move
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
@@ -2236,6 +2443,9 @@
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
                         <i class="fas fa-undo"></i> Revert
                     </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
+                    </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
@@ -2253,6 +2463,9 @@
                     </button>
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-ready')" title="Revert to Invoice Ready">
                         <i class="fas fa-undo"></i> Revert
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
                     </button>
                     <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
                         <i class="fas fa-trash"></i> Delete
@@ -2574,16 +2787,82 @@
             console.log('Attempting to close modal:', modalId);
             const modal = document.getElementById(modalId);
             if (modal) {
-                console.log('Modal found, removing show class');
+                console.log('Modal found, removing show class and forcing display none');
+                
+                // Remove the show class
                 modal.classList.remove('show');
+                
+                // Force the modal to be hidden with inline styles to override any !important rules
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.style.zIndex = '-1';
+                
+                // Remove modal-open class from body
                 document.body.classList.remove('modal-open');
                 
-                // Don't manually set display: none - let CSS handle it
-                // modal.style.display = 'none';
+                // Clear any cached data when closing quote/invoice modals
+                if (modalId === 'quoteModal' || modalId === 'invoiceModal') {
+                    clearModalData(modalId);
+                }
                 
-
+                console.log('Modal closed successfully:', modalId);
             } else {
-                // Modal not found
+                console.error('Modal not found:', modalId);
+            }
+        }
+        
+        // Clear modal data when closing
+        function clearModalData(modalId) {
+            if (modalId === 'quoteModal') {
+                // Clear quote form data
+                const quoteFields = ['quoteClientName', 'quoteClientPhone', 'quoteClientAddress', 'quoteClientEmail', 'quoteDate'];
+                quoteFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.value = '';
+                });
+                
+                // Clear service items
+                const serviceContainer = document.querySelector('.service-items-container');
+                if (serviceContainer) {
+                    serviceContainer.innerHTML = '';
+                }
+                
+                // Reset totals
+                const totalElements = ['subtotalAmount', 'taxAmount', 'grandTotalAmount'];
+                totalElements.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) element.textContent = '$0.00';
+                });
+                
+                // Reset tax toggle
+                const taxToggle = document.getElementById('taxToggle');
+                if (taxToggle) taxToggle.checked = false;
+                
+            } else if (modalId === 'invoiceModal') {
+                // Clear invoice form data
+                const invoiceFields = ['invoiceClientName', 'invoiceClientPhone', 'invoiceClientAddress', 'invoiceClientEmail', 'invoiceDate'];
+                invoiceFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.value = '';
+                });
+                
+                // Clear service items
+                const serviceContainer = document.getElementById('invoiceServiceItems');
+                if (serviceContainer) {
+                    serviceContainer.innerHTML = '';
+                }
+                
+                // Reset totals
+                const totalElements = ['invoiceSubtotalAmount', 'invoiceTaxAmount', 'invoiceGrandTotalAmount'];
+                totalElements.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) element.textContent = '$0.00';
+                });
+                
+                // Reset tax toggle
+                const taxToggle = document.getElementById('invoiceTaxToggle');
+                if (taxToggle) taxToggle.checked = false;
             }
         }
 
@@ -2616,39 +2895,513 @@
             }
         }
 
+        // Special function for opening invoice modal
+        function openInvoiceModal() {
+            console.log('🔧 Opening invoice modal with special handling...');
+            
+            // Remove any existing invoice modal completely
+            const existingModal = document.getElementById('invoiceModal');
+            if (existingModal) {
+                console.log('🔧 Removing existing invoice modal completely...');
+                existingModal.remove();
+            }
+            
+            // Create a completely new modal element from scratch
+            const newModal = document.createElement('div');
+            newModal.id = 'invoiceModal';
+            newModal.className = 'modal show';
+            
+            // Create the modal content with inline styles
+            newModal.innerHTML = `
+                <div class="modal-content quote-modal-content" style="
+                    display: flex !important;
+                    flex-direction: column !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    position: relative !important;
+                    z-index: 10000 !important;
+                    background: white !important;
+                    border-radius: 8px !important;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+                    max-height: 90vh !important;
+                    overflow-y: auto !important;
+                    width: 90% !important;
+                    max-width: 800px !important;
+                    min-width: 400px !important;
+                    margin: auto !important;
+                    padding: 20px !important;
+                    border: none !important;
+                ">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-file-invoice"></i> Invoice</h3>
+                        <button class="modal-close" onclick="closeModal('invoiceModal')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="quote-form">
+                            <!-- Client Information Section -->
+                            <div class="quote-section">
+                                <h4><i class="fas fa-user"></i> Client Information</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="invoiceClientName">Full Name</label>
+                                        <input type="text" id="invoiceClientName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceClientPhone">Phone Number</label>
+                                        <input type="tel" id="invoiceClientPhone" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceClientAddress">Address</label>
+                                        <input type="text" id="invoiceClientAddress" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceClientEmail">Email</label>
+                                        <input type="email" id="invoiceClientEmail" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceDate">Invoice Date</label>
+                                        <input type="date" id="invoiceDate" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Service Items Section -->
+                            <div class="quote-section">
+                                <h4><i class="fas fa-tools"></i> Service Items</h4>
+                                <div id="invoiceServiceItems" class="service-items-container">
+                                    <!-- Service items will be populated from quote -->
+                                </div>
+                                <div class="add-item-container">
+                                    <button type="button" class="add-item-btn" onclick="addInvoiceServiceItem()">
+                                        <i class="fas fa-plus"></i> Add Service Item
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tax and Total Section -->
+                            <div class="quote-section">
+                                <div class="tax-toggle-container">
+                                    <label class="tax-toggle-label">
+                                        <input type="checkbox" id="invoiceTaxToggle" onchange="toggleInvoiceTax()">
+                                        <span class="tax-toggle-text">Apply 5% Sales Tax</span>
+                                    </label>
+                                </div>
+                                <div class="quote-totals">
+                                    <div class="total-row">
+                                        <span>Subtotal:</span>
+                                        <span id="invoiceSubtotalAmount">$0.00</span>
+                                    </div>
+                                    <div class="total-row tax-row" id="invoiceTaxRow" style="display: none;">
+                                        <span>Tax (5%):</span>
+                                        <span id="invoiceTaxAmount">$0.00</span>
+                                    </div>
+                                    <div class="total-row grand-total">
+                                        <span>Total:</span>
+                                        <span id="invoiceGrandTotalAmount">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Invoice Actions -->
+                            <div class="quote-actions">
+                                <button type="button" class="btn-secondary" onclick="closeModal('invoiceModal')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                <button type="button" class="btn-primary" onclick="generateInvoice()">
+                                    <i class="fas fa-save"></i> Save Invoice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Apply styles to the modal container
+            newModal.style.cssText = `
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 9999 !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background-color: rgba(0, 0, 0, 0.4) !important;
+            `;
+            
+            // Add the new modal to the body
+            document.body.appendChild(newModal);
+            document.body.classList.add('modal-open');
+            
+            // Data will be populated by showInvoiceModal after modal creation
+            console.log('🔧 Modal created, waiting for data population...');
+            
+            // Verify the modal is working
+            setTimeout(() => {
+                const modalContent = newModal.querySelector('.modal-content');
+                const contentVisible = modalContent && 
+                                     modalContent.offsetWidth > 0 && 
+                                     modalContent.offsetHeight > 0;
+                console.log('🔧 Completely new invoice modal content visible:', contentVisible);
+                console.log('🔧 New modal content dimensions:', {
+                    offsetWidth: modalContent ? modalContent.offsetWidth : 'N/A',
+                    offsetHeight: modalContent ? modalContent.offsetHeight : 'N/A',
+                    clientWidth: modalContent ? modalContent.clientWidth : 'N/A',
+                    clientHeight: modalContent ? modalContent.clientHeight : 'N/A'
+                });
+                
+                if (contentVisible) {
+                    console.log('✅ SUCCESS: Invoice modal is now visible!');
+                } else {
+                    console.log('❌ Still having issues with modal visibility');
+                }
+            }, 100);
+            
+            console.log('✅ Invoice modal created completely from scratch');
+            return true;
+        }
+        
+        // Function to populate the new invoice modal with data
+        function populateNewInvoiceModal() {
+            if (!window.currentInvoiceData) {
+                console.log('❌ No currentInvoiceData available for population');
+                return;
+            }
+            
+            console.log('🔧 Populating new invoice modal with data:', window.currentInvoiceData);
+            console.log('🔧 Available form elements:', {
+                clientName: document.getElementById('invoiceClientName'),
+                clientPhone: document.getElementById('invoiceClientPhone'),
+                clientAddress: document.getElementById('invoiceClientAddress'),
+                clientEmail: document.getElementById('invoiceClientEmail'),
+                invoiceDate: document.getElementById('invoiceDate')
+            });
+            
+            // Get the original quote data from the totals
+            const originalTotals = window.currentInvoiceData.originalQuoteTotals;
+            if (!originalTotals) {
+                console.log('No original quote totals available');
+                return;
+            }
+            
+            // Pre-fill client information
+            const clientNameEl = document.getElementById('invoiceClientName');
+            const clientPhoneEl = document.getElementById('invoiceClientPhone');
+            const clientAddressEl = document.getElementById('invoiceClientAddress');
+            const clientEmailEl = document.getElementById('invoiceClientEmail');
+            const invoiceDateEl = document.getElementById('invoiceDate');
+            
+            console.log('🔧 Setting form values:', {
+                name: window.currentInvoiceData.name,
+                phone: window.currentInvoiceData.phone,
+                address: window.currentInvoiceData.address,
+                email: window.currentInvoiceData.email
+            });
+            
+            if (clientNameEl) {
+                clientNameEl.value = window.currentInvoiceData.name || '';
+                console.log('🔧 Set client name to:', clientNameEl.value);
+            }
+            if (clientPhoneEl) {
+                clientPhoneEl.value = window.currentInvoiceData.phone || '';
+                console.log('🔧 Set client phone to:', clientPhoneEl.value);
+            }
+            if (clientAddressEl) {
+                clientAddressEl.value = window.currentInvoiceData.address || '';
+                console.log('🔧 Set client address to:', clientAddressEl.value);
+            }
+            if (clientEmailEl) {
+                clientEmailEl.value = window.currentInvoiceData.email || '';
+                console.log('🔧 Set client email to:', clientEmailEl.value);
+            }
+            if (invoiceDateEl) {
+                invoiceDateEl.value = new Date().toISOString().split('T')[0];
+                console.log('🔧 Set invoice date to:', invoiceDateEl.value);
+            }
+            
+            // Set tax toggle
+            const taxToggleEl = document.getElementById('invoiceTaxToggle');
+            if (taxToggleEl) taxToggleEl.checked = originalTotals.tax_enabled || false;
+            
+            // Update totals display
+            const subtotalEl = document.getElementById('invoiceSubtotalAmount');
+            const taxEl = document.getElementById('invoiceTaxAmount');
+            const totalEl = document.getElementById('invoiceGrandTotalAmount');
+            const taxRowEl = document.getElementById('invoiceTaxRow');
+            
+            if (subtotalEl) subtotalEl.textContent = `$${originalTotals.subtotal || 0}.00`;
+            if (taxEl) taxEl.textContent = `$${originalTotals.tax_amount || 0}.00`;
+            if (totalEl) totalEl.textContent = `$${originalTotals.total_amount || 0}.00`;
+            if (taxRowEl) taxRowEl.style.display = originalTotals.tax_enabled ? 'block' : 'none';
+            
+            // Populate service items if available
+            if (window.currentInvoiceData.serviceItems) {
+                console.log('🔧 Populating service items...');
+                populateInvoiceServiceItems(window.currentInvoiceData.serviceItems);
+            }
+            
+            console.log('✅ Invoice modal data populated successfully');
+        }
+
         function openModal(modalId) {
+            console.log('🔍 openModal called with modalId:', modalId);
+            
+            // Special handling for invoice modal
+            if (modalId === 'invoiceModal') {
+                console.log('🔧 Using special invoice modal handling...');
+                return openInvoiceModal();
+            }
+            
             // Add retry mechanism for modal opening
             let retryCount = 0;
             const maxRetries = 3;
             
             function attemptOpenModal() {
                 const modal = document.getElementById(modalId);
+                console.log(`🔍 Attempt ${retryCount + 1}: Modal element found:`, modal);
                 
                 if (modal) {
                     try {
+                        console.log('🔍 Modal found, attempting to show...');
+                        
                         // Ensure any manually set display styles are removed so CSS can work
                         if (modal.style.display === 'none') {
+                            console.log('🔍 Removing display: none style');
                             modal.style.removeProperty('display');
                         }
                         
-                        // Ensure modal is visible and properly positioned
+                        // Force modal to be visible with inline styles
+                        modal.style.display = 'flex';
                         modal.style.visibility = 'visible';
                         modal.style.opacity = '1';
+                        modal.style.position = 'fixed';
+                        modal.style.top = '0';
+                        modal.style.left = '0';
+                        modal.style.width = '100%';
+                        modal.style.height = '100%';
+                        modal.style.zIndex = '9999';
+                        modal.style.alignItems = 'center';
+                        modal.style.justifyContent = 'center';
+                        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                        
+                        // Force modal content to be visible
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (modalContent) {
+                            // Use flex display for quote-modal-content and quote-preview-content to match CSS
+                            const isQuoteModal = modalContent.classList.contains('quote-modal-content');
+                            const isPreviewModal = modalContent.classList.contains('quote-preview-content');
+                            const shouldUseFlex = isQuoteModal || isPreviewModal;
+                            
+                            // Clear any existing inline styles that might conflict
+                            modalContent.style.cssText = '';
+                            
+                            // Apply comprehensive styles using cssText for maximum priority
+                            modalContent.style.cssText = `
+                                display: ${shouldUseFlex ? 'flex' : 'block'} !important;
+                                flex-direction: ${shouldUseFlex ? 'column' : 'initial'} !important;
+                                visibility: visible !important;
+                                opacity: 1 !important;
+                                position: relative !important;
+                                z-index: 10000 !important;
+                                background: white !important;
+                                border-radius: 8px !important;
+                                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+                                max-height: 90vh !important;
+                                overflow-y: auto !important;
+                                width: 90% !important;
+                                max-width: 800px !important;
+                                min-width: 400px !important;
+                                margin: auto !important;
+                                padding: 0 !important;
+                                border: none !important;
+                            `;
+                            
+                            console.log('🔍 Forced modal content visibility with cssText approach');
+                            console.log('🔍 Modal content styles applied:', {
+                                display: modalContent.style.display,
+                                visibility: modalContent.style.visibility,
+                                opacity: modalContent.style.opacity,
+                                isQuoteModal: isQuoteModal,
+                                isPreviewModal: isPreviewModal,
+                                shouldUseFlex: shouldUseFlex,
+                                computedDisplay: window.getComputedStyle(modalContent).display
+                            });
+                        }
+                        
+                        console.log('🔍 Adding show class to modal and resetting inline styles');
+                        
+                        // Reset any inline styles that might be hiding the modal
+                        modal.style.display = '';
+                        modal.style.visibility = '';
+                        modal.style.opacity = '';
+                        modal.style.zIndex = '';
                         
                         modal.classList.add('show');
                         document.body.classList.add('modal-open');
                         
+                        // Verify modal is actually visible
+                        setTimeout(() => {
+                            const isVisible = modal.classList.contains('show') && 
+                                            modal.style.display !== 'none' && 
+                                            modal.style.visibility !== 'hidden' && 
+                                            modal.style.opacity !== '0';
+                            
+                            // Check if modal content is visible
+                            const modalContent = modal.querySelector('.modal-content');
+                            const contentVisible = modalContent && 
+                                                 modalContent.offsetWidth > 0 && 
+                                                 modalContent.offsetHeight > 0;
+                            
+                            console.log('🔍 Modal visibility check:', {
+                                hasShowClass: modal.classList.contains('show'),
+                                display: modal.style.display,
+                                visibility: modal.style.visibility,
+                                opacity: modal.style.opacity,
+                                isVisible: isVisible,
+                                modalContent: modalContent,
+                                contentVisible: contentVisible,
+                                contentWidth: modalContent ? modalContent.offsetWidth : 'N/A',
+                                contentHeight: modalContent ? modalContent.offsetHeight : 'N/A'
+                            });
+                            
+                            if (!isVisible) {
+                                console.warn('⚠️ Modal may not be visible despite show class');
+                            } else if (!contentVisible) {
+                                console.warn('⚠️ Modal is visible but content is not');
+                                
+                                // Force content visibility as fallback
+                                const modalContent = modal.querySelector('.modal-content');
+                                if (modalContent) {
+                                    console.log('🔧 Applying fallback content visibility fixes...');
+                                    
+                                    // Remove any conflicting styles first
+                                    modalContent.style.removeProperty('display');
+                                    modalContent.style.removeProperty('visibility');
+                                    modalContent.style.removeProperty('opacity');
+                                    modalContent.style.removeProperty('position');
+                                    modalContent.style.removeProperty('z-index');
+                                    modalContent.style.removeProperty('background');
+                                    modalContent.style.removeProperty('border-radius');
+                                    modalContent.style.removeProperty('box-shadow');
+                                    modalContent.style.removeProperty('max-height');
+                                    modalContent.style.removeProperty('overflow-y');
+                                    modalContent.style.removeProperty('width');
+                                    modalContent.style.removeProperty('max-width');
+                                    modalContent.style.removeProperty('min-width');
+                                    modalContent.style.removeProperty('margin');
+                                    modalContent.style.removeProperty('flex-direction');
+                                    
+                                    // Apply fresh styles
+                                    modalContent.style.cssText = `
+                                        display: flex !important;
+                                        flex-direction: column !important;
+                                        visibility: visible !important;
+                                        opacity: 1 !important;
+                                        position: relative !important;
+                                        z-index: 10000 !important;
+                                        background: white !important;
+                                        border-radius: 8px !important;
+                                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+                                        max-height: 90vh !important;
+                                        overflow-y: auto !important;
+                                        width: 90% !important;
+                                        max-width: 800px !important;
+                                        min-width: 400px !important;
+                                        margin: auto !important;
+                                        padding: 0 !important;
+                                        border: none !important;
+                                    `;
+                                    
+                                    // Force a reflow and check dimensions
+                                    modalContent.offsetHeight;
+                                    
+                                    console.log('🔧 Fallback styles applied with cssText, checking again...');
+                                    console.log('🔧 Modal content dimensions:', {
+                                        offsetWidth: modalContent.offsetWidth,
+                                        offsetHeight: modalContent.offsetHeight,
+                                        clientWidth: modalContent.clientWidth,
+                                        clientHeight: modalContent.clientHeight,
+                                        scrollWidth: modalContent.scrollWidth,
+                                        scrollHeight: modalContent.scrollHeight,
+                                        computedStyle: window.getComputedStyle(modalContent).display
+                                    });
+                                    
+                                    setTimeout(() => {
+                                        const newContentVisible = modalContent && 
+                                                               modalContent.offsetWidth > 0 && 
+                                                               modalContent.offsetHeight > 0;
+                                        console.log('🔧 After fallback - content visible:', newContentVisible);
+                                        
+                                        if (!newContentVisible) {
+                                            console.log('🔧 Content still not visible, trying alternative approach...');
+                                            
+                                            // Try removing and re-adding the modal content
+                                            const parent = modalContent.parentNode;
+                                            const nextSibling = modalContent.nextSibling;
+                                            const clonedContent = modalContent.cloneNode(true);
+                                            
+                                            parent.removeChild(modalContent);
+                                            if (nextSibling) {
+                                                parent.insertBefore(clonedContent, nextSibling);
+                                            } else {
+                                                parent.appendChild(clonedContent);
+                                            }
+                                            
+                                            // Reapply styles to the new element
+                                            clonedContent.style.cssText = `
+                                                display: flex !important;
+                                                flex-direction: column !important;
+                                                visibility: visible !important;
+                                                opacity: 1 !important;
+                                                position: relative !important;
+                                                z-index: 10000 !important;
+                                                background: white !important;
+                                                border-radius: 8px !important;
+                                                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+                                                max-height: 90vh !important;
+                                                overflow-y: auto !important;
+                                                width: 90% !important;
+                                                max-width: 800px !important;
+                                                min-width: 400px !important;
+                                                margin: auto !important;
+                                                padding: 0 !important;
+                                                border: none !important;
+                                            `;
+                                            
+                                            console.log('🔧 Modal content recreated, final check...');
+                                            setTimeout(() => {
+                                                const finalVisible = clonedContent && 
+                                                                   clonedContent.offsetWidth > 0 && 
+                                                                   clonedContent.offsetHeight > 0;
+                                                console.log('🔧 After recreation - content visible:', finalVisible);
+                                            }, 100);
+                                        }
+                                    }, 100);
+                                }
+                            } else {
+                                console.log('✅ Modal should be visible now');
+                            }
+                        }, 100);
+                        
                     } catch (error) {
+                        console.error('❌ Error opening modal:', error);
                         showNotification(`Error opening ${modalId}`, 'error');
                     }
-                                    } else {
-                        retryCount++;
-                        if (retryCount < maxRetries) {
-                            setTimeout(attemptOpenModal, 100);
-                        } else {
-                            showNotification(`Modal ${modalId} not found`, 'error');
-                        }
+                } else {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        console.log(`🔍 Modal not found, retrying in 100ms (attempt ${retryCount}/${maxRetries})`);
+                        setTimeout(attemptOpenModal, 100);
+                    } else {
+                        console.error(`❌ Modal ${modalId} not found after ${maxRetries} attempts`);
+                        showNotification(`Modal ${modalId} not found`, 'error');
                     }
+                }
             }
             
             attemptOpenModal();
@@ -2659,7 +3412,9 @@
             document.addEventListener('click', function(event) {
                 const modals = document.querySelectorAll('.modal.show');
                 modals.forEach(modal => {
+                    // Check if click is on the modal backdrop (not on modal content)
                     if (event.target === modal) {
+                        console.log('Clicking outside modal, closing:', modal.id);
                         closeModal(modal.id);
                     }
                 });
@@ -2672,7 +3427,10 @@
                 if (event.key === 'Escape') {
                     const modals = document.querySelectorAll('.modal.show');
                     if (modals.length > 0) {
-                        closeModal(modals[0].id);
+                        // Close the most recently opened modal (last in the list)
+                        const lastModal = modals[modals.length - 1];
+                        console.log('Escape key pressed, closing modal:', lastModal.id);
+                        closeModal(lastModal.id);
                     }
                 }
             });
@@ -4435,6 +5193,7 @@
         }
 
         function generateQuickQuotePreview(serviceItems) {
+            console.log('🎯 generateQuickQuotePreview called with:', { serviceItems });
             const clientName = document.getElementById('quickQuoteClientName').value;
             const clientPhone = document.getElementById('quickQuoteClientPhone').value || 'N/A';
             const clientAddress = document.getElementById('quickQuoteClientAddress').value || 'N/A';
@@ -4574,10 +5333,15 @@
 
             document.getElementById('quotePreviewContent').innerHTML = quoteHTML;
             closeModal('quickQuoteModal');
-            openModal('quotePreviewModal');
+            // Add a small delay to ensure the close operation completes
+            setTimeout(() => {
+                console.log('🎯 Attempting to open quick quote preview modal...');
+                createNewPreviewModal('quote', quoteHTML);
+            }, 200);
         }
 
         function generateQuickInvoicePreview(serviceItems) {
+            console.log('🎯 generateQuickInvoicePreview called with:', { serviceItems });
             const clientName = document.getElementById('quickInvoiceClientName').value;
             const clientPhone = document.getElementById('quickInvoiceClientPhone').value || 'N/A';
             const clientAddress = document.getElementById('quickInvoiceClientAddress').value || 'N/A';
@@ -4717,11 +5481,16 @@
 
             document.getElementById('invoicePreviewContent').innerHTML = invoiceHTML;
             closeModal('quickInvoiceModal');
-            openModal('invoicePreviewModal');
+            // Add a small delay to ensure the close operation completes
+            setTimeout(() => {
+                console.log('🎯 Attempting to open quick invoice preview modal...');
+                createNewPreviewModal('invoice', invoiceHTML);
+            }, 200);
         }
 
         // Generate Quote Preview
         function generateQuotePreview(serviceItems, quoteId = null) {
+            console.log('🎯 generateQuotePreview called with:', { serviceItems, quoteId });
             const clientName = document.getElementById('quoteClientName').value;
             const clientPhone = document.getElementById('quoteClientPhone').value;
             const clientAddress = document.getElementById('quoteClientAddress').value;
@@ -4861,7 +5630,19 @@ stellartmanagement@outlook.com</span>
                 </div>
             `;
 
-            document.getElementById('quotePreviewContent').innerHTML = quoteHTML;
+            console.log('🎯 Setting quote preview content...');
+            const previewContent = document.getElementById('quotePreviewContent');
+            console.log('🎯 Preview content element found:', !!previewContent);
+            if (previewContent) {
+                previewContent.innerHTML = quoteHTML;
+                // Ensure the preview content is visible
+                previewContent.style.display = 'block';
+                previewContent.style.visibility = 'visible';
+                previewContent.style.opacity = '1';
+                console.log('🎯 Quote preview content set successfully');
+            } else {
+                console.error('🎯 quotePreviewContent element not found!');
+            }
             
             // Update the Send Quote button with the correct booking ID
             const sendQuoteBtn = document.querySelector('#quotePreviewModal .action-btn.confirm');
@@ -4873,7 +5654,11 @@ stellartmanagement@outlook.com</span>
             }
             
             closeModal('quoteModal');
-            openModal('quotePreviewModal');
+            // Add a small delay to ensure the close operation completes and content is rendered
+            setTimeout(() => {
+                console.log('🎯 Attempting to open quotePreviewModal...');
+                createNewPreviewModal('quote', quoteHTML);
+            }, 200);
         }
 
         // Generate Quote Number
@@ -5308,7 +6093,7 @@ stellartmanagement@outlook.com</span>
         }
 
         // Invoice Functions
-        let currentInvoiceData = null;
+        window.currentInvoiceData = null;
 
         // Show Invoice Modal from Booking ID
         async function showInvoiceModalFromBooking(bookingId) {
@@ -5344,7 +6129,49 @@ stellartmanagement@outlook.com</span>
             } catch (error) {
                 console.error('Error fetching data for invoice modal:', error);
                 showNotification('Failed to load invoice data. Please try again.', 'error');
+                
+                // Fallback: Show empty invoice modal
+                console.log('Showing fallback empty invoice modal');
+                showEmptyInvoiceModal(bookingId);
             }
+        }
+        
+        // Fallback function to show empty invoice modal
+        function showEmptyInvoiceModal(bookingId) {
+            console.log('showEmptyInvoiceModal called with bookingId:', bookingId);
+            
+            // Find the booking data
+            const booking = allBookings.find(b => b.booking_id === bookingId);
+            if (booking) {
+                // Populate basic client information
+                document.getElementById('invoiceClientName').value = booking.name || '';
+                document.getElementById('invoiceClientPhone').value = booking.phone || '';
+                document.getElementById('invoiceClientAddress').value = booking.address || '';
+                document.getElementById('invoiceClientEmail').value = booking.email || '';
+                document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+                
+                // Clear service items
+                const container = document.getElementById('invoiceServiceItems');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                
+                // Reset totals
+                document.getElementById('invoiceSubtotalAmount').textContent = '$0.00';
+                document.getElementById('invoiceTaxAmount').textContent = '$0.00';
+                document.getElementById('invoiceGrandTotalAmount').textContent = '$0.00';
+                
+                // Uncheck tax toggle
+                const taxToggle = document.getElementById('invoiceTaxToggle');
+                if (taxToggle) {
+                    taxToggle.checked = false;
+                }
+            }
+            
+            // Show the modal
+            console.log('About to call openModal with invoiceModal (fallback)');
+            openModal('invoiceModal');
+            console.log('openModal called (fallback)');
         }
 
         // Load existing invoice data into the modal
@@ -5360,7 +6187,7 @@ stellartmanagement@outlook.com</span>
                 console.log('Booking received:', booking);
                 
                 // Set current invoice data
-                currentInvoiceData = {
+                window.currentInvoiceData = {
                     invoiceId: invoice.invoice_id,
                     quoteId: invoice.quote_id,
                     bookingId: bookingId,
@@ -5371,10 +6198,19 @@ stellartmanagement@outlook.com</span>
                     email: booking.email,
                     phone: booking.phone,
                     address: booking.address,
-                    notes: booking.notes
+                    notes: booking.notes,
+                    // Store the service items for the new modal
+                    serviceItems: invoice.service_items,
+                    // Store the original invoice totals
+                    originalQuoteTotals: {
+                        subtotal: invoice.subtotal,
+                        tax_amount: invoice.tax_amount,
+                        total_amount: invoice.total_amount,
+                        tax_enabled: invoice.tax_enabled
+                    }
                 };
                 
-                console.log('currentInvoiceData set to:', currentInvoiceData);
+                console.log('currentInvoiceData set to:', window.currentInvoiceData);
                 
                 // Pre-fill client information from existing invoice
                 document.getElementById('invoiceClientName').value = invoice.client_name || booking.name || '';
@@ -5396,6 +6232,12 @@ stellartmanagement@outlook.com</span>
                 console.log('About to call openModal with invoiceModal');
                 openModal('invoiceModal');
                 console.log('openModal called');
+                
+                // For the new modal system, populate data after modal is created
+                setTimeout(() => {
+                    console.log('🔧 Populating data after modal creation (existing invoice)...');
+                    populateNewInvoiceModal();
+                }, 200);
                 
                 // Load photos for service items if this is an existing invoice
                 if (invoice && invoice.invoice_id) {
@@ -5571,7 +6413,7 @@ stellartmanagement@outlook.com</span>
             console.log('Quote subtotal:', quote.subtotal);
             console.log('Quote tax amount:', quote.tax_amount);
             
-            currentInvoiceData = {
+            window.currentInvoiceData = {
                 quoteId: quote.quote_id,
                 bookingId: booking.booking_id,
                 service: booking.service,
@@ -5582,6 +6424,8 @@ stellartmanagement@outlook.com</span>
                 phone: booking.phone,
                 address: booking.address,
                 notes: booking.notes,
+                // Store the service items for the new modal
+                serviceItems: quote.service_items,
                 // Store the original quote totals to ensure consistency
                 originalQuoteTotals: {
                     subtotal: quote.subtotal,
@@ -5613,6 +6457,12 @@ stellartmanagement@outlook.com</span>
             console.log('About to call openModal with invoiceModal');
             openModal('invoiceModal');
             console.log('openModal called');
+            
+            // For the new modal system, populate data after modal is created
+            setTimeout(() => {
+                console.log('🔧 Populating data after modal creation...');
+                populateNewInvoiceModal();
+            }, 200);
             
             // Load photos for service items if this is an existing quote
             if (quote && quote.quote_id) {
@@ -5954,7 +6804,7 @@ stellartmanagement@outlook.com</span>
                         showNotification('Invoice saved successfully!', 'success');
                         
                         // Store the invoice ID for later use
-                        currentInvoiceData.invoiceId = result.invoice_id;
+                        window.currentInvoiceData.invoiceId = result.invoice_id;
                     }
                 }
 
@@ -5995,6 +6845,7 @@ stellartmanagement@outlook.com</span>
 
         // Generate Invoice Preview
         function generateInvoicePreview(serviceItems, invoiceId = null) {
+            console.log('🎯 generateInvoicePreview called with:', { serviceItems, invoiceId });
             const clientName = document.getElementById('invoiceClientName').value;
             const clientPhone = document.getElementById('invoiceClientPhone').value;
             const clientAddress = document.getElementById('invoiceClientAddress').value;
@@ -6136,9 +6987,25 @@ stellartmanagement@outlook.com</span>
                 </div>
             `;
 
-            document.getElementById('invoicePreviewContent').innerHTML = invoiceHTML;
+            console.log('🎯 Setting invoice preview content...');
+            const invoicePreviewContent = document.getElementById('invoicePreviewContent');
+            console.log('🎯 Invoice preview content element found:', !!invoicePreviewContent);
+            if (invoicePreviewContent) {
+                invoicePreviewContent.innerHTML = invoiceHTML;
+                // Ensure the preview content is visible
+                invoicePreviewContent.style.display = 'block';
+                invoicePreviewContent.style.visibility = 'visible';
+                invoicePreviewContent.style.opacity = '1';
+                console.log('🎯 Invoice preview content set successfully');
+            } else {
+                console.error('🎯 invoicePreviewContent element not found!');
+            }
             closeModal('invoiceModal');
-            openModal('invoicePreviewModal');
+            // Add a small delay to ensure the close operation completes and content is rendered
+            setTimeout(() => {
+                console.log('🎯 Attempting to open invoicePreviewModal...');
+                createNewPreviewModal('invoice', invoiceHTML);
+            }, 200);
         }
 
         // Generate Invoice Number
@@ -6963,21 +7830,22 @@ stellartmanagement@outlook.com</span>
 
         // Smooth filter tab click handler
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('filter-tab')) {
-                const filter = e.target.getAttribute('data-filter');
+            if (e.target.classList.contains('sidebar-item') || e.target.closest('.sidebar-item')) {
+                const sidebarItem = e.target.classList.contains('sidebar-item') ? e.target : e.target.closest('.sidebar-item');
+                const filter = sidebarItem.getAttribute('data-filter');
                 
                 // Prevent multiple rapid clicks
-                if (e.target.classList.contains('loading')) return;
+                if (sidebarItem.classList.contains('loading')) return;
                 
-                // Add loading state to clicked tab
-                e.target.classList.add('loading');
+                // Add loading state to clicked sidebar item
+                sidebarItem.classList.add('loading');
                 
-                // Update active tab
-                document.querySelectorAll('.filter-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                    tab.classList.remove('loading');
+                // Update active sidebar item
+                document.querySelectorAll('.sidebar-item').forEach(item => {
+                    item.classList.remove('active');
+                    item.classList.remove('loading');
                 });
-                e.target.classList.add('active');
+                sidebarItem.classList.add('active');
                 
                 // Update current filter
                 currentFilter = filter;
@@ -7023,6 +7891,9 @@ stellartmanagement@outlook.com</span>
                     targetView = document.getElementById('calendarView');
                     targetView.style.display = 'block';
                     if (!window.adminCalendar.blockedDates.length) window.adminCalendar.loadBlockedDates();
+                    
+                    // Debug: Check mobile detection
+                    console.log('Calendar view opened - Window width:', window.innerWidth, 'Is mobile:', window.innerWidth <= 768);
                     window.adminCalendar.renderCalendar(allBookings);
                 } else if (filter === 'quick-quote') {
                     targetView = document.getElementById('quickQuoteView');
@@ -7367,14 +8238,14 @@ stellartmanagement@outlook.com</span>
                     return; // Don't switch for other statuses
             }
             
-            // Find the corresponding filter tab and trigger its click
-            const filterTab = document.querySelector(`.filter-tab[data-filter="${targetFilter}"]`);
-            if (filterTab) {
-                // Remove active class from all tabs
-                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            // Find the corresponding sidebar item and trigger its click
+            const sidebarItem = document.querySelector(`.sidebar-item[data-filter="${targetFilter}"]`);
+            if (sidebarItem) {
+                // Remove active class from all sidebar items
+                document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
                 
-                // Add active class to the target filter tab
-                filterTab.classList.add('active');
+                // Add active class to the target sidebar item
+                sidebarItem.classList.add('active');
                 
                 // Update current filter
                 currentFilter = targetFilter;
@@ -8533,8 +9404,311 @@ stellartmanagement@outlook.com</span>
             color: var(--primary-color);
         }
 
+        /* Sidebar Layout Styles */
+        .main-layout-with-sidebar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
 
+        /* Mobile sidebar - hidden on desktop */
+        .mobile-sidebar {
+            display: none;
+        }
 
+        /* Desktop sidebar - visible on desktop, hidden on mobile */
+        .desktop-sidebar {
+            display: block;
+            width: 250px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            flex-shrink: 0;
+            height: fit-content;
+            order: 2; /* Position on the right */
+        }
+
+        .active-bookings-section {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            flex-shrink: 0;
+            height: fit-content;
+            order: 2; /* Position on the right */
+        }
+
+        .sidebar-header {
+            padding: 0.8rem 0.8rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.8rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .sidebar-section-header:hover {
+            background: #e9ecef;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.8rem;
+        }
+
+        .section-chevron {
+            color: #6c757d;
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        .sidebar-section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: white;
+        }
+
+        .sidebar-section-content.expanded {
+            max-height: 500px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .sidebar-item:hover {
+            background: #f8f9fa;
+            border-left-color: #8cc63f;
+        }
+
+        .sidebar-item.active {
+            background: #e8f5e8;
+            border-left-color: #8cc63f;
+            color: #2c5530;
+        }
+
+        .sidebar-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-item.active i {
+            color: #8cc63f;
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .item-count {
+            background: #8cc63f;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .sidebar-item.active .item-count {
+            background: #2c5530;
+        }
+
+        /* Loading state for sidebar items */
+        .sidebar-item.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .sidebar-item.loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        .main-content-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 1024px) {
+            .bookings-container {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            .main-layout-with-sidebar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Mobile sidebar positioning */
+            .mobile-sidebar {
+                display: block;
+                width: 100%;
+                margin-bottom: 1rem;
+                order: 1;
+            }
+
+            /* Hide desktop sidebar on mobile */
+            .desktop-sidebar {
+                display: none;
+            }
+
+            .bookings-container {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .bookings-container {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            .main-layout-with-sidebar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Mobile sidebar positioning */
+            .mobile-sidebar {
+                display: block;
+                width: 100%;
+                margin-bottom: 1rem;
+                order: 1;
+            }
+
+            /* Hide desktop sidebar on mobile */
+            .desktop-sidebar {
+                display: none;
+            }
+
+            .bookings-container {
+                order: 2;
+            }
+
+            .sidebar-section-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .section-title {
+                font-size: 0.85rem;
+            }
+
+            .sidebar-item {
+                padding: 0.625rem 1rem;
+            }
+
+            .item-text {
+                font-size: 0.8rem;
+            }
+
+            .sidebar-item i {
+                width: 18px;
+                margin-right: 0.625rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bookings-container {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            .main-layout-with-sidebar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Mobile sidebar positioning */
+            .mobile-sidebar {
+                display: block;
+                width: 100%;
+                margin-bottom: 1rem;
+                order: 1;
+            }
+
+            /* Hide desktop sidebar on mobile */
+            .desktop-sidebar {
+                display: none;
+            }
+
+            .bookings-container {
+                order: 2;
+            }
+
+            .sidebar-section-header {
+                padding: 0.625rem 0.875rem;
+            }
+
+            .section-title {
+                font-size: 0.8rem;
+            }
+
+            .sidebar-item {
+                padding: 0.5rem 0.875rem;
+            }
+
+            .item-text {
+                font-size: 0.75rem;
+            }
+
+            .sidebar-item i {
+                width: 16px;
+                margin-right: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
 
     </style>
 
@@ -8592,6 +9766,363 @@ stellartmanagement@outlook.com</span>
         
         // Keep the original function name for backward compatibility
         window.showBookingDetailsPopup = showDetailedBookingDetailsPopup;
+        
+        // Make the enhanced openModal function globally accessible
+        window.openModal = openModal;
+        
+        // Test function to manually open preview modals
+        function testPreviewModals() {
+            console.log('🧪 Testing preview modals...');
+            
+            // Test quote preview modal
+            console.log('🧪 Testing quote preview modal...');
+            const quoteContent = document.getElementById('quotePreviewContent');
+            if (quoteContent) {
+                quoteContent.innerHTML = '<div style="padding: 20px; text-align: center;"><h3>Test Quote Preview</h3><p>This is a test quote preview modal.</p></div>';
+            }
+            showQuotePreviewModal();
+            
+            // Test invoice preview modal after a delay
+            setTimeout(() => {
+                console.log('🧪 Testing invoice preview modal...');
+                const invoiceContent = document.getElementById('invoicePreviewContent');
+                if (invoiceContent) {
+                    invoiceContent.innerHTML = '<div style="padding: 20px; text-align: center;"><h3>Test Invoice Preview</h3><p>This is a test invoice preview modal.</p></div>';
+                }
+                showInvoicePreviewModal();
+            }, 2000);
+        }
+        
+        // Make test function globally accessible
+        window.testPreviewModals = testPreviewModals;
+        
+        // Simple functions to show preview modals
+        function showQuotePreviewModal() {
+            console.log('🎯 showQuotePreviewModal called');
+            const modal = document.getElementById('quotePreviewModal');
+            if (modal) {
+                // Force the modal to be visible
+                modal.style.display = 'flex';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.zIndex = '9999';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                
+                // Ensure the modal content is visible
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.display = 'flex';
+                    modalContent.style.flexDirection = 'column';
+                    modalContent.style.visibility = 'visible';
+                    modalContent.style.opacity = '1';
+                    modalContent.style.background = 'white';
+                    modalContent.style.borderRadius = '8px';
+                    modalContent.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+                    modalContent.style.maxHeight = '90vh';
+                    modalContent.style.overflowY = 'auto';
+                    modalContent.style.width = '90%';
+                    modalContent.style.maxWidth = '800px';
+                    modalContent.style.minWidth = '400px';
+                    modalContent.style.margin = 'auto';
+                    modalContent.style.padding = '0';
+                }
+                
+                // Ensure the preview content is visible
+                const previewContent = document.getElementById('quotePreviewContent');
+                if (previewContent) {
+                    previewContent.style.display = 'block';
+                    previewContent.style.visibility = 'visible';
+                    previewContent.style.opacity = '1';
+                    previewContent.style.background = 'white';
+                    previewContent.style.padding = '1.5rem';
+                    previewContent.style.borderRadius = '8px';
+                    previewContent.style.border = '1px solid #e1e8ed';
+                    previewContent.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                    previewContent.style.marginBottom = '1rem';
+                }
+                
+                document.body.classList.add('modal-open');
+                console.log('🎯 Quote preview modal should now be visible');
+            } else {
+                console.error('🎯 quotePreviewModal not found!');
+            }
+        }
+        
+        function showInvoicePreviewModal() {
+            console.log('🎯 showInvoicePreviewModal called');
+            const modal = document.getElementById('invoicePreviewModal');
+            if (modal) {
+                // Force the modal to be visible
+                modal.style.display = 'flex';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.zIndex = '9999';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                
+                // Ensure the modal content is visible
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.display = 'flex';
+                    modalContent.style.flexDirection = 'column';
+                    modalContent.style.visibility = 'visible';
+                    modalContent.style.opacity = '1';
+                    modalContent.style.background = 'white';
+                    modalContent.style.borderRadius = '8px';
+                    modalContent.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+                    modalContent.style.maxHeight = '90vh';
+                    modalContent.style.overflowY = 'auto';
+                    modalContent.style.width = '90%';
+                    modalContent.style.maxWidth = '800px';
+                    modalContent.style.minWidth = '400px';
+                    modalContent.style.margin = 'auto';
+                    modalContent.style.padding = '0';
+                }
+                
+                // Ensure the preview content is visible
+                const previewContent = document.getElementById('invoicePreviewContent');
+                if (previewContent) {
+                    previewContent.style.display = 'block';
+                    previewContent.style.visibility = 'visible';
+                    previewContent.style.opacity = '1';
+                    previewContent.style.background = 'white';
+                    previewContent.style.padding = '1.5rem';
+                    previewContent.style.borderRadius = '8px';
+                    previewContent.style.border = '1px solid #e1e8ed';
+                    previewContent.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                    previewContent.style.marginBottom = '1rem';
+                }
+                
+                document.body.classList.add('modal-open');
+                console.log('🎯 Invoice preview modal should now be visible');
+            } else {
+                console.error('🎯 invoicePreviewModal not found!');
+            }
+        }
+        
+        // Make the functions globally accessible
+        window.showQuotePreviewModal = showQuotePreviewModal;
+        window.showInvoicePreviewModal = showInvoicePreviewModal;
+        
+        // Ultra-simple test function
+        function testSimpleModal() {
+            console.log('🧪 Testing ultra-simple modal...');
+            const modal = document.getElementById('invoicePreviewModal');
+            if (modal) {
+                // Remove all classes and styles first
+                modal.className = '';
+                modal.style.cssText = '';
+                
+                // Set the most basic possible styles
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100vw';
+                modal.style.height = '100vh';
+                modal.style.backgroundColor = 'red'; // Make it obvious
+                modal.style.zIndex = '99999';
+                modal.style.display = 'block';
+                
+                console.log('🧪 Modal should now be a red screen covering everything');
+                
+                // Set some content
+                const content = document.getElementById('invoicePreviewContent');
+                if (content) {
+                    content.innerHTML = '<h1 style="color: white; text-align: center; margin-top: 50vh;">TEST MODAL IS WORKING!</h1>';
+                    content.style.cssText = '';
+                    content.style.color = 'white';
+                    content.style.fontSize = '24px';
+                    content.style.textAlign = 'center';
+                    content.style.marginTop = '50vh';
+                }
+            }
+        }
+        
+        window.testSimpleModal = testSimpleModal;
+        
+        // Create a completely new modal dynamically
+        function createNewPreviewModal(type, content) {
+            console.log('🧪 Creating new preview modal for type:', type);
+            
+            // Remove any existing dynamic modal
+            const existingModal = document.getElementById('dynamicPreviewModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create new modal element
+            const modal = document.createElement('div');
+            modal.id = 'dynamicPreviewModal';
+            modal.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background-color: rgba(0, 0, 0, 0.8) !important;
+                z-index: 99999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            `;
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white !important;
+                border-radius: 8px !important;
+                padding: 2rem !important;
+                max-width: 800px !important;
+                width: 90% !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            `;
+            
+            // Create header
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 1rem !important;
+                padding-bottom: 1rem !important;
+                border-bottom: 1px solid #e1e8ed !important;
+            `;
+            
+            const title = document.createElement('h3');
+            title.textContent = type === 'quote' ? 'Quote Saved Successfully' : 'Invoice Created Successfully';
+            title.style.cssText = 'margin: 0 !important; color: #333 !important;';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.style.cssText = `
+                background: none !important;
+                border: none !important;
+                font-size: 24px !important;
+                cursor: pointer !important;
+                color: #666 !important;
+                padding: 0 !important;
+                width: 30px !important;
+                height: 30px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            `;
+            closeBtn.onclick = () => modal.remove();
+            
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            // Create content area
+            const contentArea = document.createElement('div');
+            contentArea.innerHTML = content;
+            contentArea.style.cssText = 'margin-bottom: 1rem !important;';
+            
+            // Create action buttons
+            const actions = document.createElement('div');
+            actions.style.cssText = `
+                display: flex !important;
+                gap: 1rem !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+            `;
+            
+            const doneBtn = document.createElement('button');
+            doneBtn.textContent = 'Done';
+            doneBtn.style.cssText = `
+                background: #6c757d !important;
+                color: white !important;
+                border: none !important;
+                padding: 0.75rem 1.5rem !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+            `;
+            doneBtn.onclick = () => modal.remove();
+            
+            const printBtn = document.createElement('button');
+            printBtn.textContent = 'Print';
+            printBtn.style.cssText = `
+                background: #007bff !important;
+                color: white !important;
+                border: none !important;
+                padding: 0.75rem 1.5rem !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+            `;
+            printBtn.onclick = () => {
+                if (type === 'quote') {
+                    printQuote();
+                } else {
+                    printInvoice();
+                }
+            };
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download PDF';
+            downloadBtn.style.cssText = `
+                background: #28a745 !important;
+                color: white !important;
+                border: none !important;
+                padding: 0.75rem 1.5rem !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+            `;
+            downloadBtn.onclick = () => {
+                if (type === 'quote') {
+                    downloadQuotePDF();
+                } else {
+                    downloadInvoicePDF();
+                }
+            };
+            
+            actions.appendChild(doneBtn);
+            actions.appendChild(printBtn);
+            actions.appendChild(downloadBtn);
+            
+            // Assemble modal
+            modalContent.appendChild(header);
+            modalContent.appendChild(contentArea);
+            modalContent.appendChild(actions);
+            modal.appendChild(modalContent);
+            
+            // Add to page
+            document.body.appendChild(modal);
+            
+            console.log('🧪 New dynamic modal created and added to page');
+        }
+        
+        window.createNewPreviewModal = createNewPreviewModal;
+        
+        // Make renderActiveBookings globally accessible for archive functionality
+        window.renderActiveBookings = renderActiveBookings;
+        
+        // Make updateStatistics globally accessible for archive functionality
+        window.updateStatistics = updateStatistics;
+        
+        // Make autoSwitchToNextTab globally accessible for archive functionality
+        window.autoSwitchToNextTab = autoSwitchToNextTab;
+        
+        // Make currentFilter globally accessible for archive functionality
+        window.currentFilter = currentFilter;
+        
+        // Make updateSectionTitle globally accessible for archive functionality
+        window.updateSectionTitle = updateSectionTitle;
+        
+        
     </script>
 </body>
 </html> 

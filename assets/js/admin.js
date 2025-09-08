@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Also load calendar events when authenticated
         if (window.adminCalendarEvents) {
-            window.adminCalendarEvents.loadEventsWhenAuthenticated();
+            await window.adminCalendarEvents.loadEventsWhenAuthenticated();
         }
     }
     
@@ -93,14 +93,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Add a fallback to load bookings after a short delay
     // This ensures bookings are loaded even if there are timing issues
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.simpleGoogleAuth && window.simpleGoogleAuth.isUserAuthenticated() && (!allBookings || allBookings.length === 0)) {
             console.log('🔄 Fallback: Loading bookings...');
             loadBookings();
             
             // Also load calendar events when authenticated
             if (window.adminCalendarEvents) {
-                window.adminCalendarEvents.loadEventsWhenAuthenticated();
+                await window.adminCalendarEvents.loadEventsWhenAuthenticated();
             }
         }
     }, 2000);
@@ -767,7 +767,7 @@ function changeMoveMonth(month) { console.log('changeMoveMonth', month); }
 function renderMoveCalendar() { console.log('renderMoveCalendar'); }
 function toggleDateBlock() { console.log('toggleDateBlock'); }
 function unblockDate() { console.log('unblockDate'); }
-function showBookingDetailsPopup(bookingId) { console.log('showBookingDetailsPopup', bookingId); }
+// showBookingDetailsPopup is defined in admin.html
 function loadCustomers() { console.log('loadCustomers'); }
 
 // Invoice functions
@@ -995,31 +995,7 @@ function createServiceItemElement(item, itemId) {
     return div;
 }
 
-// Update invoice totals
-function updateInvoiceTotals() {
-    const serviceItems = document.querySelectorAll('#invoiceServiceItems .service-item');
-    let subtotal = 0;
-    
-    serviceItems.forEach(item => {
-        const quantity = parseFloat(item.querySelector('.item-qty-input').value) || 0;
-        const price = parseFloat(item.querySelector('.item-price-input').value) || 0;
-        subtotal += quantity * price;
-    });
-    
-    const taxToggle = document.getElementById('invoiceTaxToggle');
-    const taxAmount = taxToggle && taxToggle.checked ? subtotal * 0.05 : 0;
-    const grandTotal = subtotal + taxAmount;
-    
-    document.getElementById('invoiceSubtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('invoiceTaxAmount').textContent = `$${taxAmount.toFixed(2)}`;
-    document.getElementById('invoiceGrandTotalAmount').textContent = `$${grandTotal.toFixed(2)}`;
-    
-    // Show/hide tax row
-    const taxRow = document.getElementById('invoiceTaxRow');
-    if (taxRow) {
-        taxRow.style.display = taxToggle && taxToggle.checked ? 'flex' : 'none';
-    }
-}
+// Update invoice totals - function moved to admin.html to avoid conflicts
 
 // Toggle invoice tax
 function toggleInvoiceTax() {

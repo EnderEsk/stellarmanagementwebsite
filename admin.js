@@ -239,7 +239,7 @@ async function loadBookings() {
             // Wait for calendar events to be loaded before rendering calendar
             if (document.getElementById('calendarView').classList.contains('active')) {
                 await waitForCalendarEvents();
-                renderCalendar();
+                await renderCalendar();
             }
             
             // Customer management view - REMOVED
@@ -506,92 +506,101 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Calendar functions
-function renderCalendar() {
-    const grid = document.getElementById('calendarGrid');
-    const monthDisplay = document.getElementById('calendarMonth');
-    
-    monthDisplay.textContent = `${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} ${currentYear}`;
-    
-    grid.innerHTML = '';
-    
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayHeaders.forEach(day => {
-        const header = document.createElement('div');
-        header.className = 'day-header';
-        header.textContent = day;
-        grid.appendChild(header);
-    });
-    
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
-    for (let i = 0; i < 42; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        const dateString = currentDate.toISOString().split('T')[0];
+// Calendar functions - Use the mobile calendar from admin-calendar.js
+async function renderCalendar() {
+    // Use the mobile calendar function from admin-calendar.js
+    if (window.adminCalendar && window.adminCalendar.renderCalendar) {
+        await window.adminCalendar.renderCalendar(allBookings);
+    } else {
+        console.warn('Admin calendar not available, falling back to basic calendar');
+        // Fallback to basic calendar if mobile calendar is not available
+        const grid = document.getElementById('calendarGrid');
+        const monthDisplay = document.getElementById('calendarMonth');
         
-        const dayElement = document.createElement('div');
-        dayElement.className = 'day';
-        dayElement.textContent = currentDate.getDate();
-        dayElement.dataset.date = dateString;
-        
-        if (currentDate.getMonth() !== currentMonth) {
-            dayElement.style.opacity = '0.3';
+        if (monthDisplay) {
+            monthDisplay.textContent = `${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} ${currentYear}`;
         }
         
-        const today = new Date();
-        if (currentDate.toDateString() === today.toDateString()) {
-            dayElement.classList.add('today');
+        if (grid) {
+            grid.innerHTML = '<div class="calendar-loading">Loading calendar...</div>';
         }
-        
-        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-        const isBlocked = blockedDates.some(d => d.date === dateString);
-        
-        if (isBlocked) {
-            dayElement.classList.add('blocked');
-        } else if (isWeekend) {
-            dayElement.classList.add('weekend');
-        }
-        
-        const dayBookings = allBookings.filter(b => b.date === dateString && (b.status === 'confirmed' || b.status === 'pending' || b.status === 'pending-site-visit' || b.status === 'quote-ready' || b.status === 'quote-sent' || b.status === 'quote-accepted'));
-        if (dayBookings.length > 0) {
-            dayElement.classList.add('booked');
-        }
-        
-        dayElement.addEventListener('click', () => handleDayClick(currentDate, dayBookings));
-        grid.appendChild(dayElement);
     }
 }
 
 function handleDayClick(date, bookings) {
-    // Implement modal logic here
-    // Handle day click
+    // Use the mobile calendar day click handler
+    if (window.adminCalendar && window.adminCalendar.handleDayClick) {
+        window.adminCalendar.handleDayClick(date, bookings);
+    } else {
+        console.warn('Admin calendar day click handler not available');
+    }
 }
 
 function previousMonth() {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
+    // Use the mobile calendar month navigation
+    if (window.adminCalendar && window.adminCalendar.previousMonth) {
+        window.adminCalendar.previousMonth();
+    } else {
+        // Fallback
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
     }
-    renderCalendar();
 }
 
 function nextMonth() {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
+    // Use the mobile calendar month navigation
+    if (window.adminCalendar && window.adminCalendar.nextMonth) {
+        window.adminCalendar.nextMonth();
+    } else {
+        // Fallback
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar();
     }
-    renderCalendar();
 }
 
 // Modal functions
-function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id) { 
+    console.log('openModal called with id:', id);
+    const element = document.getElementById(id);
+    console.log('Element found:', !!element);
+    if (element) {
+        // Reset any inline styles that might be hiding the modal
+        element.style.display = '';
+        element.style.visibility = '';
+        element.style.opacity = '';
+        element.style.zIndex = '';
+        
+        element.classList.add('show');
+        document.body.classList.add('modal-open');
+        console.log('Added show class to element and reset inline styles');
+        console.log('Element classes after:', element.className);
+    } else {
+        console.error('Element not found for id:', id);
+    }
+}
+function closeModal(id) { 
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('show');
+        
+        // Force the modal to be hidden with inline styles to override any !important rules
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        modal.style.zIndex = '-1';
+        
+        document.body.classList.remove('modal-open');
+        console.log('Modal closed:', id);
+    }
+}
 function closeBookingModal() { closeModal('bookingDetailsModal'); }
 function closeBlockingModal() { closeModal('dateBlockingModal'); }
 function closeBookingDetailsPopup() { closeModal('bookingDetailsPopupModal'); }
@@ -616,24 +625,62 @@ function showQuoteModal(booking) {
 }
 
 function showInvoiceModalFromBooking(bookingId) {
-    console.log('showInvoiceModalFromBooking', bookingId);
+    console.log('🚀 showInvoiceModalFromBooking called with bookingId:', bookingId);
+    console.log('📊 allBookings available:', typeof allBookings, allBookings ? allBookings.length : 'undefined');
+    console.log('🔍 Function called from:', new Error().stack);
+    
     // Store the current booking ID for invoice creation
     window.currentInvoiceBookingId = bookingId;
     
     // Find the booking data
-    const booking = allBookings.find(b => b.booking_id === bookingId);
+    const booking = allBookings ? allBookings.find(b => b.booking_id === bookingId) : null;
+    console.log('Found booking:', booking);
+    
     if (booking) {
         // Populate invoice form with booking data
-        document.getElementById('invoiceClientName').value = booking.name || '';
-        document.getElementById('invoiceClientPhone').value = booking.phone || '';
-        document.getElementById('invoiceClientAddress').value = booking.address || '';
-        document.getElementById('invoiceClientEmail').value = booking.email || '';
-        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+        const nameField = document.getElementById('invoiceClientName');
+        const phoneField = document.getElementById('invoiceClientPhone');
+        const addressField = document.getElementById('invoiceClientAddress');
+        const emailField = document.getElementById('invoiceClientEmail');
+        const dateField = document.getElementById('invoiceDate');
+        
+        console.log('Form fields found:', {
+            nameField: !!nameField,
+            phoneField: !!phoneField,
+            addressField: !!addressField,
+            emailField: !!emailField,
+            dateField: !!dateField
+        });
+        
+        if (nameField) nameField.value = booking.name || '';
+        if (phoneField) phoneField.value = booking.phone || '';
+        if (addressField) addressField.value = booking.address || '';
+        if (emailField) emailField.value = booking.email || '';
+        if (dateField) dateField.value = new Date().toISOString().split('T')[0];
         
         // Check if there's a quote for this booking
         loadQuoteForInvoice(bookingId);
+    } else {
+        console.error('Booking not found for ID:', bookingId);
     }
-    openModal('invoiceModal');
+    
+    console.log('Attempting to open invoiceModal...');
+    const modal = document.getElementById('invoiceModal');
+    console.log('Modal element found:', !!modal);
+    
+    if (modal) {
+        // Call the enhanced openModal function from admin.html
+        if (typeof window.openModal === 'function') {
+            window.openModal('invoiceModal');
+            console.log('Modal opened successfully using window.openModal');
+        } else {
+            // Fallback to local openModal
+            openModal('invoiceModal');
+            console.log('Modal opened successfully using local openModal');
+        }
+    } else {
+        console.error('Invoice modal element not found!');
+    }
 }
 
 // Load quote data for invoice creation
@@ -700,31 +747,7 @@ function createServiceItemElement(item, itemId) {
     return div;
 }
 
-// Update invoice totals
-function updateInvoiceTotals() {
-    const serviceItems = document.querySelectorAll('#invoiceServiceItems .service-item');
-    let subtotal = 0;
-    
-    serviceItems.forEach(item => {
-        const quantity = parseFloat(item.querySelector('.item-qty-input').value) || 0;
-        const price = parseFloat(item.querySelector('.item-price-input').value) || 0;
-        subtotal += quantity * price;
-    });
-    
-    const taxToggle = document.getElementById('invoiceTaxToggle');
-    const taxAmount = taxToggle && taxToggle.checked ? subtotal * 0.05 : 0;
-    const grandTotal = subtotal + taxAmount;
-    
-    document.getElementById('invoiceSubtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('invoiceTaxAmount').textContent = `$${taxAmount.toFixed(2)}`;
-    document.getElementById('invoiceGrandTotalAmount').textContent = `$${grandTotal.toFixed(2)}`;
-    
-    // Show/hide tax row
-    const taxRow = document.getElementById('invoiceTaxRow');
-    if (taxRow) {
-        taxRow.style.display = taxToggle && taxToggle.checked ? 'flex' : 'none';
-    }
-}
+// Update invoice totals - function moved to admin.html to avoid conflicts
 
 // Toggle invoice tax
 function toggleInvoiceTax() {
@@ -1329,12 +1352,69 @@ function changeMoveMonth(month) { console.log('changeMoveMonth', month); }
 function renderMoveCalendar() { /* TODO: Implement move calendar rendering */ }
 function toggleDateBlock() { console.log('toggleDateBlock'); }
 function unblockDate() { console.log('unblockDate'); }
-function showBookingDetailsPopup(bookingId) { console.log('showBookingDetailsPopup', bookingId); }
+// showBookingDetailsPopup is defined in admin.html
+
+// Test function to verify modal can be opened
+function testInvoiceModal() {
+    console.log('Testing invoice modal...');
+    const modal = document.getElementById('invoiceModal');
+    console.log('Modal element:', modal);
+    if (modal) {
+        console.log('Modal classes before:', modal.className);
+        console.log('Modal style display before:', modal.style.display);
+        console.log('Modal computed style before:', window.getComputedStyle(modal).display);
+        console.log('Modal position:', window.getComputedStyle(modal).position);
+        console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+        
+        // Add show class directly
+        modal.classList.add('show');
+        console.log('Modal classes after direct add:', modal.className);
+        console.log('Modal computed style after:', window.getComputedStyle(modal).display);
+        
+        // Check modal content
+        const modalContent = modal.querySelector('.modal-content');
+        console.log('Modal content element:', modalContent);
+        if (modalContent) {
+            console.log('Modal content classes:', modalContent.className);
+            console.log('Modal content computed style:', window.getComputedStyle(modalContent).display);
+        }
+        
+        // Also try the openModal function
+        setTimeout(() => {
+            openModal('invoiceModal');
+            console.log('Modal classes after openModal:', modal.className);
+        }, 1000);
+    }
+}
 
 // Debug: Verify functions are available globally
 console.log('Admin.js loaded. Available functions:', {
     sendInvoiceFromBooking: typeof sendInvoiceFromBooking,
     showInvoiceModalFromBooking: typeof showInvoiceModalFromBooking,
     generateInvoice: typeof generateInvoice,
-    getCurrentBookingId: typeof getCurrentBookingId
+    getCurrentBookingId: typeof getCurrentBookingId,
+    testInvoiceModal: typeof testInvoiceModal
 });
+
+// Make test function globally available
+window.testInvoiceModal = testInvoiceModal;
+
+// Also make showInvoiceModalFromBooking globally available for testing
+window.showInvoiceModalFromBooking = showInvoiceModalFromBooking;
+
+// Test function to manually test invoice modal
+function testInvoiceModalWithBooking() {
+    console.log('🧪 Testing invoice modal with sample booking...');
+    // Use a sample booking ID or find the first invoice-ready booking
+    const invoiceReadyBookings = allBookings ? allBookings.filter(b => b.status === 'invoice-ready') : [];
+    if (invoiceReadyBookings.length > 0) {
+        const testBookingId = invoiceReadyBookings[0].booking_id;
+        console.log('🧪 Using booking ID:', testBookingId);
+        showInvoiceModalFromBooking(testBookingId);
+    } else {
+        console.log('🧪 No invoice-ready bookings found. Using sample ID...');
+        showInvoiceModalFromBooking('ST-MF7OPX46-4L15V'); // Use the ID from your console log
+    }
+}
+
+window.testInvoiceModalWithBooking = testInvoiceModalWithBooking;

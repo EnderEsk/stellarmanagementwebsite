@@ -424,9 +424,6 @@ class AdminArchive {
     }
 
     async unarchiveBooking(bookingId) {
-        if (!confirm('Are you sure you want to unarchive this booking? It will be restored to the active bookings.')) {
-            return;
-        }
 
         try {
             const response = await fetch(`/api/bookings/${bookingId}/unarchive`, {
@@ -435,10 +432,18 @@ class AdminArchive {
             });
 
             if (response.ok) {
+                // Get the unarchived booking data
+                const unarchivedBooking = await response.json();
+                
                 // Remove from archived list
                 this.archivedBookings = this.archivedBookings.filter(b => b.booking_id !== bookingId);
                 
-                // Update UI
+                // Add back to active bookings list
+                if (window.allBookings) {
+                    window.allBookings.unshift(unarchivedBooking);
+                }
+                
+                // Update archive UI
                 this.renderArchivedBookings();
                 
                 // Close modal if open
@@ -448,9 +453,45 @@ class AdminArchive {
                 // Show success message
                 this.showNotification('Booking unarchived successfully', 'success');
                 
-                // Refresh active bookings if on that view
-                if (typeof window.refreshBookings === 'function') {
-                    window.refreshBookings();
+                // Update active bookings UI immediately
+                if (typeof window.renderActiveBookings === 'function') {
+                    window.renderActiveBookings();
+                }
+                
+                // Update statistics
+                if (typeof window.updateStatistics === 'function') {
+                    window.updateStatistics();
+                }
+                
+                // Auto-switch to the appropriate tab for the restored status
+                if (typeof window.autoSwitchToNextTab === 'function') {
+                    window.autoSwitchToNextTab(unarchivedBooking.status);
+                }
+                
+                // Check if we need to switch to the appropriate filter tab
+                if (typeof window.currentFilter !== 'undefined' && window.currentFilter !== 'archive') {
+                    // Find the corresponding filter tab and trigger its click
+                    const filterTab = document.querySelector(`.filter-tab[data-filter="${unarchivedBooking.status}"]`);
+                    if (filterTab) {
+                        // Remove active class from all tabs
+                        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+                        
+                        // Add active class to the appropriate filter tab
+                        filterTab.classList.add('active');
+                        
+                        // Update current filter
+                        window.currentFilter = unarchivedBooking.status;
+                        
+                                        // Update section title
+                        if (typeof window.updateSectionTitle === 'function') {
+                            window.updateSectionTitle();
+                        }
+                        
+                        // Update calendar view if it's currently visible
+                        if (typeof window.adminCalendar !== 'undefined' && window.adminCalendar.renderCalendar) {
+                            window.adminCalendar.renderCalendar(window.allBookings);
+                        }
+                    }
                 }
             } else {
                 throw new Error('Failed to unarchive booking');
@@ -495,6 +536,10 @@ class AdminArchive {
     }
 
     async archiveBooking(bookingId) {
+        if (!confirm('Are you sure you want to archive this booking? It will be moved to the archive.')) {
+            return false;
+        }
+        
         try {
             const response = await fetch(`/api/bookings/${bookingId}/archive`, {
                 method: 'POST',
@@ -506,9 +551,58 @@ class AdminArchive {
                 const archivedBooking = await response.json();
                 this.archivedBookings.unshift(archivedBooking);
                 
+                // Remove from active bookings list immediately
+                if (window.allBookings) {
+                    window.allBookings = window.allBookings.filter(b => b.booking_id !== bookingId);
+                }
+                
                 // Update UI if archive view is active
                 if (document.getElementById('archiveView').style.display !== 'none') {
                     this.renderArchivedBookings();
+                }
+                
+                // Update active bookings UI
+                if (typeof window.renderActiveBookings === 'function') {
+                    window.renderActiveBookings();
+                }
+                
+                // Update statistics
+                if (typeof window.updateStatistics === 'function') {
+                    window.updateStatistics();
+                }
+                
+                // Close modal popup if open
+                const modal = document.querySelector('.modal.show');
+                if (modal) {
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                }
+                
+                // Close booking details popup if open
+                const bookingModal = document.getElementById('bookingDetailsPopupModal');
+                if (bookingModal && bookingModal.classList.contains('show')) {
+                    this.closeBookingDetailsPopup();
+                }
+                
+                // Check if we need to show "No bookings found" message
+                if (typeof window.currentFilter !== 'undefined') {
+                    const currentFilter = window.currentFilter;
+                    if (currentFilter !== 'all' && currentFilter !== 'all-bookings' && currentFilter !== 'archive') {
+                        // Check if there are any bookings left for the current filter
+                        const remainingBookings = window.allBookings.filter(b => b.status === currentFilter);
+                        if (remainingBookings.length === 0) {
+                            // Update the grid to show "No bookings found"
+                            const grid = document.getElementById('activeBookingsGrid');
+                            if (grid) {
+                                grid.innerHTML = '<div class="empty-state">No bookings found</div>';
+                            }
+                        }
+                    }
+                }
+                
+                // Update calendar view if it's currently visible
+                if (typeof window.adminCalendar !== 'undefined' && window.adminCalendar.renderCalendar) {
+                    window.adminCalendar.renderCalendar(window.allBookings);
                 }
                 
                 this.showNotification('Booking archived successfully', 'success');
@@ -566,6 +660,14 @@ class AdminArchive {
         return {
             'Content-Type': 'application/json'
         };
+    }
+
+    closeBookingDetailsPopup() {
+        const modal = document.getElementById('bookingDetailsPopupModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+        }
     }
 }
 
