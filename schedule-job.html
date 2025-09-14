@@ -1613,62 +1613,56 @@
                 if (response.ok) {
                     availabilityData = await response.json();
     
-                    
+                    console.log('✅ Availability data loaded successfully');
                     // Log some sample data for debugging
                     const sampleDates = Object.keys(availabilityData).slice(0, 5);
-                    sampleDates.forEach(date => {
-                        console.log(`📊 ${date}:`, availabilityData[date]);
-                    });
-                    
-                    // If no real data, add sample data for testing
-                    if (Object.keys(availabilityData).length === 0) {
-                        addSampleAvailabilityData();
+                    if (sampleDates.length > 0) {
+                        sampleDates.forEach(date => {
+                            console.log(`📊 ${date}:`, availabilityData[date]);
+                        });
+                    } else {
+                        console.log('📊 No bookings or events found - all dates available by default');
                     }
                     
-                    // Re-render calendar with new data
+                    // Re-render calendar with real data (empty data means available dates)
                     if (document.getElementById('calendar-grid')) {
                         renderCalendar();
                     }
                 } else {
                     const errorText = await response.text();
                     console.error('❌ Failed to load availability data:', response.status, errorText);
-                    console.log('⚠️ No availability data loaded - calendar will show default availability');
+                    console.log('⚠️ API error - calendar will show all dates as available');
                     
-                    // Start with empty availability data
+                    // Start with empty availability data (all dates available)
                     availabilityData = {};
                     
-                    // For testing purposes, add some sample data
-                    addSampleAvailabilityData();
-                    
-                    // Re-render calendar with sample data
+                    // Re-render calendar with empty data
                     if (document.getElementById('calendar-grid')) {
                         renderCalendar();
                     }
                     
                     // Show warning notification
-                    showNotification('Using sample data - real availability data unavailable', 'warning');
+                    showNotification('Could not load booking data - showing all dates as available', 'warning');
                 }
             } catch (error) {
                 console.error('❌ Error loading availability data:', error);
-                console.log('⚠️ No availability data loaded - calendar will show default availability');
+                console.log('⚠️ Network error - calendar will show all dates as available');
                 
-                // Start with empty availability data
+                // Start with empty availability data (all dates available)
                 availabilityData = {};
                 
-                                    // For testing purposes, add some sample data
-                    addSampleAvailabilityData();
-                
-                // Re-render calendar with sample data
+                // Re-render calendar with empty data
                 if (document.getElementById('calendar-grid')) {
                     renderCalendar();
                 }
                 
                 // Show error notification
-                showNotification('Failed to load availability data - using sample data', 'error');
+                showNotification('Network error loading booking data - showing all dates as available', 'error');
             }
         }
 
-        // Add sample availability data for testing
+        // Add sample availability data for testing (DISABLED - was causing fake bookings to appear)
+        // This function is kept for manual testing purposes only
         function addSampleAvailabilityData() {
             const today = new Date();
             let blockedCount = 0;
@@ -1930,12 +1924,28 @@
                                 // All time slots are booked
                                 dayElement.classList.add('booked');
                                 dayElement.textContent = currentDateObj.getDate();
-                                dayElement.title = 'All time slots are booked';
+                                
+                                let tooltipText = 'All time slots are booked';
+                                if (dayBookings.calendar_events && dayBookings.calendar_events.length > 0) {
+                                    const eventTitles = dayBookings.calendar_events.map(event => 
+                                        `${event.title} (${event.startTime}-${event.endTime})`
+                                    ).join(', ');
+                                    tooltipText += `\nCalendar Events: ${eventTitles}`;
+                                }
+                                dayElement.title = tooltipText;
                             } else if (bookedTimeSlots.length > 0) {
                                 // Some time slots are booked
                                 dayElement.classList.add('partially-booked');
                                 dayElement.textContent = currentDateObj.getDate();
-                                dayElement.title = `Some time slots booked: ${bookedTimeSlots.join(', ')}`;
+                                
+                                let tooltipText = `Some time slots booked: ${bookedTimeSlots.join(', ')}`;
+                                if (dayBookings.calendar_events && dayBookings.calendar_events.length > 0) {
+                                    const eventTitles = dayBookings.calendar_events.map(event => 
+                                        `${event.title} (${event.startTime}-${event.endTime})`
+                                    ).join(', ');
+                                    tooltipText += `\nCalendar Events: ${eventTitles}`;
+                                }
+                                dayElement.title = tooltipText;
                                 
                                 // Add click handler for partially booked days
                                 dayElement.addEventListener('click', () => selectDate(currentDateObj));
@@ -2118,6 +2128,19 @@
                 
                 if (bookedTimeSlots.length === timeSlots.length) {
                     // All time slots are booked
+                    let conflictInfo = '';
+                    if (dayBookings.calendar_events && dayBookings.calendar_events.length > 0) {
+                        const eventTitles = dayBookings.calendar_events.map(event => 
+                            `${event.title} (${event.startTime}-${event.endTime})`
+                        ).join(', ');
+                        conflictInfo = `
+                            <div class="info-row">
+                                <span class="info-label">Calendar Events:</span>
+                                <span class="info-value" style="color: #dc3545;">${eventTitles}</span>
+                            </div>
+                        `;
+                    }
+                    
                     infoHTML = `
                         <div class="info-row">
                             <span class="info-label">Status:</span>
@@ -2131,9 +2154,23 @@
                             <span class="info-label">Available Slots:</span>
                             <span class="info-value">None (Job scheduling only)</span>
                         </div>
+                        ${conflictInfo}
                     `;
                 } else if (bookedTimeSlots.length > 0) {
                     // Some time slots are booked
+                    let conflictInfo = '';
+                    if (dayBookings.calendar_events && dayBookings.calendar_events.length > 0) {
+                        const eventTitles = dayBookings.calendar_events.map(event => 
+                            `${event.title} (${event.startTime}-${event.endTime})`
+                        ).join(', ');
+                        conflictInfo = `
+                            <div class="info-row">
+                                <span class="info-label">Calendar Events:</span>
+                                <span class="info-value" style="color: #dc3545;">${eventTitles}</span>
+                            </div>
+                        `;
+                    }
+                    
                     infoHTML = `
                         <div class="info-row">
                             <span class="info-label">Status:</span>
@@ -2151,6 +2188,7 @@
                             <span class="info-label">Available Slots:</span>
                             <span class="info-value">${availableTimeSlots.join(', ')} (Job scheduling only)</span>
                         </div>
+                        ${conflictInfo}
                     `;
                 } else {
                     // All time slots are available

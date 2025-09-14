@@ -53,9 +53,6 @@
         
         monthDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         
-        // Clear grid
-        grid.innerHTML = '';
-        
         // Check if we're on mobile (or force mobile for testing)
         const isMobile = window.innerWidth <= 768 || window.location.search.includes('mobile=true');
         
@@ -69,10 +66,17 @@
             if (calendarControls) {
                 calendarControls.style.display = 'none';
             }
-            // Clear the grid completely for mobile
-            grid.innerHTML = '';
-            // Mobile-friendly calendar with weeks
-            renderMobileCalendar(grid, bookings);
+            
+            // Check if mobile calendar already exists
+            const existingMobileCalendar = grid.querySelector('.mobile-calendar-container');
+            if (existingMobileCalendar) {
+                // Update existing mobile calendar instead of recreating
+                updateMobileCalendar(existingMobileCalendar, bookings);
+            } else {
+                // Clear grid and create new mobile calendar only if it doesn't exist
+                grid.innerHTML = '';
+                renderMobileCalendar(grid, bookings);
+            }
         } else {
             // Show the original month display and controls on desktop
             if (monthDisplay) {
@@ -83,7 +87,8 @@
             if (calendarControls) {
                 calendarControls.style.display = 'flex';
             }
-            // Desktop calendar (original grid layout)
+            // Clear grid and render desktop calendar
+            grid.innerHTML = '';
             renderDesktopCalendar(grid, bookings);
         }
     }
@@ -113,6 +118,91 @@
         grid.appendChild(mobileCalendarContainer);
         
         
+    }
+
+    function updateMobileCalendar(mobileCalendarContainer, bookings = []) {
+        // Add a subtle fade effect during update
+        mobileCalendarContainer.style.opacity = '0.8';
+        
+        // Update month display in top section
+        const monthYearText = mobileCalendarContainer.querySelector('.month-year-text');
+        if (monthYearText) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const newMonthText = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            // Only update if the text has actually changed
+            if (monthYearText.textContent !== newMonthText) {
+                monthYearText.textContent = newMonthText;
+            }
+        }
+        
+        // Update the weekly scroller with new dates
+        const weekContainer = mobileCalendarContainer.querySelector('#weekContainer');
+        if (weekContainer) {
+            // Store current scroll position to maintain it
+            const currentScrollLeft = weekContainer.scrollLeft;
+            
+            // Clear and re-render the week container
+            weekContainer.innerHTML = '';
+            
+            // Get all weeks for the current month
+            const allWeeks = getAllMonthWeeks();
+            
+            // Create date buttons for all weeks
+            allWeeks.forEach((weekDates, weekIndex) => {
+                weekDates.forEach(dateInfo => {
+                    const dateButton = createMonthWeekDateButton(dateInfo, bookings);
+                    weekContainer.appendChild(dateButton);
+                });
+            });
+            
+            // Restore scroll position to prevent jarring jumps
+            weekContainer.scrollLeft = currentScrollLeft;
+            
+            // Auto-scroll and select the appropriate date (without the jarring effect)
+            requestAnimationFrame(() => {
+                // Load saved selected date or default to today
+                const savedDate = loadSelectedDate();
+                const targetDateString = savedDate.toISOString().split('T')[0];
+                
+                // Find the button for the target date
+                const targetButton = weekContainer.querySelector(`[data-date="${targetDateString}"]`);
+                
+                if (targetButton) {
+                    // Select the target date without scrolling
+                    document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+                    targetButton.classList.add('selected');
+                    selectedDate = savedDate;
+                    // Update timeline and todo summary
+                    updateTimeEventsSection(selectedDate, bookings);
+                    updateTodoSummarySection(selectedDate, bookings);
+                } else {
+                    // Fallback to today if saved date not found
+                    const todayButton = weekContainer.querySelector('.month-week-date-button.today');
+                    if (todayButton) {
+                        document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
+                        todayButton.classList.add('selected');
+                        selectedDate = new Date();
+                        saveSelectedDate(selectedDate);
+                        updateTimeEventsSection(selectedDate, bookings);
+                        updateTodoSummarySection(selectedDate, bookings);
+                    }
+                }
+                
+                // Restore full opacity after update is complete
+                mobileCalendarContainer.style.opacity = '1';
+            });
+        } else {
+            // Restore opacity even if week container not found
+            mobileCalendarContainer.style.opacity = '1';
+        }
+        
+        // Update todo summary and time events sections
+        if (selectedDate) {
+            updateTodoSummarySection(selectedDate, bookings);
+            updateTimeEventsSection(selectedDate, bookings);
+        }
     }
 
     function createMobileCalendarTopSection() {
@@ -155,10 +245,8 @@
         weeklyScroller.appendChild(weekDisplay);
         
         // Initialize with all weeks of current month for horizontal scrolling
-        // Use setTimeout to ensure the DOM is updated before rendering
-        setTimeout(() => {
+        // Render immediately without setTimeout to prevent visual glitches
         renderAllMonthWeeks(bookings);
-        }, 0);
         
         return weeklyScroller;
     }
@@ -189,9 +277,9 @@
         const dayBookings = bookings.filter(booking => 
             (booking.date === dateString || booking.job_date === dateString) &&
             (booking.status === 'confirmed' || booking.status === 'pending' || 
-             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
-             booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
-             booking.status === 'completed')
+             booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
+             booking.status === 'pending-booking' || booking.status === 'invoice-ready' || 
+             booking.status === 'invoice-sent' || booking.status === 'completed')
         );
         
         const eventsCount = dayEvents.length;
@@ -202,14 +290,14 @@
                 <i class="fas fa-tasks todo-summary-icon"></i>
                 <h3 class="todo-summary-title">Today's to-do list</h3>
             </div>
-            <div class="todo-summary-counters">
-                <div class="todo-counter events">
-                    <div class="todo-counter-number">${eventsCount}</div>
-                    <div class="todo-counter-label">Events</div>
+            <div class="todo-summary-info">
+                <div class="todo-info-line">
+                    <i class="fas fa-calendar-alt todo-info-icon events"></i>
+                    <span class="todo-info-text">${eventsCount} Events</span>
                 </div>
-                <div class="todo-counter bookings">
-                    <div class="todo-counter-number">${bookingsCount}</div>
-                    <div class="todo-counter-label">Bookings</div>
+                <div class="todo-info-line">
+                    <i class="fas fa-briefcase todo-info-icon bookings"></i>
+                    <span class="todo-info-text">${bookingsCount} Bookings</span>
                 </div>
             </div>
         `;
@@ -258,8 +346,8 @@
         });
         
         
-        // Auto-scroll and select the appropriate date
-        setTimeout(() => {
+        // Auto-scroll and select the appropriate date (optimized for smooth experience)
+        requestAnimationFrame(() => {
             // Load saved selected date or default to today
             const savedDate = loadSelectedDate();
             const targetDateString = savedDate.toISOString().split('T')[0];
@@ -268,13 +356,7 @@
             const targetButton = weekContainer.querySelector(`[data-date="${targetDateString}"]`);
             
             if (targetButton) {
-                // TEMPORARILY DISABLED: targetButton.scrollIntoView({ 
-                //     behavior: 'smooth', 
-                //     block: 'nearest', 
-                //     inline: 'center' 
-                // });
-                
-                // Select the target date
+                // Select the target date without jarring scroll
                 document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
                 targetButton.classList.add('selected');
                 selectedDate = savedDate;
@@ -285,12 +367,6 @@
                 // Fallback to today if saved date not found
                 const todayButton = weekContainer.querySelector('.month-week-date-button.today');
                 if (todayButton) {
-                    // TEMPORARILY DISABLED: todayButton.scrollIntoView({ 
-                    //     behavior: 'smooth', 
-                    //     block: 'nearest', 
-                    //     inline: 'center' 
-                    // });
-                    
                     document.querySelectorAll('.month-week-date-button').forEach(btn => btn.classList.remove('selected'));
                     todayButton.classList.add('selected');
                     selectedDate = new Date();
@@ -299,7 +375,7 @@
                     updateTodoSummarySection(selectedDate, bookings);
                 }
             }
-        }, 100);
+        });
 
         // CSS should handle scrolling now - no JavaScript needed
         
@@ -430,9 +506,9 @@
         const dayBookings = bookings.filter(booking => 
             (booking.date === dateInfo.dateString || booking.job_date === dateInfo.dateString) &&
             (booking.status === 'confirmed' || booking.status === 'pending' || 
-             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
-                 booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
-                 booking.status === 'completed')
+             booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
+             booking.status === 'pending-booking' || booking.status === 'invoice-ready' || 
+             booking.status === 'invoice-sent' || booking.status === 'completed')
             );
             
             
@@ -520,7 +596,10 @@
             const dayEvents = window.adminCalendarEvents ? window.adminCalendarEvents.getEventsForDate(date.toISOString().split('T')[0]) : [];
             const dayBookings = bookings.filter(booking => 
                 booking.date === date.toISOString().split('T')[0] &&
-                (booking.status === 'confirmed' || booking.status === 'pending')
+                (booking.status === 'confirmed' || booking.status === 'pending' || 
+                 booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
+                 booking.status === 'pending-booking' || booking.status === 'invoice-ready' || 
+                 booking.status === 'invoice-sent' || booking.status === 'completed')
             );
             
             const hasEvents = dayEvents.length > 0 || dayBookings.length > 0;
@@ -714,9 +793,9 @@
         const dayBookings = bookings.filter(booking => 
             (booking.date === dateString || booking.job_date === dateString) &&
             (booking.status === 'confirmed' || booking.status === 'pending' || 
-             booking.status === 'quote-ready' || booking.status === 'pending-booking' ||
-             booking.status === 'invoice-ready' || booking.status === 'invoice-sent' ||
-             booking.status === 'completed')
+             booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
+             booking.status === 'pending-booking' || booking.status === 'invoice-ready' || 
+             booking.status === 'invoice-sent' || booking.status === 'completed')
         );
         
         // Update todo summary section
@@ -1304,7 +1383,7 @@
             const regularBookings = bookings.filter(booking => 
                 booking.date === dateString && 
                 (booking.status === 'confirmed' || booking.status === 'pending' || 
-                 booking.status === 'quote-ready' || 
+                 booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
                  booking.status === 'pending-booking')
             );
             
@@ -1836,7 +1915,7 @@
                     const dayBookings = allBookings.filter(booking => 
                         booking.date === dateString && 
                         (booking.status === 'confirmed' || booking.status === 'pending' || 
-                         booking.status === 'quote-ready' || 
+                         booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
                          booking.status === 'pending-booking')
                     );
                     
@@ -2159,7 +2238,7 @@
         const sourceBookings = (window.allBookings || []).filter(booking => 
             booking.date === sourceDate && 
             (booking.status === 'confirmed' || booking.status === 'pending' || 
-             booking.status === 'quote-ready' || 
+             booking.status === 'quote-ready' || booking.status === 'quote-sent' ||
              booking.status === 'pending-booking')
         );
 
@@ -2425,6 +2504,7 @@
     window.adminCalendar = {
         renderCalendar,
         renderMobileCalendar,
+        updateMobileCalendar,
         renderDesktopCalendar,
         handleDayClick,
         showCalendarPopup,

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Billing - Stellar T Management</title>
+    <link rel="stylesheet" href="quick-billing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Quick Quote View -->
+    <div class="quick-quote-view" id="quickQuoteView">
+        <div class="quick-quote-container">
+            <div class="quick-quote-header">
+                <h2><i class="fas fa-bolt"></i> Quick Billing Generator</h2>
+                <p>Generate quotes and invoices quickly without creating a full booking</p>
+            </div>
+            
+            <div class="quick-quote-actions">
+                <button class="quick-quote-btn" onclick="showQuickQuoteModal()">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    Generate Quote
+                </button>
+                <button class="quick-quote-btn" onclick="showQuickInvoiceModal()">
+                    <i class="fas fa-file-invoice"></i>
+                    Generate Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Quote Modal -->
+    <div id="quickQuoteModal" class="modal">
+        <div class="modal-content quote-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bolt"></i> Quick Quote</h3>
+                <button class="modal-close" onclick="closeModal('quickQuoteModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="quote-form">
+                    <!-- Client Information Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-user"></i> Client Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <input type="text" id="quickQuoteClientName" placeholder="Full Name *" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="quickQuoteClientPhone" placeholder="Phone Number (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="quickQuoteClientAddress" placeholder="Address (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="quickQuoteClientEmail" placeholder="Email (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="date" id="quickQuoteDate" placeholder="Quote Date" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-tools"></i> Service Items</h4>
+                        <div id="quickQuoteServiceItems" class="service-items-container">
+                            <div class="service-item" data-item-id="1">
+                                <div class="item-row">
+                                    <div class="item-description">
+                                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                                    </div>
+                                    <div class="item-controls">
+                                        <div class="item-quantity">
+                                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                                        </div>
+                                        <div class="item-price">
+                                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                                        </div>
+                                    </div>
+                                    <div class="item-footer">
+                                        <div class="item-total">
+                                            <span class="item-total-amount">$0.00</span>
+                                        </div>
+                                        <div class="item-actions">
+                                            <button type="button" class="remove-item-btn" onclick="removeQuickQuoteServiceItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-photos-section">
+                                    <div class="photo-upload-area" onclick="triggerQuickQuotePhotoUpload(this)">
+                                        <div class="photo-upload-content">
+                                            <i class="fas fa-file-image"></i>
+                                            <span class="photo-upload-text">Photos: Add Photo</span>
+                                        </div>
+                                    </div>
+                                    <div class="photos-container">
+                                        <!-- Photos will be displayed here -->
+                                    </div>
+                                    <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handleQuickQuotePhotoUpload(this)">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item-btn" onclick="addQuickQuoteServiceItem()">
+                            <i class="fas fa-plus"></i> Add Service Item
+                        </button>
+                    </div>
+
+                    <!-- Tax and Total Section -->
+                    <div class="quote-section">
+                        <div class="tax-toggle-container">
+                            <label class="tax-toggle-label">
+                                <input type="checkbox" id="quickQuoteTaxToggle" onchange="toggleQuickQuoteTax()">
+                                <span class="tax-toggle-text">Apply 5% Sales Tax</span>
+                            </label>
+                        </div>
+                        <div class="quote-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span id="quickQuoteSubtotalAmount">$0.00</span>
+                            </div>
+                            <div class="total-row tax-row" id="quickQuoteTaxRow" style="display: none;">
+                                <span>Tax (5%):</span>
+                                <span id="quickQuoteTaxAmount">$0.00</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span id="quickQuoteGrandTotalAmount">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Quote Actions -->
+                    <div class="quote-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('quickQuoteModal')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-primary" onclick="generateQuickQuote()">
+                            <i class="fas fa-eye"></i> Generate Quote
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Invoice Modal -->
+    <div id="quickInvoiceModal" class="modal">
+        <div class="modal-content quote-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bolt"></i> Quick Invoice</h3>
+                <button class="modal-close" onclick="closeModal('quickInvoiceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="quote-form">
+                    <!-- Client Information Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-user"></i> Client Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <input type="text" id="quickInvoiceClientName" placeholder="Full Name *" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="quickInvoiceClientPhone" placeholder="Phone Number (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="quickInvoiceClientAddress" placeholder="Address (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="quickInvoiceClientEmail" placeholder="Email (optional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="date" id="quickInvoiceDate" placeholder="Invoice Date" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items Section -->
+                    <div class="quote-section">
+                        <h4><i class="fas fa-tools"></i> Service Items</h4>
+                        <div id="quickInvoiceServiceItems" class="service-items-container">
+                            <div class="service-item" data-item-id="1">
+                                <div class="item-row">
+                                    <div class="item-description">
+                                        <input type="text" class="item-desc-input" placeholder="Service or item description" value="">
+                                    </div>
+                                    <div class="item-controls">
+                                        <div class="item-quantity">
+                                            <input type="number" class="item-qty-input" value="1" min="1" placeholder="Qty">
+                                        </div>
+                                        <div class="item-price">
+                                            <input type="number" class="item-price-input" value="" min="0" step="0.01" placeholder="Price">
+                                        </div>
+                                    </div>
+                                    <div class="item-footer">
+                                        <div class="item-total">
+                                            <span class="item-total-amount">$0.00</span>
+                                        </div>
+                                        <div class="item-actions">
+                                            <button type="button" class="remove-item-btn" onclick="removeQuickInvoiceServiceItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-photos-section">
+                                    <div class="photo-upload-area" onclick="triggerQuickInvoicePhotoUpload(this)">
+                                        <div class="photo-upload-content">
+                                            <i class="fas fa-file-image"></i>
+                                            <span class="photo-upload-text">Photos: Add Photo</span>
+                                        </div>
+                                    </div>
+                                    <div class="photos-container">
+                                        <!-- Photos will be displayed here -->
+                                    </div>
+                                    <input type="file" class="photo-upload-input" accept="image/*" multiple style="display: none;" onchange="handleQuickInvoicePhotoUpload(this)">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item-btn" onclick="addQuickInvoiceServiceItem()">
+                            <i class="fas fa-plus"></i> Add Service Item
+                        </button>
+                    </div>
+
+                    <!-- Tax and Total Section -->
+                    <div class="quote-section">
+                        <div class="tax-toggle-container">
+                            <label class="tax-toggle-label">
+                                <input type="checkbox" id="quickInvoiceTaxToggle" onchange="toggleQuickInvoiceTax()">
+                                <span class="tax-toggle-text">Apply 5% Sales Tax</span>
+                            </label>
+                        </div>
+                        <div class="quote-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span id="quickInvoiceSubtotalAmount">$0.00</span>
+                            </div>
+                            <div class="total-row tax-row" id="quickInvoiceTaxRow" style="display: none;">
+                                <span>Tax (5%):</span>
+                                <span id="quickInvoiceTaxAmount">$0.00</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span id="quickInvoiceGrandTotalAmount">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Invoice Actions -->
+                    <div class="quote-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('quickInvoiceModal')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-primary" onclick="generateQuickInvoice()">
+                            <i class="fas fa-eye"></i> Generate Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quote Preview Modal -->
+    <div id="quotePreviewModal" class="modal">
+        <div class="modal-content quote-preview-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-invoice-dollar"></i> Quote Preview</h3>
+                <button class="modal-close" onclick="closeModal('quotePreviewModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="quotePreviewContent">
+                    <!-- Quote content will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('quotePreviewModal')">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button type="button" class="btn-primary" onclick="printQuote()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Preview Modal -->
+    <div id="invoicePreviewModal" class="modal">
+        <div class="modal-content quote-preview-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-invoice"></i> Invoice Preview</h3>
+                <button class="modal-close" onclick="closeModal('invoicePreviewModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="invoicePreviewContent">
+                    <!-- Invoice content will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('invoicePreviewModal')">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button type="button" class="btn-primary" onclick="printInvoice()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="quick-billing.js"></script>
+</body>
+</html>

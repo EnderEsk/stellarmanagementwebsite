@@ -9,8 +9,31 @@ let selectedDate = null;
 
 // Helper function to format date without timezone issues
 function formatBookingDate(dateString) {
+    // Handle null, undefined, or empty date strings
+    if (!dateString || typeof dateString !== 'string') {
+        return 'Invalid Date';
+    }
+    
+    // Check if the date string is in the expected format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) {
+        return 'Invalid Date';
+    }
+    
     const [year, month, day] = dateString.split('-').map(Number);
+    
+    // Validate the parsed numbers
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return 'Invalid Date';
+    }
+    
     const date = new Date(year, month - 1, day);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+    }
+    
     return date.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
@@ -1224,7 +1247,17 @@ function renderBookings(bookings) {
     }
     
     // Sort bookings by date (newest first)
-    const sortedBookings = bookings.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedBookings = bookings.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        
+        // Handle invalid dates by putting them at the end
+        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+        if (isNaN(dateA.getTime())) return 1;
+        if (isNaN(dateB.getTime())) return -1;
+        
+        return dateB - dateA;
+    });
     
     container.innerHTML = sortedBookings.map(booking => createBookingCard(booking)).join('');
 }

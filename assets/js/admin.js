@@ -23,8 +23,31 @@ window.currentCustomerId = currentCustomerId;
 
 // Helper function to format date without timezone issues
 function formatBookingDate(dateString) {
+    // Handle null, undefined, or empty date strings
+    if (!dateString || typeof dateString !== 'string') {
+        return 'Invalid Date';
+    }
+    
+    // Check if the date string is in the expected format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) {
+        return 'Invalid Date';
+    }
+    
     const [year, month, day] = dateString.split('-').map(Number);
+    
+    // Validate the parsed numbers
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return 'Invalid Date';
+    }
+    
     const date = new Date(year, month - 1, day);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+    }
+    
     return date.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
@@ -332,6 +355,12 @@ function renderActiveBookings() {
     }
 
     grid.innerHTML = filteredBookings.map(booking => {
+        // Validate booking data
+        if (!booking || !booking.booking_id) {
+            console.warn('Invalid booking data:', booking);
+            return '';
+        }
+        
         const statusClass = `status-${booking.status}`;
         const statusText = booking.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
@@ -383,9 +412,9 @@ function renderActiveBookings() {
                     <span class="status-badge ${statusClass}">${statusText}</span>
                 </div>
                 <div class="booking-essentials">
-                    <div class="essential-row"><i class="fas fa-tools essential-icon"></i><span class="essential-value">${booking.service}</span></div>
+                    <div class="essential-row"><i class="fas fa-tools essential-icon"></i><span class="essential-value">${booking.service || 'No service specified'}</span></div>
                     <div class="essential-row"><i class="fas fa-calendar essential-icon"></i><span class="essential-value">${formatBookingDate(booking.date)}</span></div>
-                    <div class="essential-row"><i class="fas fa-user essential-icon"></i><span class="essential-value">${booking.name}</span></div>
+                    <div class="essential-row"><i class="fas fa-user essential-icon"></i><span class="essential-value">${booking.name || 'No name provided'}</span></div>
                 </div>
                 <div class="booking-actions" onclick="event.stopPropagation();">
                     ${actionButtons}
@@ -414,8 +443,8 @@ function renderHistory() {
         return `
             <tr>
                 <td>${booking.booking_id}</td>
-                <td>${booking.name}</td>
-                <td>${booking.service}</td>
+                <td>${booking.name || 'No name provided'}</td>
+                <td>${booking.service || 'No service specified'}</td>
                 <td>${formatBookingDate(booking.date)}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             </tr>

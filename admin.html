@@ -477,6 +477,11 @@
                         <span class="item-text">Quote Sent</span>
                         <span class="item-count" id="quoteSentCount">0</span>
                     </div>
+                    <div class="sidebar-item" data-filter="quote-accepted">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="item-text">Quote Accepted</span>
+                        <span class="item-count" id="quoteAcceptedCount">0</span>
+                    </div>
                     <div class="sidebar-item" data-filter="pending-booking">
                         <i class="fas fa-calendar-plus"></i>
                         <span class="item-text">Job Scheduled</span>
@@ -629,6 +634,11 @@
                             <i class="fas fa-paper-plane"></i>
                             <span class="item-text">Quote Sent</span>
                             <span class="item-count" id="desktop-quoteSentCount">0</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="quote-accepted">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="item-text">Quote Accepted</span>
+                            <span class="item-count" id="desktop-quoteAcceptedCount">0</span>
                         </div>
                         <div class="sidebar-item" data-filter="pending-booking">
                             <i class="fas fa-calendar-plus"></i>
@@ -1313,6 +1323,7 @@
                 pending: allBookings.filter(b => b.status === 'pending').length,
                 quoteReady: allBookings.filter(b => b.status === 'quote-ready').length,
                 quoteSent: allBookings.filter(b => b.status === 'quote-sent').length,
+                quoteAccepted: allBookings.filter(b => b.status === 'quote-accepted').length,
                 pendingBooking: allBookings.filter(b => b.status === 'pending-booking').length,
                 invoiceReady: allBookings.filter(b => b.status === 'invoice-ready').length,
                 invoiceSent: allBookings.filter(b => b.status === 'invoice-sent').length,
@@ -1323,6 +1334,7 @@
             document.getElementById('pendingCount').textContent = stats.pending;
             document.getElementById('quoteReadyCount').textContent = stats.quoteReady;
             document.getElementById('quoteSentCount').textContent = stats.quoteSent;
+            document.getElementById('quoteAcceptedCount').textContent = stats.quoteAccepted;
             document.getElementById('pendingBookingCount').textContent = stats.pendingBooking;
             document.getElementById('invoiceReadyCount').textContent = stats.invoiceReady;
             document.getElementById('invoiceSentCount').textContent = stats.invoiceSent;
@@ -1332,6 +1344,7 @@
             const desktopPendingCount = document.getElementById('desktop-pendingCount');
             const desktopQuoteReadyCount = document.getElementById('desktop-quoteReadyCount');
             const desktopQuoteSentCount = document.getElementById('desktop-quoteSentCount');
+            const desktopQuoteAcceptedCount = document.getElementById('desktop-quoteAcceptedCount');
             const desktopPendingBookingCount = document.getElementById('desktop-pendingBookingCount');
             const desktopInvoiceReadyCount = document.getElementById('desktop-invoiceReadyCount');
             const desktopInvoiceSentCount = document.getElementById('desktop-invoiceSentCount');
@@ -1340,6 +1353,7 @@
             if (desktopPendingCount) desktopPendingCount.textContent = stats.pending;
             if (desktopQuoteReadyCount) desktopQuoteReadyCount.textContent = stats.quoteReady;
             if (desktopQuoteSentCount) desktopQuoteSentCount.textContent = stats.quoteSent;
+            if (desktopQuoteAcceptedCount) desktopQuoteAcceptedCount.textContent = stats.quoteAccepted;
             if (desktopPendingBookingCount) desktopPendingBookingCount.textContent = stats.pendingBooking;
             if (desktopInvoiceReadyCount) desktopInvoiceReadyCount.textContent = stats.invoiceReady;
             if (desktopInvoiceSentCount) desktopInvoiceSentCount.textContent = stats.invoiceSent;
@@ -1480,6 +1494,8 @@
                 filteredBookings = allBookings.filter(b => b.status === 'quote-ready');
             } else if (currentFilter === 'quote-sent') {
                 filteredBookings = allBookings.filter(b => b.status === 'quote-sent');
+            } else if (currentFilter === 'quote-accepted') {
+                filteredBookings = allBookings.filter(b => b.status === 'quote-accepted');
             } else if (currentFilter === 'pending-booking') {
                 filteredBookings = allBookings.filter(b => b.status === 'pending-booking');
             } else if (currentFilter === 'invoice-ready') {
@@ -1533,12 +1549,6 @@
                         <button class="action-btn quote" onclick="showQuoteModalWithRetry(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
                         </button>
-                        <button class="action-btn confirm" onclick="sendQuoteToCustomer('${booking.booking_id}')">
-                            <i class="fas fa-paper-plane"></i> Send Quote
-                        </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending')" title="Revert to Initial State">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -1549,9 +1559,13 @@
                         <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
                         </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-ready')" title="Revert to Quote Ready">
-                            <i class="fas fa-undo"></i> Revert
+                        <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                            <i class="fas fa-archive"></i> Archive
                         </button>
+                    `;
+                } else if (booking.status === 'quote-accepted') {
+                    statusText = 'Quote Accepted - Ready to Schedule';
+                    actionButtons = `
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -1564,9 +1578,6 @@
                         </button>
                         <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
-                        </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
-                            <i class="fas fa-undo"></i> Revert
                         </button>
                         <button class="action-btn cancel" onclick="updateBookingStatus('${booking.booking_id}', 'cancelled')">
                             <i class="fas fa-times"></i> Cancel
@@ -1584,9 +1595,6 @@
                         <button class="action-btn quote" onclick="sendInvoiceFromBooking('${booking.booking_id}')">
                             <i class="fas fa-file-invoice-dollar"></i> Send Invoice
                         </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -1600,9 +1608,6 @@
                         <button class="action-btn confirm" onclick="markInvoicePaid('${booking.booking_id}')">
                             <i class="fas fa-check"></i> Mark as Paid
                         </button>
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-ready')" title="Revert to Invoice Ready">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -1610,9 +1615,6 @@
                 } else if (booking.status === 'completed') {
                     statusText = 'Completed';
                     actionButtons = `
-                        <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
-                            <i class="fas fa-undo"></i> Revert
-                        </button>
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -1832,7 +1834,8 @@
                 const validTransitions = {
                     'pending': ['quote-ready'],
                     'quote-ready': ['quote-sent'],
-                    'quote-sent': ['pending-booking'],
+                    'quote-sent': ['quote-accepted'],
+                    'quote-accepted': ['pending-booking'],
                     'pending-booking': ['invoice-ready'],
                     'invoice-ready': ['invoice-sent'],
                     'invoice-sent': ['completed']
@@ -2200,6 +2203,9 @@
                 case 'quote-sent':
                     sectionTitle.textContent = 'Quote Sent';
                     break;
+                case 'quote-accepted':
+                    sectionTitle.textContent = 'Quote Accepted';
+                    break;
 
                 case 'pending-booking':
                     sectionTitle.textContent = 'Job Scheduled - Awaiting Admin Confirmation';
@@ -2326,7 +2332,7 @@
                     <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
                         <i class="fas fa-envelope"></i> Message
                     </button>
-                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'pending-booking')" title="Revert to Job Scheduled">
+                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'invoice-sent')" title="Revert to Invoice Sent">
                         <i class="fas fa-undo"></i> Revert
                     </button>
                     <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
@@ -2392,10 +2398,31 @@
                     <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                         <i class="fas fa-file-invoice-dollar"></i> Quote
                     </button>
-                    <button class="action-btn forward" onclick="moveToNextStage('${booking.booking_id}', 'pending-booking')" title="Move to Job Scheduled">
+                    <button class="action-btn forward" onclick="moveToNextStage('${booking.booking_id}', 'quote-accepted')" title="Move to Quote Accepted">
                         <i class="fas fa-arrow-right"></i> Forward
                     </button>
                     <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-ready')" title="Revert to Quote Ready">
+                        <i class="fas fa-undo"></i> Revert
+                    </button>
+                    <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
+                        <i class="fas fa-archive"></i> Archive
+                    </button>
+                    <button class="action-btn delete" onclick="deleteBooking('${booking.booking_id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                `;
+            } else if (booking.status === 'quote-accepted') {
+                actionButtons = `
+                    <button class="action-btn message" onclick="showCustomerMessageModal('${booking.booking_id}', '${booking.name}', '${booking.email}')">
+                        <i class="fas fa-envelope"></i> Message
+                    </button>
+                    <button class="action-btn quote" onclick="showQuoteModal(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-file-invoice-dollar"></i> Quote
+                    </button>
+                    <button class="action-btn forward" onclick="moveToNextStage('${booking.booking_id}', 'pending-booking')" title="Move to Job Scheduled">
+                        <i class="fas fa-arrow-right"></i> Forward
+                    </button>
+                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
                         <i class="fas fa-undo"></i> Revert
                     </button>
                     <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
@@ -2416,7 +2443,7 @@
                     <button class="action-btn forward" onclick="moveToNextStage('${booking.booking_id}', 'invoice-ready')" title="Move to Invoice Ready">
                         <i class="fas fa-arrow-right"></i> Forward
                     </button>
-                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-sent')" title="Revert to Quote Sent">
+                    <button class="action-btn warning" onclick="revertBookingStatus('${booking.booking_id}', 'quote-accepted')" title="Revert to Quote Accepted">
                         <i class="fas fa-undo"></i> Revert
                     </button>
                     <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
@@ -8220,16 +8247,19 @@ stellartmanagement@outlook.com</span>
                     targetFilter = 'quote-ready';
                     break;
                 case 'quote-sent':
-                    targetFilter = 'pending-booking';
+                    targetFilter = 'quote-sent';
+                    break;
+                case 'quote-accepted':
+                    targetFilter = 'quote-accepted';
                     break;
                 case 'pending-booking':
-                    targetFilter = 'invoice-ready';
+                    targetFilter = 'pending-booking';
                     break;
                 case 'invoice-ready':
-                    targetFilter = 'invoice-sent';
+                    targetFilter = 'invoice-ready';
                     break;
                 case 'invoice-sent':
-                    targetFilter = 'completed';
+                    targetFilter = 'invoice-sent';
                     break;
                 case 'completed':
                     targetFilter = 'completed';

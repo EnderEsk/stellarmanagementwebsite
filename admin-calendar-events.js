@@ -376,6 +376,17 @@ class AdminCalendarEvents {
             form.reset();
         }
         
+        // Reset modal title and button text
+        const modalTitle = document.querySelector('#adminCalendarEventsModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> Add Calendar Event';
+        }
+
+        const saveButton = document.querySelector('#adminCalendarEventsModal .btn-primary');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="fas fa-save"></i> Save Event';
+        }
+        
         // Reset to today's date
         const eventDateInput = document.getElementById('eventDate');
         if (eventDateInput) {
@@ -403,8 +414,6 @@ class AdminCalendarEvents {
         this.selectedColor = '#007bff';
         this.updateColorSelection();
         this.updatePreviewCardColor();
-
-
 
         // Reset input states (only for inputs with floating labels)
         document.querySelectorAll('.input-wrapper').forEach(wrapper => {
@@ -451,44 +460,56 @@ class AdminCalendarEvents {
                 endTime,
                 location: location ? location.trim() : '',
                 description,
-                color,
-                created_at: new Date().toISOString()
+                color
             };
 
-            const response = await fetch('/api/calendar-events', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...this.getAuthHeaders()
-                },
-                body: JSON.stringify(eventData)
-            });
+            let response;
+            let successMessage;
+
+            if (this.currentEvent) {
+                // Update existing event
+                eventData.updated_at = new Date().toISOString();
+                const eventId = this.currentEvent.id || this.currentEvent._id;
+                
+                response = await fetch(`/api/calendar-events/${eventId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.getAuthHeaders()
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                successMessage = 'Event updated successfully!';
+            } else {
+                // Create new event
+                eventData.created_at = new Date().toISOString();
+                
+                response = await fetch('/api/calendar-events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.getAuthHeaders()
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                successMessage = 'Event created successfully!';
+            }
 
             if (response.ok) {
                 const result = await response.json();
-                this.showNotification('Event created successfully!', 'success');
+                this.showNotification(successMessage, 'success');
                 this.closeModal();
                 
-                // Refresh events and calendar
+                // Refresh events data and calendar (same as manual refresh)
                 await this.loadEvents();
                 
-                // Refresh the day management modal if it's open
-                if (window.adminCalendar && typeof window.adminCalendar.refreshDayManagementModal === 'function') {
-                    window.adminCalendar.refreshDayManagementModal();
-                }
-                
-                // Notify admin calendar to refresh
-                if (window.adminCalendar && typeof window.adminCalendar.renderCalendar === 'function') {
-                    await window.adminCalendar.renderCalendar(window.allBookings || []);
-                }
-                
-                // Also refresh mobile calendar if it's currently displayed
-                if (window.adminCalendar && typeof window.adminCalendar.refreshMobileCalendar === 'function') {
-                    window.adminCalendar.refreshMobileCalendar();
+                // Trigger the same refresh as manual refresh button
+                if (typeof window.loadBookings === 'function') {
+                    await window.loadBookings();
                 }
             } else {
                 const error = await response.json();
-                this.showNotification(error.error || 'Failed to create event', 'error');
+                this.showNotification(error.error || `Failed to ${this.currentEvent ? 'update' : 'create'} event`, 'error');
             }
         } catch (error) {
             console.error('Error saving event:', error);
@@ -542,22 +563,18 @@ class AdminCalendarEvents {
             if (response.ok) {
                 this.showNotification('Event deleted successfully!', 'success');
                 
-                // Refresh events and calendar
+                // Close any existing event details modal
+                const existingModal = document.querySelector('.event-details-modal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Refresh events data and calendar (same as manual refresh)
                 await this.loadEvents();
                 
-                // Refresh the day management modal if it's open
-                if (window.adminCalendar && typeof window.adminCalendar.refreshDayManagementModal === 'function') {
-                    window.adminCalendar.refreshDayManagementModal();
-                }
-                
-                // Notify admin calendar to refresh
-                if (window.adminCalendar && typeof window.adminCalendar.renderCalendar === 'function') {
-                    await window.adminCalendar.renderCalendar(window.allBookings || []);
-                }
-                
-                // Also refresh mobile calendar if it's currently displayed
-                if (window.adminCalendar && typeof window.adminCalendar.refreshMobileCalendar === 'function') {
-                    window.adminCalendar.refreshMobileCalendar();
+                // Trigger the same refresh as manual refresh button
+                if (typeof window.loadBookings === 'function') {
+                    await window.loadBookings();
                 }
             } else {
                 const error = await response.json();
@@ -808,7 +825,8 @@ class AdminCalendarEvents {
                 </p>` : ''}
             </div>
             <div style="display: flex; gap: 8px;">
-                <button onclick="window.adminCalendarEvents.editEvent('${event.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: ${event.color || '#007bff'}; color: white; cursor: pointer;">Edit</button>
+                <button onclick="window.adminCalendarEvents.editEvent('${event.id || event._id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: ${event.color || '#007bff'}; color: white; cursor: pointer;">Edit</button>
+                <button onclick="window.adminCalendarEvents.deleteEvent('${event.id || event._id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #dc3545; color: white; cursor: pointer;">Delete</button>
             </div>
         `;
         
@@ -823,11 +841,72 @@ class AdminCalendarEvents {
         });
     }
 
-    // Method to edit event (placeholder for now)
-    editEvent(eventId) {
-        // TODO: Implement event editing
-        // This could open the existing modal with pre-filled data
+    // Method to edit event
+    async editEvent(eventId) {
+        try {
+            // Find the event to edit
+            const event = this.events.find(e => (e.id || e._id) === eventId);
+            if (!event) {
+                this.showNotification('Event not found', 'error');
+                return;
+            }
+
+            // Close any existing event details modal
+            const existingModal = document.querySelector('.event-details-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Set current event for editing
+            this.currentEvent = event;
+
+            // Update modal title
+            const modalTitle = document.querySelector('#adminCalendarEventsModal .modal-header h3');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Calendar Event';
+            }
+
+            // Update save button text
+            const saveButton = document.querySelector('#adminCalendarEventsModal .btn-primary');
+            if (saveButton) {
+                saveButton.innerHTML = '<i class="fas fa-save"></i> Update Event';
+            }
+
+            // Pre-fill form with event data
+            document.getElementById('eventTitle').value = event.title || '';
+            document.getElementById('eventDate').value = event.date || '';
+            document.getElementById('eventType').value = event.type || '';
+            document.getElementById('eventStartTime').value = event.startTime || '';
+            document.getElementById('eventEndTime').value = event.endTime || '';
+            document.getElementById('eventLocation').value = event.location || '';
+            document.getElementById('eventDescription').value = event.description || '';
+
+            // Set color selection
+            this.selectedColor = event.color || '#007bff';
+            this.updateColorSelection();
+            this.updatePreviewCardColor();
+
+            // Update input states for floating labels
+            document.querySelectorAll('.input-wrapper').forEach(wrapper => {
+                const input = wrapper.querySelector('input, select, textarea');
+                if (input && input.value && input.type !== 'time' && input.type !== 'date') {
+                    wrapper.classList.add('has-value');
+                }
+            });
+
+            // Update live preview
+            this.updateLivePreview();
+
+            // Show modal without resetting the date (pass the event's date)
+            this.showModal(event.date);
+
+        } catch (error) {
+            console.error('Error editing event:', error);
+            this.showNotification('Error loading event for editing', 'error');
+        }
     }
+
+
 
     // Helper method to convert hex color to RGB
     hexToRgb(hex) {

@@ -483,7 +483,36 @@ app.get('/api/bookings', requireAdminAuth, async (req, res) => {
             .find({ archived: { $ne: true } }) // Exclude archived bookings
             .sort({ date: 1, time: 1 })
             .toArray();
-        res.json(bookings);
+        
+        // Filter out bookings with invalid or missing dates
+        const validBookings = bookings.filter(booking => {
+            if (!booking.date || typeof booking.date !== 'string') {
+                console.warn(`Booking ${booking.booking_id} has invalid date:`, booking.date);
+                return false;
+            }
+            
+            // Check if date is in valid format (YYYY-MM-DD)
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(booking.date)) {
+                console.warn(`Booking ${booking.booking_id} has invalid date format:`, booking.date);
+                return false;
+            }
+            
+            // Check if date is actually valid
+            const date = new Date(booking.date);
+            if (isNaN(date.getTime())) {
+                console.warn(`Booking ${booking.booking_id} has invalid date value:`, booking.date);
+                return false;
+            }
+            
+            return true;
+        });
+        
+        if (validBookings.length !== bookings.length) {
+            console.warn(`Filtered out ${bookings.length - validBookings.length} bookings with invalid dates`);
+        }
+        
+        res.json(validBookings);
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Database error' });
@@ -549,6 +578,25 @@ function formatDateInCalgary(date) {
     return `${year}-${month}-${day}`;
 }
 
+// Helper function to check if two time ranges overlap
+function timeRangesOverlap(start1, end1, start2, end2) {
+    // Convert time strings to minutes for easier comparison
+    function timeToMinutes(timeStr) {
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+    }
+    
+    const start1Min = timeToMinutes(start1);
+    const end1Min = timeToMinutes(end1);
+    const start2Min = timeToMinutes(start2);
+    const end2Min = timeToMinutes(end2);
+    
+    return start1Min < end2Min && end1Min > start2Min;
+}
+
 // Get availability data for a date range
 app.get('/api/availability', async (req, res) => {
     try {
@@ -568,6 +616,13 @@ app.get('/api/availability', async (req, res) => {
             .sort({ date: 1, time: 1 })
             .toArray();
         
+        // Get calendar events for the date range
+        const calendarEvents = await db.collection('calendar_events')
+            .find({
+                date: { $gte: start_date, $lte: end_date }
+            })
+            .toArray();
+        
         // Group by date and time slot with normalized times
         const availability = {};
         bookings.forEach(booking => {
@@ -580,6 +635,38 @@ app.get('/api/availability', async (req, res) => {
                 availability[booking.date][normalizedTime] = 0;
             }
             availability[booking.date][normalizedTime]++;
+        });
+        
+        // Check calendar events for conflicts with booking time slots
+        // Standard booking time slots are 5:30 PM - 7:30 PM
+        const bookingStartTime = '5:30 PM';
+        const bookingEndTime = '7:30 PM';
+        
+        calendarEvents.forEach(event => {
+            // Check if the event overlaps with the booking time slot
+            if (timeRangesOverlap(event.startTime, event.endTime, bookingStartTime, bookingEndTime)) {
+                if (!availability[event.date]) {
+                    availability[event.date] = {};
+                }
+                
+                // Mark the 5:30 PM slot as having a conflict (treat as booked)
+                const normalizedTime = normalizeTimeFormat(bookingStartTime);
+                if (!availability[event.date][normalizedTime]) {
+                    availability[event.date][normalizedTime] = 0;
+                }
+                availability[event.date][normalizedTime]++;
+                
+                // Add metadata about the calendar event conflict
+                if (!availability[event.date]['calendar_events']) {
+                    availability[event.date]['calendar_events'] = [];
+                }
+                availability[event.date]['calendar_events'].push({
+                    title: event.title,
+                    startTime: event.startTime,
+                    endTime: event.endTime,
+                    type: event.type
+                });
+            }
         });
         
         // Also include blocked dates in the response (excluding unblocked weekends)
