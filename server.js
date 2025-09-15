@@ -2912,7 +2912,7 @@ app.get('/api/calendar-events', requireAdminAuth, async (req, res) => {
 // Create a new calendar event
 app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
     try {
-        const { title, type, date, startTime, endTime, location, description, color } = req.body;
+        const { title, type, date, startTime, endTime, location, description, color, sendToMyself } = req.body;
         
         if (!title || !type || !date || !startTime || !endTime) {
             return res.status(400).json({ error: 'Title, type, date, start time, and end time are required' });
@@ -2933,6 +2933,17 @@ app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
         
         const result = await db.collection('calendar_events').insertOne(eventData);
         
+        // Send email confirmation if requested
+        if (sendToMyself && req.user && req.user.email) {
+            try {
+                await emailService.sendEventConfirmationEmail(req.user.email, eventData, false);
+                console.log('📧 Event confirmation email sent to:', req.user.email);
+            } catch (emailError) {
+                console.error('❌ Failed to send event confirmation email:', emailError);
+                // Don't fail the request if email fails
+            }
+        }
+        
         res.status(201).json({
             message: 'Event created successfully',
             event: { ...eventData, _id: result.insertedId }
@@ -2947,7 +2958,7 @@ app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
 app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
     try {
         const { eventId } = req.params;
-        const { title, type, date, startTime, endTime, location, description, color } = req.body;
+        const { title, type, date, startTime, endTime, location, description, color, sendToMyself } = req.body;
         
         if (!title || !type || !date || !startTime || !endTime) {
             return res.status(400).json({ error: 'Title, type, date, start time, and end time are required' });
@@ -2972,6 +2983,17 @@ app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
         
         if (result.matchedCount === 0) {
             return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        // Send email confirmation if requested
+        if (sendToMyself && req.user && req.user.email) {
+            try {
+                await emailService.sendEventConfirmationEmail(req.user.email, updateData, true);
+                console.log('📧 Event update confirmation email sent to:', req.user.email);
+            } catch (emailError) {
+                console.error('❌ Failed to send event update confirmation email:', emailError);
+                // Don't fail the request if email fails
+            }
         }
         
         res.json({

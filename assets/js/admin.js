@@ -343,7 +343,7 @@ function renderActiveBookings() {
     if (currentFilter === 'all') {
         filteredBookings = allBookings.filter(booking => 
             booking.status === 'pending' || booking.status === 'confirmed' || 
-            booking.status === 'pending-booking' || booking.status === 'completed'
+            booking.status === 'pending-booking'
         );
     } else {
         filteredBookings = allBookings.filter(b => b.status === currentFilter);

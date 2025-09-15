@@ -367,7 +367,6 @@
             }
         }
     </style>
-
 </head>
 <body>
     <nav>
@@ -1003,7 +1002,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // Variables are now declared in admin.js to avoid duplication
         // Global state variables
@@ -1481,11 +1479,15 @@
             let filteredBookings = [];
             
             if (currentFilter === 'all') {
-                // Show only active bookings (pending, pending-booking, and completed)
+                // Show only active bookings (pending, quote-ready, quote-sent, quote-accepted, pending-booking, invoice-ready, invoice-sent)
                 filteredBookings = allBookings.filter(booking => 
                     booking.status === 'pending' || 
-                    booking.status === 'quote-ready' || booking.status === 'pending-booking' || 
-                    booking.status === 'completed'
+                    booking.status === 'quote-ready' || 
+                    booking.status === 'quote-sent' || 
+                    booking.status === 'quote-accepted' || 
+                    booking.status === 'pending-booking' || 
+                    booking.status === 'invoice-ready' || 
+                    booking.status === 'invoice-sent'
                 );
             } else if (currentFilter === 'pending') {
                 filteredBookings = allBookings.filter(b => b.status === 'pending');
@@ -1548,6 +1550,9 @@
                     actionButtons = `
                         <button class="action-btn quote" onclick="showQuoteModalWithRetry(${JSON.stringify(booking).replace(/"/g, '&quot;')})">
                             <i class="fas fa-file-invoice-dollar"></i> Quote
+                        </button>
+                        <button class="action-btn send-quote" onclick="sendQuoteToCustomer('${booking.booking_id}')">
+                            <i class="fas fa-paper-plane"></i> Send Quote
                         </button>
                         <button class="action-btn archive" onclick="adminArchive.archiveBooking('${booking.booking_id}')">
                             <i class="fas fa-archive"></i> Archive
@@ -1764,7 +1769,6 @@
                 `;
             }).join('');
         }
-
         // Update booking status with intelligent reversion logic
         async function updateBookingStatus(bookingId, newStatus) {
             try {
@@ -2268,15 +2272,6 @@
             document.getElementById('bookingDetailsModal').classList.remove('show');
             document.body.classList.remove('modal-open');
         }
-
-
-
-
-
-
-
-
-
         function showDetailedBookingDetailsPopup(bookingId) {
             const booking = allBookings.find(b => b.booking_id === bookingId);
             if (!booking) return;
@@ -2921,7 +2916,6 @@
                 targetModal.style.removeProperty('display');
             }
         }
-
         // Special function for opening invoice modal
         function openInvoiceModal() {
             console.log('🔧 Opening invoice modal with special handling...');
@@ -3694,7 +3688,6 @@
                 showNotification('Network error completing site visit', 'error');
             }
         }
-
         // Show Quote Modal with Retry
         async function showQuoteModalWithRetry(booking) {
             // Add loading state to the quote button
@@ -4487,7 +4480,6 @@
                 await loadServiceItemPhotos(item, quoteId, itemId);
             });
         }
-
         // Upload temporary photos to server
         async function uploadTemporaryPhotos() {
             if (!currentQuoteData || !currentQuoteData.quoteId) {
@@ -5218,7 +5210,6 @@
             // Generate invoice preview
             generateQuickInvoicePreview(serviceItems);
         }
-
         function generateQuickQuotePreview(serviceItems) {
             console.log('🎯 generateQuickQuotePreview called with:', { serviceItems });
             const clientName = document.getElementById('quickQuoteClientName').value;
@@ -5557,9 +5548,8 @@
                                         <i class="fas fa-envelope"></i>
                                         <span>
 stellartmanagement@outlook.com</span>
-                                    </div>
-                                </div>
-                            </div>
+                                 </div>
+                             </div>
                         </div>
                         <div class="document-info">
                             <div class="document-type">QUOTE</div>
@@ -6319,7 +6309,6 @@ stellartmanagement@outlook.com</span>
                 showNotification('Failed to create invoice from quote. Please try again.', 'error');
             }
         }
-
         // Send Invoice from Booking (directly generates and sends invoice without showing modal)
         async function sendInvoiceFromBooking(bookingId) {
             try {
@@ -7044,7 +7033,6 @@ stellartmanagement@outlook.com</span>
             const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
             return `INV-${year}${month}${day}-${random}`;
         }
-
         // Print Invoice
         function printInvoice() {
             const printWindow = window.open('', '_blank');
@@ -7786,7 +7774,6 @@ stellartmanagement@outlook.com</span>
         function closeCustomerMessageModal() {
             closeModal('customerMessageModal');
         }
-
         async function sendCustomerMessage() {
             const customerName = document.getElementById('messageCustomerName').textContent;
             const customerEmail = document.getElementById('messageCustomerEmail').textContent;
@@ -8513,7 +8500,6 @@ stellartmanagement@outlook.com</span>
             </div>
         </div>
     </div>
-
     <!-- Quote Generation Modal -->
     <div id="quoteModal" class="modal">
         <div class="modal-content quote-modal-content">
@@ -8900,6 +8886,13 @@ stellartmanagement@outlook.com</span>
                 </div>
             </div>
         </div>
+
+        <!-- Mobile Quick Actions -->
+        <div class="mobile-quick-actions">
+            <button class="quick-action-btn refresh-action" onclick="manualRefreshBookings()" title="Refresh Data">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Quote Preview Modal -->
@@ -9080,7 +9073,6 @@ stellartmanagement@outlook.com</span>
     <script>
         // Image verification functions removed - now using improved storage system
     </script>
-
     <style>
         /* Image verification styles removed - using improved storage system */
         
@@ -9789,7 +9781,6 @@ stellartmanagement@outlook.com</span>
             </div>
         </div>
     </div>
-
     <script>
         // Make the detailed booking details popup globally accessible
         window.showDetailedBookingDetailsPopup = showDetailedBookingDetailsPopup;

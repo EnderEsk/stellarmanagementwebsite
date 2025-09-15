@@ -129,7 +129,26 @@ class AdminCalendarEvents {
                                 </div>
                             </div>
 
-                            <!-- Row 7: Live Preview -->
+                            <!-- Row 7: Email Notification Toggle -->
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <div class="toggle-wrapper">
+                                        <label class="toggle-container">
+                                            <input type="checkbox" id="sendToMyself" class="toggle-input">
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-label">
+                                                <i class="fas fa-envelope"></i>
+                                                Send confirmation email to myself
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            Get an email confirmation when this event is created or updated
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 8: Live Preview -->
                             <div class="form-row">
                                 <div class="live-preview">
                                     <h4>Event Preview</h4>
@@ -147,7 +166,7 @@ class AdminCalendarEvents {
                                 </div>
                             </div>
 
-                            <!-- Row 8: Info Box -->
+                            <!-- Row 9: Info Box -->
                             <div class="form-row">
                                 <div class="info-box">
                                     <i class="fas fa-info-circle"></i>
@@ -415,6 +434,12 @@ class AdminCalendarEvents {
         this.updateColorSelection();
         this.updatePreviewCardColor();
 
+        // Reset toggle
+        const sendToMyselfToggle = document.getElementById('sendToMyself');
+        if (sendToMyselfToggle) {
+            sendToMyselfToggle.checked = false;
+        }
+
         // Reset input states (only for inputs with floating labels)
         document.querySelectorAll('.input-wrapper').forEach(wrapper => {
             wrapper.classList.remove('focused');
@@ -443,6 +468,7 @@ class AdminCalendarEvents {
         const location = document.getElementById('eventLocation').value.trim();
         const description = document.getElementById('eventDescription').value.trim();
         const color = this.selectedColor;
+        const sendToMyself = document.getElementById('sendToMyself').checked;
 
         if (!title || !type || !date || !startTime || !endTime) {
             this.showNotification('Please fill in all required fields', 'error');
@@ -460,7 +486,8 @@ class AdminCalendarEvents {
                 endTime,
                 location: location ? location.trim() : '',
                 description,
-                color
+                color,
+                sendToMyself
             };
 
             let response;

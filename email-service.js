@@ -38,6 +38,154 @@ class EmailService {
         }
     }
 
+    async sendEventConfirmationEmail(to, eventData, isUpdate = false) {
+        const action = isUpdate ? 'updated' : 'created';
+        const subject = `Event ${action}: ${eventData.title}`;
+        
+        // Format date and time
+        const eventDate = new Date(eventData.date);
+        const formattedDate = eventDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Format time
+        const startTime = new Date(`2000-01-01T${eventData.startTime}`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        const endTime = new Date(`2000-01-01T${eventData.endTime}`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Event ${action}</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #2a2a2a; background-color: #f8f9fa;">
+                
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa;">
+                    <tr>
+                        <td align="center" style="padding: 20px 0;">
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                                
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background-color: #2a2a2a; color: #ffffff; padding: 30px; text-align: center;">
+                                        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">
+                                            📅 Event ${isUpdate ? 'Updated' : 'Created'}
+                                        </h1>
+                                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.8); font-size: 16px;">
+                                            Stellar Tree Management
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 30px;">
+                                        
+                                        <!-- Event Card -->
+                                        <div style="background-color: #f8f9fa; border: 2px solid ${eventData.color}; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+                                            <h2 style="margin: 0 0 15px 0; color: #2a2a2a; font-size: 20px; font-weight: 600;">
+                                                ${eventData.title}
+                                            </h2>
+                                            
+                                            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <span style="color: ${eventData.color}; font-size: 16px;">📅</span>
+                                                    <span style="font-weight: 500;">${formattedDate}</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <span style="color: ${eventData.color}; font-size: 16px;">⏰</span>
+                                                    <span style="font-weight: 500;">${startTime} - ${endTime}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <span style="color: ${eventData.color}; font-size: 16px;">🏷️</span>
+                                                    <span style="background-color: ${eventData.color}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                                                        ${eventData.type}
+                                                    </span>
+                                                </div>
+                                                ${eventData.location ? `
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <span style="color: ${eventData.color}; font-size: 16px;">📍</span>
+                                                    <span>${eventData.location}</span>
+                                                </div>
+                                                ` : ''}
+                                            </div>
+                                            
+                                            ${eventData.description ? `
+                                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                                                <p style="margin: 0; color: #5a5a5a; line-height: 1.5;">
+                                                    ${eventData.description}
+                                                </p>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                        
+                                        <!-- Info -->
+                                        <div style="background-color: #f0f9f0; border: 1px solid #8cc63f; border-radius: 8px; padding: 15px; text-align: center;">
+                                            <p style="margin: 0; color: #2a2a2a; font-size: 14px;">
+                                                ✅ This event has been ${action} successfully and is now visible on your admin calendar.
+                                            </p>
+                                        </div>
+                                        
+                                    </td>
+                                </tr>
+                                
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #2a2a2a; color: #ffffff; padding: 20px; text-align: center;">
+                                        <p style="margin: 0; font-size: 14px; color: rgba(255, 255, 255, 0.8);">
+                                            © 2024 Stellar Tree Management<br>
+                                            Professional tree care services in Calgary, Alberta
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                            </table>
+                            
+                        </td>
+                    </tr>
+                </table>
+                
+            </body>
+            </html>
+        `;
+        
+        const textContent = `
+Event ${isUpdate ? 'Updated' : 'Created'}: ${eventData.title}
+
+Event Details:
+- Title: ${eventData.title}
+- Type: ${eventData.type}
+- Date: ${formattedDate}
+- Time: ${startTime} - ${endTime}
+${eventData.location ? `- Location: ${eventData.location}` : ''}
+${eventData.description ? `- Description: ${eventData.description}` : ''}
+
+This event has been ${action} successfully and is now visible on your admin calendar.
+
+© 2024 Stellar Tree Management
+Professional tree care services in Calgary, Alberta
+        `;
+        
+        return await this.sendEmail(to, subject, htmlContent, textContent);
+    }
+
     async sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems, bookingId = null, serviceItemPhotos = null) {
         const subject = `Your Quote from Stellar Tree Management - ${quoteId}`;
         
