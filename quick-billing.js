@@ -498,37 +498,69 @@ function generateQuickQuotePreview(serviceItems) {
     const grandTotal = subtotal + taxAmount;
 
     const quoteHTML = `
-        <div class="quote-preview">
+        <div class="quote-document">
+            <!-- Header Section -->
             <div class="quote-header">
-                <h1>QUOTE</h1>
-                <div class="quote-info">
-                    <p><strong>Date:</strong> ${quoteDate}</p>
-                    <p><strong>Quote #:</strong> QB-${Date.now()}</p>
+                <div class="company-brand">
+                    <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                    <div>
+                        <h1 class="company-name">Stellar Tree Management</h1>
+                        <div class="company-contact">
+                            <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
+                            <p><i class="fas fa-phone"></i> (250) 551-1021</p>
+                            <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="quote-details">
+                    <h2 class="quote-title">QUOTE</h2>
+                    <p class="quote-number">#QB-${Date.now()}</p>
+                    <p class="quote-date">${quoteDate}</p>
                 </div>
             </div>
 
-            <div class="client-section">
-                <h3>Bill To:</h3>
-                <p><strong>${clientName}</strong></p>
-                <p>${clientAddress}</p>
-                <p>Phone: ${clientPhone}</p>
-                <p>Email: ${clientEmail}</p>
+            <!-- Client Information Section -->
+            <div class="client-info-section">
+                <div class="client-info-column">
+                    <h3>Client Information</h3>
+                    <div class="info-line"></div>
+                    <div class="info-content">
+                        <p><strong>Name:</strong> ${clientName}</p>
+                        <p><strong>Phone:</strong> ${clientPhone}</p>
+                        <p><strong>Email:</strong> ${clientEmail}</p>
+                        <p><strong>Address:</strong> ${clientAddress}</p>
+                    </div>
+                </div>
+                <div class="bill-to-column">
+                    <h3>Bill To</h3>
+                    <div class="info-line"></div>
+                    <div class="info-content">
+                        <p><strong>Name:</strong> ${clientName}</p>
+                        <p><strong>Phone:</strong> ${clientPhone}</p>
+                        <p><strong>Email:</strong> ${clientEmail}</p>
+                        <p><strong>Address:</strong> ${clientAddress}</p>
+                    </div>
+                </div>
             </div>
 
+            <!-- Services Section -->
             <div class="services-section">
-                <h3>Services & Items</h3>
+                <h3>Services</h3>
+                <div class="info-line"></div>
                 <table class="services-table">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Description</th>
                             <th>Qty</th>
-                            <th>Price</th>
+                            <th>Unit Price</th>
                             <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${serviceItems.map(item => `
+                        ${serviceItems.map((item, index) => `
                             <tr>
+                                <td>${index + 1}</td>
                                 <td>${item.description}</td>
                                 <td>${item.quantity}</td>
                                 <td>$${item.price.toFixed(2)}</td>
@@ -539,25 +571,29 @@ function generateQuickQuotePreview(serviceItems) {
                 </table>
             </div>
 
+            <!-- Totals Section -->
             <div class="totals-section">
-                    <div class="total-row">
+                <div class="total-row">
                     <span>Subtotal:</span>
                     <span>$${subtotal.toFixed(2)}</span>
-                    </div>
-                    ${taxEnabled ? `
-                        <div class="total-row">
+                </div>
+                ${taxEnabled ? `
+                    <div class="total-row">
                         <span>Tax (5%):</span>
                         <span>$${taxAmount.toFixed(2)}</span>
-                        </div>
-                    ` : ''}
-                    <div class="total-row grand-total">
+                    </div>
+                ` : ''}
+                <div class="total-line"></div>
+                <div class="total-row grand-total">
                     <span>Total:</span>
                     <span>$${grandTotal.toFixed(2)}</span>
                 </div>
             </div>
 
+            <!-- Terms Section -->
             <div class="terms-section">
-                <h3 class="section-heading">Terms & Conditions</h3>
+                <h3>Terms & Conditions</h3>
+                <div class="info-line"></div>
                 <div class="terms-content">
                     <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfer.</p>
                 </div>
@@ -590,37 +626,69 @@ function generateQuickInvoicePreview(serviceItems) {
     const grandTotal = subtotal + taxAmount;
 
     const invoiceHTML = `
-        <div class="invoice-preview">
-            <div class="invoice-header">
-                <h1>INVOICE</h1>
-                <div class="invoice-info">
-                    <p><strong>Date:</strong> ${invoiceDate}</p>
-                    <p><strong>Invoice #:</strong> INV-${Date.now()}</p>
+        <div class="quote-document">
+            <!-- Header Section -->
+            <div class="quote-header">
+                <div class="company-brand">
+                    <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
+                    <div>
+                        <h1 class="company-name">Stellar Tree Management</h1>
+                        <div class="company-contact">
+                            <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
+                            <p><i class="fas fa-phone"></i> (250) 551-1021</p>
+                            <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="quote-details">
+                    <h2 class="quote-title">INVOICE</h2>
+                    <p class="quote-number">#INV-${Date.now()}</p>
+                    <p class="quote-date">${invoiceDate}</p>
                 </div>
             </div>
 
-            <div class="client-section">
-                <h3>Bill To:</h3>
-                <p><strong>${clientName}</strong></p>
-                <p>${clientAddress}</p>
-                <p>Phone: ${clientPhone}</p>
-                <p>Email: ${clientEmail}</p>
+            <!-- Client Information Section -->
+            <div class="client-info-section">
+                <div class="client-info-column">
+                    <h3>Client Information</h3>
+                    <div class="info-line"></div>
+                    <div class="info-content">
+                        <p><strong>Name:</strong> ${clientName}</p>
+                        <p><strong>Phone:</strong> ${clientPhone}</p>
+                        <p><strong>Email:</strong> ${clientEmail}</p>
+                        <p><strong>Address:</strong> ${clientAddress}</p>
+                    </div>
+                </div>
+                <div class="bill-to-column">
+                    <h3>Bill To</h3>
+                    <div class="info-line"></div>
+                    <div class="info-content">
+                        <p><strong>Name:</strong> ${clientName}</p>
+                        <p><strong>Phone:</strong> ${clientPhone}</p>
+                        <p><strong>Email:</strong> ${clientEmail}</p>
+                        <p><strong>Address:</strong> ${clientAddress}</p>
+                    </div>
+                </div>
             </div>
 
+            <!-- Services Section -->
             <div class="services-section">
-                <h3>Services & Items</h3>
+                <h3>Services</h3>
+                <div class="info-line"></div>
                 <table class="services-table">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Description</th>
                             <th>Qty</th>
-                            <th>Price</th>
+                            <th>Unit Price</th>
                             <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${serviceItems.map(item => `
+                        ${serviceItems.map((item, index) => `
                             <tr>
+                                <td>${index + 1}</td>
                                 <td>${item.description}</td>
                                 <td>${item.quantity}</td>
                                 <td>$${item.price.toFixed(2)}</td>
@@ -631,25 +699,29 @@ function generateQuickInvoicePreview(serviceItems) {
                 </table>
             </div>
 
+            <!-- Totals Section -->
             <div class="totals-section">
-                    <div class="total-row">
+                <div class="total-row">
                     <span>Subtotal:</span>
                     <span>$${subtotal.toFixed(2)}</span>
-                    </div>
-                    ${taxEnabled ? `
-                        <div class="total-row">
+                </div>
+                ${taxEnabled ? `
+                    <div class="total-row">
                         <span>Tax (5%):</span>
                         <span>$${taxAmount.toFixed(2)}</span>
-                        </div>
-                    ` : ''}
-                    <div class="total-row grand-total">
+                    </div>
+                ` : ''}
+                <div class="total-line"></div>
+                <div class="total-row grand-total">
                     <span>Total:</span>
                     <span>$${grandTotal.toFixed(2)}</span>
                 </div>
             </div>
 
+            <!-- Terms Section -->
             <div class="terms-section">
-                <h3 class="section-heading">Payment Terms</h3>
+                <h3>Payment Terms</h3>
+                <div class="info-line"></div>
                 <div class="terms-content">
                     <p>Payment is due upon receipt of this invoice. We accept check, and e-transfer. Please include the invoice number with your payment.</p>
                 </div>
@@ -754,11 +826,200 @@ function removeTempPhoto(index) {
 
 // Print functions
 function printQuote() {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Quote - Stellar Tree Management</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <link rel="stylesheet" href="quick-billing.css">
+            <style>
+                * { box-sizing: border-box; }
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: #fff;
+                    color: #333;
+                    line-height: 1.6;
+                    font-size: 14px;
+                }
+                
+                @media print { 
+                    body { 
+                        margin: 0; 
+                        padding: 20px;
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    .quote-document { 
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${quoteContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
 }
 
 function printInvoice() {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    const invoiceContent = document.getElementById('invoicePreviewContent').innerHTML;
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice - Stellar Tree Management</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <link rel="stylesheet" href="quick-billing.css">
+            <style>
+                * { box-sizing: border-box; }
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: #fff;
+                    color: #333;
+                    line-height: 1.6;
+                    font-size: 14px;
+                }
+                
+                @media print { 
+                    body { 
+                        margin: 0; 
+                        padding: 20px;
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    .quote-document { 
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${invoiceContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Download functions
+function downloadQuote() {
+    const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Quote - Stellar Tree Management</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <link rel="stylesheet" href="quick-billing.css">
+            <style>
+                * { box-sizing: border-box; }
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: #fff;
+                    color: #333;
+                    line-height: 1.6;
+                    font-size: 14px;
+                }
+                
+                @media print { 
+                    body { 
+                        margin: 0; 
+                        padding: 20px;
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    .quote-document { 
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${quoteContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Trigger download
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+}
+
+function downloadInvoice() {
+    const invoiceContent = document.getElementById('invoicePreviewContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice - Stellar Tree Management</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <link rel="stylesheet" href="quick-billing.css">
+            <style>
+                * { box-sizing: border-box; }
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: #fff;
+                    color: #333;
+                    line-height: 1.6;
+                    font-size: 14px;
+                }
+                
+                @media print { 
+                    body { 
+                        margin: 0; 
+                        padding: 20px;
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    .quote-document { 
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${invoiceContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Trigger download
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
 }
 
 // Initialize the quick billing functionality when the page loads

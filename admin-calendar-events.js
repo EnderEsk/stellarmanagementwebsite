@@ -129,20 +129,24 @@ class AdminCalendarEvents {
                                 </div>
                             </div>
 
-                            <!-- Row 7: Email Notification Toggle -->
+                            <!-- Row 7: Email Notification -->
                             <div class="form-row">
                                 <div class="form-group full-width">
-                                    <div class="toggle-wrapper">
-                                        <label class="toggle-container">
-                                            <input type="checkbox" id="sendToMyself" class="toggle-input">
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-label">
+                                    <div class="email-notification-section">
+                                        <div class="email-notification-content">
+                                            <div class="email-icon">
                                                 <i class="fas fa-envelope"></i>
-                                                Send confirmation email to myself
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            Get an email confirmation when this event is created or updated
+                                            </div>
+                                            <div class="email-text">
+                                                <div class="email-label">Send confirmation email to myself</div>
+                                                <div class="email-description">Get an email confirmation when this event is created or updated</div>
+                                            </div>
+                                            <div class="email-toggle">
+                                                <input type="checkbox" id="sendToMyself" class="email-checkbox">
+                                                <label for="sendToMyself" class="email-switch">
+                                                    <span class="email-slider"></span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -341,6 +345,23 @@ class AdminCalendarEvents {
 
         // Bind color swatches
         this.bindColorSwatches();
+        
+        // Bind email notification toggle
+        this.bindEmailToggle();
+    }
+    
+    bindEmailToggle() {
+        const emailSwitch = document.querySelector('.email-switch');
+        const emailCheckbox = document.getElementById('sendToMyself');
+        
+        if (emailSwitch && emailCheckbox) {
+            emailSwitch.addEventListener('click', (e) => {
+                e.preventDefault();
+                emailCheckbox.checked = !emailCheckbox.checked;
+                console.log('📧 Email toggle clicked, new state:', emailCheckbox.checked);
+            });
+        }
+        console.log('📧 Email toggle binding completed');
     }
 
     showModal(selectedDate = null) {
@@ -468,7 +489,12 @@ class AdminCalendarEvents {
         const location = document.getElementById('eventLocation').value.trim();
         const description = document.getElementById('eventDescription').value.trim();
         const color = this.selectedColor;
-        const sendToMyself = document.getElementById('sendToMyself').checked;
+        const sendToMyselfElement = document.getElementById('sendToMyself');
+        const sendToMyself = sendToMyselfElement ? sendToMyselfElement.checked : false;
+        
+        console.log('📧 Debug - sendToMyself element:', sendToMyselfElement);
+        console.log('📧 Debug - sendToMyself checked:', sendToMyself);
+        console.log('📧 Debug - sendToMyself element exists:', !!sendToMyselfElement);
 
         if (!title || !type || !date || !startTime || !endTime) {
             this.showNotification('Please fill in all required fields', 'error');
@@ -489,6 +515,9 @@ class AdminCalendarEvents {
                 color,
                 sendToMyself
             };
+            
+            console.log('📧 Debug - Event data being sent:', eventData);
+            console.log('📧 Debug - sendToMyself in eventData:', eventData.sendToMyself);
 
             let response;
             let successMessage;

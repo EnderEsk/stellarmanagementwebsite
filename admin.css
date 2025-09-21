@@ -6546,22 +6546,20 @@
             background: #138496;
         }
 
-        /* Quote Preview Styles */
+        /* Quote Preview Styles - Matching Quick Billing */
         .quote-preview-content {
-            max-width: 800px;
-            width: 95%;
-            max-height: 90vh;
-            overflow-y: auto;
+            width: 800px;
+            max-width: 90vw;
         }
 
-        .quote-preview {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            border: 1px solid #e1e8ed;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1rem;
+        #quotePreviewContent,
+        #invoicePreviewContent {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
         }
+
+        /* Removed old quote-preview styles - now using quote-document styles for consistency */
 
         .quote-preview-actions {
             display: flex;
@@ -6570,34 +6568,245 @@
             flex-wrap: wrap;
         }
 
-        /* Quote Document Styles */
+        /* Quote Document Styles - Matching Quick Billing Design */
         .quote-document {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.4;
-            color: #333;
-            font-size: 12px;
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Arial', sans-serif !important;
+            line-height: 1.6 !important;
+            color: #333 !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+            background: white !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         }
 
         .quote-header {
-            background: white;
-            color: #333;
-            padding: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 3px solid #8cc63f;
+            background: white !important;
+            color: #333 !important;
+            padding: 24px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            border-bottom: 2px solid #8cc63f !important;
         }
 
         .company-brand {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 16px;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .company-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .company-contact {
+            margin: 0;
+        }
+
+        .company-contact p {
+            margin: 4px 0;
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .company-contact i {
+            color: #8cc63f;
+            width: 16px;
+        }
+
+        .quote-details {
+            text-align: right;
+        }
+
+        .quote-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .quote-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 4px 0;
+        }
+
+        .quote-date {
+            font-size: 1rem;
+            color: #666;
+            margin: 0;
+        }
+
+        .client-info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            gap: 40px;
+        }
+
+        .client-info-column,
+        .bill-to-column {
+            flex: 1;
+        }
+
+        .client-info-column h3,
+        .bill-to-column h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .info-line {
+            height: 2px;
+            background: #8cc63f;
+            width: 60%;
+            margin-bottom: 12px;
+        }
+
+        .info-content p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .services-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .services-section h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .services-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 16px !important;
+            background: white !important;
+        }
+
+        .services-table thead {
+            background: #333 !important;
+            color: white !important;
+        }
+
+        .services-table th {
+            padding: 12px 8px !important;
+            text-align: left !important;
+            font-weight: bold !important;
+            font-size: 0.9rem !important;
+        }
+
+        .services-table td {
+            padding: 12px 8px !important;
+            border-bottom: 1px solid #ddd !important;
+            font-size: 0.9rem !important;
+        }
+
+        .services-table tbody tr:nth-child(even) {
+            background: #f9f9f9 !important;
+        }
+
+        .totals-section {
+            background: #f8f9fa !important;
+            padding: 20px !important;
+            margin: 0 !important;
+            text-align: right !important;
+            max-width: 300px !important;
+            margin-left: auto !important;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 1rem;
+        }
+
+        .total-line {
+            height: 1px;
+            background: #8cc63f;
+            margin: 8px 0;
+        }
+
+        .grand-total {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .terms-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .terms-section h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .terms-content p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        /* Mobile responsive for quote document */
+        @media (max-width: 768px) {
+            .quote-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .company-brand {
+                justify-content: center;
+            }
+
+            .quote-details {
+                text-align: center;
+            }
+
+            .client-info-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .totals-section {
+                max-width: 100%;
+                margin-left: 0;
+            }
+
+            .services-table th,
+            .services-table td {
+                padding: 8px 4px;
+                font-size: 0.8rem;
+            }
         }
 
         .company-logo {
@@ -6707,13 +6916,7 @@
             padding: 24px;
         }
 
-        .services-table {
-            border: 1px solid #e1e8ed;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+        /* Removed conflicting services-table styles - using quote-document styles */
 
         .table-header {
             display: grid;
@@ -6778,11 +6981,7 @@
             font-weight: 600;
         }
 
-        .totals-section {
-            padding: 0 24px 24px;
-            display: flex;
-            justify-content: flex-end;
-        }
+        /* Removed conflicting totals-section styles - using quote-document styles */
 
         .totals-container {
             width: 240px;
@@ -6861,11 +7060,7 @@
             background: #f8f9fa;
         }
 
-        .totals-section {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 2rem;
-        }
+        /* Removed conflicting totals-section styles - using quote-document styles */
 
         .totals-table {
             width: 300px;
@@ -7638,6 +7833,11 @@
                 width: 100%;
                 padding: 0.75rem;
                 font-size: 0.9rem;
+            }
+
+            .quote-preview-content {
+                width: 100%;
+                max-width: calc(100vw - 2rem);
             }
 
             /* Mobile responsive for service item photos - ensure consistency with regular quotes */
@@ -10270,172 +10470,156 @@
             }
         }
 
-/* Toggle Switch Styles for Event Settings */
-.toggle-wrapper {
-    margin: 1.5rem 0;
-    padding: 1rem;
-    background: #f8f9fa;
-    border: 1px solid var(--admin-border);
-    border-radius: 12px;
-    transition: all 0.2s ease;
+/* Email Notification Section - Clean Design */
+.email-notification-section {
+    margin: 1rem 0;
+    padding: 0;
+    background: transparent;
 }
 
-.toggle-wrapper:hover {
-    background: #f1f3f4;
-    border-color: var(--admin-accent);
-}
-
-.toggle-container {
+.email-notification-content {
     display: flex;
     align-items: center;
     gap: 16px;
-    cursor: pointer;
-    user-select: none;
-    padding: 0;
-    position: relative;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
-.toggle-input {
+.email-notification-content:hover {
+    background: #f1f3f4;
+    border-color: #8cc63f;
+}
+
+.email-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #8cc63f;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.email-icon i {
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.email-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.email-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.email-description {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.email-toggle {
+    flex-shrink: 0;
+}
+
+.email-checkbox {
     position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
+    pointer-events: none;
 }
 
-.toggle-slider {
+.email-switch {
     position: relative;
-    width: 56px;
-    height: 30px;
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
-    border-radius: 30px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
-    border: 2px solid transparent;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block;
+    width: 50px;
+    height: 28px;
+    background: #e5e7eb;
+    border-radius: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #d1d5db;
+    pointer-events: auto;
 }
 
-.toggle-slider::before {
-    content: '';
+.email-slider {
     position: absolute;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
     top: 2px;
     left: 2px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.15),
-        0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.toggle-input:checked + .toggle-slider {
-    background: linear-gradient(135deg, var(--admin-accent) 0%, #7ab33a 100%);
-    border-color: var(--admin-accent);
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.1),
-        0 0 0 3px rgba(140, 198, 63, 0.1);
-}
-
-.toggle-input:checked + .toggle-slider::before {
-    transform: translateX(26px);
-    box-shadow: 
-        0 2px 12px rgba(0, 0, 0, 0.2),
-        0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
-.toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--admin-text);
-    line-height: 1.4;
-    flex: 1;
-}
-
-.toggle-label i {
-    color: var(--admin-accent);
-    font-size: 18px;
     width: 20px;
-    text-align: center;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.toggle-description {
-    font-size: 13px;
-    color: var(--admin-secondary);
-    margin-top: 8px;
-    margin-left: 72px;
-    line-height: 1.5;
-    font-weight: 400;
+.email-checkbox:checked + .email-switch {
+    background: #8cc63f;
+    border-color: #7ab33a;
 }
 
-.toggle-container:hover .toggle-slider {
+.email-checkbox:checked + .email-switch .email-slider {
+    transform: translateX(22px);
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.email-switch:hover {
     transform: scale(1.02);
 }
 
-.toggle-container:hover .toggle-label {
-    color: var(--admin-primary);
-}
-
-.toggle-container:hover .toggle-label i {
-    color: #7ab33a;
-    transform: scale(1.1);
-}
-
-.toggle-input:focus + .toggle-slider {
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.1),
-        0 0 0 4px rgba(140, 198, 63, 0.2);
-    outline: none;
-}
-
-.toggle-input:checked:focus + .toggle-slider {
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.1),
-        0 0 0 4px rgba(140, 198, 63, 0.3);
-}
-
-/* Animation for the toggle switch */
-@keyframes toggleOn {
-    0% { transform: translateX(0) scale(1); }
-    50% { transform: translateX(13px) scale(1.1); }
-    100% { transform: translateX(26px) scale(1); }
-}
-
-@keyframes toggleOff {
-    0% { transform: translateX(26px) scale(1); }
-    50% { transform: translateX(13px) scale(1.1); }
-    100% { transform: translateX(0) scale(1); }
-}
-
-.toggle-input:checked + .toggle-slider::before {
-    animation: toggleOn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.toggle-input:not(:checked) + .toggle-slider::before {
-    animation: toggleOff 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.email-checkbox:focus + .email-switch {
+    outline: 2px solid #8cc63f;
+    outline-offset: 2px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .toggle-wrapper {
-        margin: 1rem 0;
-        padding: 0.75rem;
-    }
-    
-    .toggle-container {
+    .email-notification-content {
         gap: 12px;
+        padding: 12px;
     }
     
-    .toggle-label {
+    .email-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .email-icon i {
+        font-size: 16px;
+    }
+    
+    .email-label {
         font-size: 14px;
     }
     
-    .toggle-description {
+    .email-description {
         font-size: 12px;
-        margin-left: 68px;
+    }
+    
+    .email-switch {
+        width: 46px;
+        height: 26px;
+    }
+    
+    .email-slider {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .email-checkbox:checked + .email-switch .email-slider {
+        transform: translateX(20px);
     }
 }

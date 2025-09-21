@@ -5536,112 +5536,96 @@
                             <div>
                                 <h1 class="company-name">Stellar Tree Management</h1>
                                 <div class="company-contact">
-                                    <div class="contact-item">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-phone"></i>
-                                        <span>(250) 551-1021</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-envelope"></i>
-                                        <span>
-stellartmanagement@outlook.com</span>
-                                 </div>
-                             </div>
+                                    <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
+                                    <p><i class="fas fa-phone"></i> (250) 551-1021</p>
+                                    <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="document-info">
-                            <div class="document-type">QUOTE</div>
-                            <div class="document-number">#${quoteNumber}</div>
-                            <div class="document-date">${formattedDate}</div>
+                        <div class="quote-details">
+                            <h2 class="quote-title">QUOTE</h2>
+                            <p class="quote-number">#${quoteNumber}</p>
+                            <p class="quote-date">${formattedDate}</p>
                         </div>
                     </div>
 
-                    <!-- Client & Bill To Section -->
-                    <div class="client-billing-section">
-                        <div>
-                            <h3 class="section-heading">Client Information</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Phone:</span>
-                                <span class="value">${clientPhone}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Email:</span>
-                                <span class="value">${clientEmail}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
+                    <!-- Client Information Section -->
+                    <div class="client-info-section">
+                        <div class="client-info-column">
+                            <h3>Client Information</h3>
+                            <div class="info-line"></div>
+                            <div class="info-content">
+                                <p><strong>Name:</strong> ${clientName}</p>
+                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
+                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
                             </div>
                         </div>
-                        <div>
-                            <h3 class="section-heading">Bill To</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
+                        <div class="bill-to-column">
+                            <h3>Bill To</h3>
+                            <div class="info-line"></div>
+                            <div class="info-content">
+                                <p><strong>Name:</strong> ${clientName}</p>
+                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
+                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Services Table -->
+                    <!-- Services Section -->
                     <div class="services-section">
-                        <h3 class="section-heading">Services</h3>
-                        <div class="services-table">
-                            <div class="table-header">
-                                <div class="header-item">#</div>
-                                <div class="header-item description">Description</div>
-                                <div class="header-item quantity">Qty</div>
-                                <div class="header-item price">Unit Price</div>
-                                <div class="header-item total">Total</div>
-                            </div>
-                            <div class="table-body">
+                        <h3>Services</h3>
+                        <div class="info-line"></div>
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 ${serviceItems.map((item, index) => `
-                                    <div class="table-row">
-                                        <div class="table-cell">${index + 1}</div>
-                                        <div class="table-cell description">${item.description}</div>
-                                        <div class="table-cell quantity">${item.quantity}</div>
-                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
-                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
-                                    </div>
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${item.description}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>$${item.price.toFixed(2)}</td>
+                                        <td>$${item.total.toFixed(2)}</td>
+                                    </tr>
                                 `).join('')}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- Totals Section -->
                     <div class="totals-section">
-                        <div class="totals-container">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>$${subtotal.toFixed(2)}</span>
+                        </div>
+                        ${taxEnabled ? `
                             <div class="total-row">
-                                <span class="total-label">Subtotal:</span>
-                                <span class="total-value">$${subtotal.toFixed(2)}</span>
+                                <span>Tax (5%):</span>
+                                <span>$${tax.toFixed(2)}</span>
                             </div>
-                            ${taxEnabled ? `
-                                <div class="total-row">
-                                    <span class="total-label">Tax (5%):</span>
-                                    <span class="total-value">$${tax.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="total-row grand-total">
-                                <span class="total-label">Total:</span>
-                                <span class="total-value">$${total.toFixed(2)}</span>
-                            </div>
+                        ` : ''}
+                        <div class="total-line"></div>
+                        <div class="total-row grand-total">
+                            <span>Total:</span>
+                            <span>$${total.toFixed(2)}</span>
                         </div>
                     </div>
 
                     <!-- Terms Section -->
                     <div class="terms-section">
-                        <h3 class="section-heading">Terms & Conditions</h3>
+                        <h3>Terms & Conditions</h3>
+                        <div class="info-line"></div>
                         <div class="terms-content">
-                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfers.</p>
+                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfer.</p>
                         </div>
                     </div>
                 </div>
@@ -5702,210 +5686,221 @@ stellartmanagement@outlook.com</span>
                     <style>
                         * { box-sizing: border-box; }
                         body { 
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            font-family: 'Arial', sans-serif; 
                             margin: 0; 
-                            padding: 40px; 
+                            padding: 20px; 
                             background: #fff;
                             color: #333;
-                            line-height: 1.4;
-                            font-size: 12px;
+                            line-height: 1.6;
+                            font-size: 14px;
                         }
-                        .quote-document { 
-                            max-width: 800px; 
-                            margin: 0 auto; 
+                        
+                        /* Quote Document Styles - Matching Preview */
+                        .quote-document {
+                            font-family: 'Arial', sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 800px;
+                            margin: 0 auto;
                             background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
                             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                            border-radius: 8px;
-                            overflow: hidden;
                         }
-                        
-                        /* Header Section */
-                        .quote-header { 
+
+                        .quote-header {
                             background: white;
                             color: #333;
                             padding: 24px;
                             display: flex;
                             justify-content: space-between;
                             align-items: flex-start;
-                            border-bottom: 3px solid #8cc63f;
-                        }
-                        .company-brand { display: flex; align-items: center; gap: 16px; }
-                        .company-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 4px; }
-                        .company-name { 
-                            font-size: 20px; 
-                            font-weight: 700; 
-                            color: #2c3e50;
-                            margin: 0 0 10px 0;
-                            letter-spacing: 0.3px;
-                        }
-                        .company-contact { margin-top: 10px; }
-                        .contact-item { 
-                            display: flex; 
-                            align-items: center; 
-                            gap: 8px; 
-                            margin-bottom: 5px;
-                            font-size: 11px;
-                            color: #666;
-                        }
-                        .contact-item i { 
-                            width: 12px; 
-                            color: #8cc63f;
-                            text-align: center;
-                        }
-                        .document-info { 
-                            text-align: right;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-end;
-                        }
-                        .document-type { 
-                            font-size: 22px; 
-                            font-weight: 800; 
-                            color: #2c3e50;
-                            margin-bottom: 8px;
-                            letter-spacing: 1.2px;
-                        }
-                        .document-number { 
-                            font-size: 15px; 
-                            font-weight: 600; 
-                            margin-bottom: 6px;
-                            color: #555;
-                        }
-                        .document-date { 
-                            font-size: 12px; 
-                            color: #666;
-                        }
-                        
-                        /* Client & Billing Section */
-                        .client-billing-section { 
-                            display: grid; 
-                            grid-template-columns: 1fr 1fr; 
-                            gap: 24px; 
-                            padding: 24px;
-                            background: #f8f9fa;
-                            border: 1px solid #e1e8ed;
-                            border-radius: 8px;
-                            margin: 24px;
-                        }
-                        .section-heading { 
-                            font-size: 15px; 
-                            font-weight: 600; 
-                            margin: 0 0 12px 0;
-                            color: #2c3e50;
                             border-bottom: 2px solid #8cc63f;
-                            padding-bottom: 6px;
                         }
-                        .data-row { 
-                            display: flex; 
-                            margin-bottom: 8px;
+
+                        .company-brand {
+                            display: flex;
                             align-items: flex-start;
-                            min-height: 16px;
+                            gap: 16px;
                         }
-                        .label { 
-                            font-weight: 600; 
-                            min-width: 70px;
-                            color: #555;
-                            font-size: 11px;
-                            flex-shrink: 0;
+
+                        .company-logo {
+                            width: 60px;
+                            height: 60px;
+                            border-radius: 50%;
+                            object-fit: cover;
                         }
-                        .value { 
-                            flex: 1;
+
+                        .company-name {
+                            font-size: 1.8rem;
+                            font-weight: bold;
                             color: #333;
-                            font-size: 11px;
-                            word-wrap: break-word;
+                            margin: 0 0 8px 0;
                         }
-                        
-                        /* Services Section */
-                        .services-section { padding: 24px; }
-                        .services-table { 
-                            border: 1px solid #e1e8ed;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            margin-top: 12px;
-                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+                        .company-contact {
+                            margin: 0;
                         }
-                        .table-header { 
-                            display: grid;
-                            grid-template-columns: 40px 1fr 60px 90px 90px;
-                            background: #2c3e50;
-                            color: white;
-                            font-weight: 600;
-                            font-size: 11px;
-                        }
-                        .header-item { 
-                            padding: 12px 10px;
-                            text-align: left;
-                            border-right: 1px solid rgba(255, 255, 255, 0.1);
-                        }
-                        .header-item:last-child { border-right: none; }
-                        .table-body { background: white; }
-                        .table-row { 
-                            display: grid;
-                            grid-template-columns: 40px 1fr 60px 90px 90px;
-                            border-bottom: 1px solid #e1e8ed;
-                            font-size: 11px;
-                            min-height: 40px;
-                        }
-                        .table-row:nth-child(even) { background: #f8f9fa; }
-                        .table-row:last-child { border-bottom: none; }
-                        .table-cell { 
-                            padding: 12px 10px;
+
+                        .company-contact p {
+                            margin: 4px 0;
+                            font-size: 0.9rem;
+                            color: #666;
                             display: flex;
                             align-items: center;
-                            border-right: 1px solid #e1e8ed;
+                            gap: 8px;
                         }
-                        .table-cell:last-child { border-right: none; }
-                        .table-cell.description { font-weight: 500; }
-                        .table-cell.quantity { justify-content: center; }
-                        .table-cell.price, .table-cell.total { 
-                            justify-content: flex-end;
-                            font-weight: 600;
+
+                        .company-contact i {
+                            color: #8cc63f;
+                            width: 16px;
                         }
-                        
-                        /* Totals Section */
-                        .totals-section { 
-                            padding: 0 24px 24px;
-                            display: flex;
-                            justify-content: flex-end;
+
+                        .quote-details {
+                            text-align: right;
                         }
-                        .totals-container { 
-                            width: 240px;
+
+                        .quote-title {
+                            font-size: 2.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .quote-number {
+                            font-size: 1.1rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 4px 0;
+                        }
+
+                        .quote-date {
+                            font-size: 1rem;
+                            color: #666;
+                            margin: 0;
+                        }
+
+                        .client-info-section {
                             background: #f8f9fa;
-                            border-radius: 8px;
-                            padding: 16px;
-                            border: 1px solid #e1e8ed;
-                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                            padding: 20px;
+                            margin: 0;
+                            display: flex;
+                            gap: 40px;
                         }
-                        .total-row { 
+
+                        .client-info-column,
+                        .bill-to-column {
+                            flex: 1;
+                        }
+
+                        .client-info-column h3,
+                        .bill-to-column h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .info-line {
+                            height: 2px;
+                            background: #8cc63f;
+                            width: 60%;
+                            margin-bottom: 12px;
+                        }
+
+                        .info-content p {
+                            margin: 6px 0;
+                            font-size: 0.95rem;
+                            color: #333;
+                        }
+
+                        .services-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .services-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .services-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 16px;
+                            background: white;
+                        }
+
+                        .services-table thead {
+                            background: #333;
+                            color: white;
+                        }
+
+                        .services-table th {
+                            padding: 12px 8px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table td {
+                            padding: 12px 8px;
+                            border-bottom: 1px solid #ddd;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table tbody tr:nth-child(even) {
+                            background: #f9f9f9;
+                        }
+
+                        .totals-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            text-align: right;
+                            max-width: 300px;
+                            margin-left: auto;
+                        }
+
+                        .total-row {
                             display: flex;
                             justify-content: space-between;
-                            margin-bottom: 8px;
-                            font-size: 12px;
-                            align-items: center;
-                            min-height: 20px;
+                            padding: 6px 0;
+                            font-size: 1rem;
                         }
-                        .total-row.grand-total { 
-                            border-top: 2px solid #8cc63f;
-                            padding-top: 10px;
-                            margin-top: 10px;
-                            font-size: 15px;
-                            font-weight: 700;
-                            color: #2c3e50;
+
+                        .total-line {
+                            height: 1px;
+                            background: #8cc63f;
+                            margin: 8px 0;
                         }
-                        .total-label { font-weight: 600; }
-                        .total-value { font-weight: 600; }
-                        
-                        /* Terms Section */
-                        .terms-section { 
-                            padding: 24px;
+
+                        .grand-total {
+                            font-weight: bold;
+                            font-size: 1.1rem;
+                        }
+
+                        .terms-section {
                             background: #f8f9fa;
-                            border-top: 1px solid #e1e8ed;
-                        }
-                        .terms-content p { 
+                            padding: 20px;
                             margin: 0;
-                            font-size: 10px;
+                        }
+
+                        .terms-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .terms-content p {
+                            margin: 0;
+                            font-size: 0.95rem;
                             color: #666;
-                            line-height: 1.4;
+                            line-height: 1.5;
                         }
                         
                         @media print { 
@@ -6892,112 +6887,96 @@ stellartmanagement@outlook.com</span>
                             <div>
                                 <h1 class="company-name">Stellar Tree Management</h1>
                                 <div class="company-contact">
-                                    <div class="contact-item">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>123 Business Street, Toronto, ON M5V 3A8</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-phone"></i>
-                                        <span>(555) 123-4567</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-envelope"></i>
-                                        <span>info@stellartreemanagement.com</span>
-                                    </div>
+                                    <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
+                                    <p><i class="fas fa-phone"></i> (250) 551-1021</p>
+                                    <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="document-info">
-                            <div class="document-type">INVOICE</div>
-                            <div class="document-number">#${invoiceNumber}</div>
-                            <div class="document-date">${formattedDate}</div>
+                        <div class="quote-details">
+                            <h2 class="quote-title">INVOICE</h2>
+                            <p class="quote-number">#${invoiceNumber}</p>
+                            <p class="quote-date">${formattedDate}</p>
                         </div>
                     </div>
 
-                    <!-- Client & Bill To Section -->
-                    <div class="client-billing-section">
-                        <div>
-                            <h3 class="section-heading">Client Information</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Phone:</span>
-                                <span class="value">${clientPhone}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Email:</span>
-                                <span class="value">${clientEmail}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
+                    <!-- Client Information Section -->
+                    <div class="client-info-section">
+                        <div class="client-info-column">
+                            <h3>Client Information</h3>
+                            <div class="info-line"></div>
+                            <div class="info-content">
+                                <p><strong>Name:</strong> ${clientName}</p>
+                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
+                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
                             </div>
                         </div>
-                        <div>
-                            <h3 class="section-heading">Bill To</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
+                        <div class="bill-to-column">
+                            <h3>Bill To</h3>
+                            <div class="info-line"></div>
+                            <div class="info-content">
+                                <p><strong>Name:</strong> ${clientName}</p>
+                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
+                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Services Table -->
+                    <!-- Services Section -->
                     <div class="services-section">
-                        <h3 class="section-heading">Services</h3>
-                        <div class="services-table">
-                            <div class="table-header">
-                                <div class="header-item">#</div>
-                                <div class="header-item description">Description</div>
-                                <div class="header-item quantity">Qty</div>
-                                <div class="header-item price">Unit Price</div>
-                                <div class="header-item total">Total</div>
-                            </div>
-                            <div class="table-body">
+                        <h3>Services</h3>
+                        <div class="info-line"></div>
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 ${serviceItems.map((item, index) => `
-                                    <div class="table-row">
-                                        <div class="table-cell">${index + 1}</div>
-                                        <div class="table-cell description">${item.description}</div>
-                                        <div class="table-cell quantity">${item.quantity}</div>
-                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
-                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
-                                    </div>
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${item.description}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>$${item.price.toFixed(2)}</td>
+                                        <td>$${item.total.toFixed(2)}</td>
+                                    </tr>
                                 `).join('')}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- Totals Section -->
                     <div class="totals-section">
-                        <div class="totals-container">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>$${subtotal.toFixed(2)}</span>
+                        </div>
+                        ${taxEnabled ? `
                             <div class="total-row">
-                                <span class="total-label">Subtotal:</span>
-                                <span class="total-value">$${subtotal.toFixed(2)}</span>
+                                <span>Tax (5%):</span>
+                                <span>$${tax.toFixed(2)}</span>
                             </div>
-                            ${taxEnabled ? `
-                                <div class="total-row">
-                                    <span class="total-label">Tax (5%):</span>
-                                    <span class="total-value">$${tax.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="total-row grand-total">
-                                <span class="total-label">Total:</span>
-                                <span class="total-value">$${total.toFixed(2)}</span>
-                            </div>
+                        ` : ''}
+                        <div class="total-line"></div>
+                        <div class="total-row grand-total">
+                            <span>Total:</span>
+                            <span>$${total.toFixed(2)}</span>
                         </div>
                     </div>
 
                     <!-- Terms Section -->
                     <div class="terms-section">
-                        <h3 class="section-heading">Payment Terms</h3>
+                        <h3>Payment Terms</h3>
+                        <div class="info-line"></div>
                         <div class="terms-content">
-                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfers. Please include the invoice number with your payment.</p>
+                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfer. Please include the invoice number with your payment.</p>
                         </div>
                     </div>
                 </div>
@@ -7047,210 +7026,221 @@ stellartmanagement@outlook.com</span>
                     <style>
                         * { box-sizing: border-box; }
                         body { 
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            font-family: 'Arial', sans-serif; 
                             margin: 0; 
-                            padding: 40px; 
+                            padding: 20px; 
                             background: #fff;
                             color: #333;
-                            line-height: 1.4;
-                            font-size: 12px;
+                            line-height: 1.6;
+                            font-size: 14px;
                         }
-                        .quote-document { 
-                            max-width: 800px; 
-                            margin: 0 auto; 
+                        
+                        /* Quote Document Styles - Matching Preview */
+                        .quote-document {
+                            font-family: 'Arial', sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 800px;
+                            margin: 0 auto;
                             background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
                             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                            border-radius: 8px;
-                            overflow: hidden;
                         }
-                        
-                        /* Header Section */
-                        .quote-header { 
+
+                        .quote-header {
                             background: white;
                             color: #333;
                             padding: 24px;
                             display: flex;
                             justify-content: space-between;
                             align-items: flex-start;
-                            border-bottom: 3px solid #8cc63f;
-                        }
-                        .company-brand { display: flex; align-items: center; gap: 16px; }
-                        .company-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 4px; }
-                        .company-name { 
-                            font-size: 20px; 
-                            font-weight: 700; 
-                            color: #2c3e50;
-                            margin: 0 0 10px 0;
-                            letter-spacing: 0.3px;
-                        }
-                        .company-contact { margin-top: 10px; }
-                        .contact-item { 
-                            display: flex; 
-                            align-items: center; 
-                            gap: 8px; 
-                            margin-bottom: 5px;
-                            font-size: 11px;
-                            color: #666;
-                        }
-                        .contact-item i { 
-                            width: 12px; 
-                            color: #8cc63f;
-                            text-align: center;
-                        }
-                        .document-info { 
-                            text-align: right;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-end;
-                        }
-                        .document-type { 
-                            font-size: 22px; 
-                            font-weight: 800; 
-                            color: #2c3e50;
-                            margin-bottom: 8px;
-                            letter-spacing: 1.2px;
-                        }
-                        .document-number { 
-                            font-size: 15px; 
-                            font-weight: 600; 
-                            margin-bottom: 6px;
-                            color: #555;
-                        }
-                        .document-date { 
-                            font-size: 12px; 
-                            color: #666;
-                        }
-                        
-                        /* Client & Billing Section */
-                        .client-billing-section { 
-                            display: grid; 
-                            grid-template-columns: 1fr 1fr; 
-                            gap: 24px; 
-                            padding: 24px;
-                            background: #f8f9fa;
-                            border: 1px solid #e1e8ed;
-                            border-radius: 8px;
-                            margin: 24px;
-                        }
-                        .section-heading { 
-                            font-size: 15px; 
-                            font-weight: 600; 
-                            margin: 0 0 12px 0;
-                            color: #2c3e50;
                             border-bottom: 2px solid #8cc63f;
-                            padding-bottom: 6px;
                         }
-                        .data-row { 
-                            display: flex; 
-                            margin-bottom: 8px;
+
+                        .company-brand {
+                            display: flex;
                             align-items: flex-start;
-                            min-height: 16px;
+                            gap: 16px;
                         }
-                        .label { 
-                            font-weight: 600; 
-                            min-width: 70px;
-                            color: #555;
-                            font-size: 11px;
-                            flex-shrink: 0;
+
+                        .company-logo {
+                            width: 60px;
+                            height: 60px;
+                            border-radius: 50%;
+                            object-fit: cover;
                         }
-                        .value { 
-                            flex: 1;
+
+                        .company-name {
+                            font-size: 1.8rem;
+                            font-weight: bold;
                             color: #333;
-                            font-size: 11px;
-                            word-wrap: break-word;
+                            margin: 0 0 8px 0;
                         }
-                        
-                        /* Services Section */
-                        .services-section { padding: 24px; }
-                        .services-table { 
-                            border: 1px solid #e1e8ed;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            margin-top: 12px;
-                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+                        .company-contact {
+                            margin: 0;
                         }
-                        .table-header { 
-                            display: grid;
-                            grid-template-columns: 40px 1fr 60px 90px 90px;
-                            background: #2c3e50;
-                            color: white;
-                            font-weight: 600;
-                            font-size: 11px;
-                        }
-                        .header-item { 
-                            padding: 12px 10px;
-                            text-align: left;
-                            border-right: 1px solid rgba(255, 255, 255, 0.1);
-                        }
-                        .header-item:last-child { border-right: none; }
-                        .table-body { background: white; }
-                        .table-row { 
-                            display: grid;
-                            grid-template-columns: 40px 1fr 60px 90px 90px;
-                            border-bottom: 1px solid #e1e8ed;
-                            font-size: 11px;
-                            min-height: 40px;
-                        }
-                        .table-row:nth-child(even) { background: #f8f9fa; }
-                        .table-row:last-child { border-bottom: none; }
-                        .table-cell { 
-                            padding: 12px 10px;
+
+                        .company-contact p {
+                            margin: 4px 0;
+                            font-size: 0.9rem;
+                            color: #666;
                             display: flex;
                             align-items: center;
-                            border-right: 1px solid #e1e8ed;
+                            gap: 8px;
                         }
-                        .table-cell:last-child { border-right: none; }
-                        .table-cell.description { font-weight: 500; }
-                        .table-cell.quantity { justify-content: center; }
-                        .table-cell.price, .table-cell.total { 
-                            justify-content: flex-end;
-                            font-weight: 600;
+
+                        .company-contact i {
+                            color: #8cc63f;
+                            width: 16px;
                         }
-                        
-                        /* Totals Section */
-                        .totals-section { 
-                            padding: 0 24px 24px;
-                            display: flex;
-                            justify-content: flex-end;
+
+                        .quote-details {
+                            text-align: right;
                         }
-                        .totals-container { 
-                            width: 240px;
+
+                        .quote-title {
+                            font-size: 2.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .quote-number {
+                            font-size: 1.1rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 4px 0;
+                        }
+
+                        .quote-date {
+                            font-size: 1rem;
+                            color: #666;
+                            margin: 0;
+                        }
+
+                        .client-info-section {
                             background: #f8f9fa;
-                            border-radius: 8px;
-                            padding: 16px;
-                            border: 1px solid #e1e8ed;
-                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                            padding: 20px;
+                            margin: 0;
+                            display: flex;
+                            gap: 40px;
                         }
-                        .total-row { 
+
+                        .client-info-column,
+                        .bill-to-column {
+                            flex: 1;
+                        }
+
+                        .client-info-column h3,
+                        .bill-to-column h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .info-line {
+                            height: 2px;
+                            background: #8cc63f;
+                            width: 60%;
+                            margin-bottom: 12px;
+                        }
+
+                        .info-content p {
+                            margin: 6px 0;
+                            font-size: 0.95rem;
+                            color: #333;
+                        }
+
+                        .services-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .services-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .services-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 16px;
+                            background: white;
+                        }
+
+                        .services-table thead {
+                            background: #333;
+                            color: white;
+                        }
+
+                        .services-table th {
+                            padding: 12px 8px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table td {
+                            padding: 12px 8px;
+                            border-bottom: 1px solid #ddd;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table tbody tr:nth-child(even) {
+                            background: #f9f9f9;
+                        }
+
+                        .totals-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            text-align: right;
+                            max-width: 300px;
+                            margin-left: auto;
+                        }
+
+                        .total-row {
                             display: flex;
                             justify-content: space-between;
-                            margin-bottom: 8px;
-                            font-size: 12px;
-                            align-items: center;
-                            min-height: 20px;
+                            padding: 6px 0;
+                            font-size: 1rem;
                         }
-                        .total-row.grand-total { 
-                            border-top: 2px solid #8cc63f;
-                            padding-top: 10px;
-                            margin-top: 10px;
-                            font-size: 15px;
-                            font-weight: 700;
-                            color: #2c3e50;
+
+                        .total-line {
+                            height: 1px;
+                            background: #8cc63f;
+                            margin: 8px 0;
                         }
-                        .total-label { font-weight: 600; }
-                        .total-value { font-weight: 600; }
-                        
-                        /* Terms Section */
-                        .terms-section { 
-                            padding: 24px;
+
+                        .grand-total {
+                            font-weight: bold;
+                            font-size: 1.1rem;
+                        }
+
+                        .terms-section {
                             background: #f8f9fa;
-                            border-top: 1px solid #e1e8ed;
-                        }
-                        .terms-content p { 
+                            padding: 20px;
                             margin: 0;
-                            font-size: 10px;
+                        }
+
+                        .terms-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .terms-content p {
+                            margin: 0;
+                            font-size: 0.95rem;
                             color: #666;
-                            line-height: 1.4;
+                            line-height: 1.5;
                         }
                         
                         @media print { 
@@ -7283,6 +7273,524 @@ stellartmanagement@outlook.com</span>
             // In a production environment, you'd want to use a proper PDF library like jsPDF
             showNotification('PDF download feature coming soon. Use print function for now.', 'info');
             printInvoice();
+        }
+
+        // Quick Billing Print Functions
+        function printQuickQuote(content) {
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Quote - Stellar Tree Management</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                    <style>
+                        * { box-sizing: border-box; }
+                        body { 
+                            font-family: 'Arial', sans-serif; 
+                            margin: 0; 
+                            padding: 20px; 
+                            background: #fff;
+                            color: #333;
+                            line-height: 1.6;
+                            font-size: 14px;
+                        }
+                        
+                        /* Quote Document Styles - Matching Preview */
+                        .quote-document {
+                            font-family: 'Arial', sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        }
+
+                        .quote-header {
+                            background: white;
+                            color: #333;
+                            padding: 24px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            border-bottom: 2px solid #8cc63f;
+                        }
+
+                        .company-brand {
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 16px;
+                        }
+
+                        .company-logo {
+                            width: 60px;
+                            height: 60px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                        }
+
+                        .company-name {
+                            font-size: 1.8rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .company-contact {
+                            margin: 0;
+                        }
+
+                        .company-contact p {
+                            margin: 4px 0;
+                            font-size: 0.9rem;
+                            color: #666;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+
+                        .company-contact i {
+                            color: #8cc63f;
+                            width: 16px;
+                        }
+
+                        .quote-details {
+                            text-align: right;
+                        }
+
+                        .quote-title {
+                            font-size: 2.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .quote-number {
+                            font-size: 1.1rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 4px 0;
+                        }
+
+                        .quote-date {
+                            font-size: 1rem;
+                            color: #666;
+                            margin: 0;
+                        }
+
+                        .client-info-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            display: flex;
+                            gap: 40px;
+                        }
+
+                        .client-info-column,
+                        .bill-to-column {
+                            flex: 1;
+                        }
+
+                        .client-info-column h3,
+                        .bill-to-column h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .info-line {
+                            height: 2px;
+                            background: #8cc63f;
+                            width: 60%;
+                            margin-bottom: 12px;
+                        }
+
+                        .info-content p {
+                            margin: 6px 0;
+                            font-size: 0.95rem;
+                            color: #333;
+                        }
+
+                        .services-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .services-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .services-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 16px;
+                            background: white;
+                        }
+
+                        .services-table thead {
+                            background: #333;
+                            color: white;
+                        }
+
+                        .services-table th {
+                            padding: 12px 8px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table td {
+                            padding: 12px 8px;
+                            border-bottom: 1px solid #ddd;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table tbody tr:nth-child(even) {
+                            background: #f9f9f9;
+                        }
+
+                        .totals-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            text-align: right;
+                            max-width: 300px;
+                            margin-left: auto;
+                        }
+
+                        .total-row {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 6px 0;
+                            font-size: 1rem;
+                        }
+
+                        .total-line {
+                            height: 1px;
+                            background: #8cc63f;
+                            margin: 8px 0;
+                        }
+
+                        .grand-total {
+                            font-weight: bold;
+                            font-size: 1.1rem;
+                        }
+
+                        .terms-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .terms-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .terms-content p {
+                            margin: 0;
+                            font-size: 0.95rem;
+                            color: #666;
+                            line-height: 1.5;
+                        }
+                        
+                        @media print { 
+                            body { 
+                                margin: 0; 
+                                padding: 20px;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                            .quote-document { 
+                                box-shadow: none;
+                                border-radius: 0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function printQuickInvoice(content) {
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Invoice - Stellar Tree Management</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                    <style>
+                        * { box-sizing: border-box; }
+                        body { 
+                            font-family: 'Arial', sans-serif; 
+                            margin: 0; 
+                            padding: 20px; 
+                            background: #fff;
+                            color: #333;
+                            line-height: 1.6;
+                            font-size: 14px;
+                        }
+                        
+                        /* Quote Document Styles - Matching Preview */
+                        .quote-document {
+                            font-family: 'Arial', sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        }
+
+                        .quote-header {
+                            background: white;
+                            color: #333;
+                            padding: 24px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            border-bottom: 2px solid #8cc63f;
+                        }
+
+                        .company-brand {
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 16px;
+                        }
+
+                        .company-logo {
+                            width: 60px;
+                            height: 60px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                        }
+
+                        .company-name {
+                            font-size: 1.8rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .company-contact {
+                            margin: 0;
+                        }
+
+                        .company-contact p {
+                            margin: 4px 0;
+                            font-size: 0.9rem;
+                            color: #666;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+
+                        .company-contact i {
+                            color: #8cc63f;
+                            width: 16px;
+                        }
+
+                        .quote-details {
+                            text-align: right;
+                        }
+
+                        .quote-title {
+                            font-size: 2.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .quote-number {
+                            font-size: 1.1rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 4px 0;
+                        }
+
+                        .quote-date {
+                            font-size: 1rem;
+                            color: #666;
+                            margin: 0;
+                        }
+
+                        .client-info-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            display: flex;
+                            gap: 40px;
+                        }
+
+                        .client-info-column,
+                        .bill-to-column {
+                            flex: 1;
+                        }
+
+                        .client-info-column h3,
+                        .bill-to-column h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .info-line {
+                            height: 2px;
+                            background: #8cc63f;
+                            width: 60%;
+                            margin-bottom: 12px;
+                        }
+
+                        .info-content p {
+                            margin: 6px 0;
+                            font-size: 0.95rem;
+                            color: #333;
+                        }
+
+                        .services-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .services-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .services-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 16px;
+                            background: white;
+                        }
+
+                        .services-table thead {
+                            background: #333;
+                            color: white;
+                        }
+
+                        .services-table th {
+                            padding: 12px 8px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table td {
+                            padding: 12px 8px;
+                            border-bottom: 1px solid #ddd;
+                            font-size: 0.9rem;
+                        }
+
+                        .services-table tbody tr:nth-child(even) {
+                            background: #f9f9f9;
+                        }
+
+                        .totals-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                            text-align: right;
+                            max-width: 300px;
+                            margin-left: auto;
+                        }
+
+                        .total-row {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 6px 0;
+                            font-size: 1rem;
+                        }
+
+                        .total-line {
+                            height: 1px;
+                            background: #8cc63f;
+                            margin: 8px 0;
+                        }
+
+                        .grand-total {
+                            font-weight: bold;
+                            font-size: 1.1rem;
+                        }
+
+                        .terms-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            margin: 0;
+                        }
+
+                        .terms-section h3 {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #333;
+                            margin: 0 0 8px 0;
+                        }
+
+                        .terms-content p {
+                            margin: 0;
+                            font-size: 0.95rem;
+                            color: #666;
+                            line-height: 1.5;
+                        }
+                        
+                        @media print { 
+                            body { 
+                                margin: 0; 
+                                padding: 20px;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                            .quote-document { 
+                                box-shadow: none;
+                                border-radius: 0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Quick Billing Download Functions
+        function downloadQuickQuotePDF(content) {
+            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
+            printQuickQuote(content);
+        }
+
+        function downloadQuickInvoicePDF(content) {
+            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
+            printQuickInvoice(content);
         }
 
         // Send Invoice Email
@@ -10086,9 +10594,9 @@ stellartmanagement@outlook.com</span>
             `;
             printBtn.onclick = () => {
                 if (type === 'quote') {
-                    printQuote();
+                    printQuickQuote(content);
                 } else {
-                    printInvoice();
+                    printQuickInvoice(content);
                 }
             };
             
@@ -10104,9 +10612,9 @@ stellartmanagement@outlook.com</span>
             `;
             downloadBtn.onclick = () => {
                 if (type === 'quote') {
-                    downloadQuotePDF();
+                    downloadQuickQuotePDF(content);
                 } else {
-                    downloadInvoicePDF();
+                    downloadQuickInvoicePDF(content);
                 }
             };
             

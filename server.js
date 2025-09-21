@@ -5,6 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const { connectToDatabase, getDatabase, closeConnection } = require('./database');
 const { Binary, ObjectId } = require('mongodb');
+const EmailService = require('./email-service');
 
 
 
@@ -12,6 +13,9 @@ const app = express();
 // Respect X-Forwarded-* headers when behind reverse proxies / CDNs
 app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
+
+// Initialize email service
+const emailService = new EmailService();
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -461,7 +465,7 @@ function requireAdminAuth(req, res, next) {
     
     // Extract email from Bearer token
     const token = authHeader.replace('Bearer ', '');
-    const email = token; // For now, the token is the email
+    const email = token; // The token is the email address from OAuth
     
     // Check if email is in allowed list
     if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
@@ -2912,6 +2916,8 @@ app.get('/api/calendar-events', requireAdminAuth, async (req, res) => {
 // Create a new calendar event
 app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
     try {
+        console.log('📧 Server - Calendar event creation request received');
+        console.log('📧 Server - Request body:', req.body);
         const { title, type, date, startTime, endTime, location, description, color, sendToMyself } = req.body;
         
         if (!title || !type || !date || !startTime || !endTime) {
@@ -2934,14 +2940,32 @@ app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
         const result = await db.collection('calendar_events').insertOne(eventData);
         
         // Send email confirmation if requested
+        console.log('📧 Server Debug - sendToMyself:', sendToMyself);
+        console.log('📧 Server Debug - req.user:', req.user);
+        console.log('📧 Server Debug - req.user.email:', req.user ? req.user.email : 'undefined');
+        console.log('📧 Server Debug - sendToMyself type:', typeof sendToMyself);
+        console.log('📧 Server Debug - sendToMyself value:', JSON.stringify(sendToMyself));
+        
         if (sendToMyself && req.user && req.user.email) {
             try {
-                await emailService.sendEventConfirmationEmail(req.user.email, eventData, false);
-                console.log('📧 Event confirmation email sent to:', req.user.email);
+                console.log('📧 Attempting to send event confirmation email to:', req.user.email);
+                const emailResult = await emailService.sendEventConfirmationEmail(req.user.email, eventData, false);
+                console.log('📧 Event confirmation email result:', emailResult);
+                if (emailResult.success) {
+                    console.log('📧 Event confirmation email sent successfully to:', req.user.email);
+                } else {
+                    console.error('❌ Email service returned error:', emailResult.error);
+                }
             } catch (emailError) {
                 console.error('❌ Failed to send event confirmation email:', emailError);
                 // Don't fail the request if email fails
             }
+        } else {
+            console.log('📧 Email not sent - sendToMyself:', sendToMyself, 'req.user:', req.user);
+            console.log('📧 Email not sent - conditions check:');
+            console.log('  - sendToMyself truthy:', !!sendToMyself);
+            console.log('  - req.user exists:', !!req.user);
+            console.log('  - req.user.email exists:', !!(req.user && req.user.email));
         }
         
         res.status(201).json({
@@ -2986,14 +3010,32 @@ app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
         }
         
         // Send email confirmation if requested
+        console.log('📧 Update Server Debug - sendToMyself:', sendToMyself);
+        console.log('📧 Update Server Debug - req.user:', req.user);
+        console.log('📧 Update Server Debug - req.user.email:', req.user ? req.user.email : 'undefined');
+        console.log('📧 Update Server Debug - sendToMyself type:', typeof sendToMyself);
+        console.log('📧 Update Server Debug - sendToMyself value:', JSON.stringify(sendToMyself));
+        
         if (sendToMyself && req.user && req.user.email) {
             try {
-                await emailService.sendEventConfirmationEmail(req.user.email, updateData, true);
-                console.log('📧 Event update confirmation email sent to:', req.user.email);
+                console.log('📧 Attempting to send event update confirmation email to:', req.user.email);
+                const emailResult = await emailService.sendEventConfirmationEmail(req.user.email, updateData, true);
+                console.log('📧 Event update confirmation email result:', emailResult);
+                if (emailResult.success) {
+                    console.log('📧 Event update confirmation email sent successfully to:', req.user.email);
+                } else {
+                    console.error('❌ Email service returned error:', emailResult.error);
+                }
             } catch (emailError) {
                 console.error('❌ Failed to send event update confirmation email:', emailError);
                 // Don't fail the request if email fails
             }
+        } else {
+            console.log('📧 Update email not sent - sendToMyself:', sendToMyself, 'req.user:', req.user);
+            console.log('📧 Update email not sent - conditions check:');
+            console.log('  - sendToMyself truthy:', !!sendToMyself);
+            console.log('  - req.user exists:', !!req.user);
+            console.log('  - req.user.email exists:', !!(req.user && req.user.email));
         }
         
         res.json({
