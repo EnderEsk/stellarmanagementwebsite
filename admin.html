@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="admin-archive.css">
+    <link rel="stylesheet" href="admin-trash.css">
     <link rel="stylesheet" href="admin-booking-creation/admin-booking-creation.css">
     <script src="simple-google-oauth.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
@@ -22,6 +23,8 @@
     <script src="admin-calendar-events.js" defer></script>
     <!-- Load admin archive functionality -->
     <script src="admin-archive.js" defer></script>
+    <!-- Load admin trash functionality -->
+    <script src="admin-trash.js" defer></script>
     
     <style>
         
@@ -523,6 +526,10 @@
                         <i class="fas fa-archive"></i>
                         <span class="item-text">Archive</span>
                     </div>
+                    <div class="sidebar-item" data-filter="trash">
+                        <i class="fas fa-trash-alt"></i>
+                        <span class="item-text">Trash</span>
+                    </div>
                     <div class="sidebar-item" data-filter="quick-quote">
                         <i class="fas fa-bolt"></i>
                         <span class="item-text">Quick Billing</span>
@@ -599,6 +606,8 @@
                         
                         <!-- Archive View (dynamically created) -->
                         <div id="archiveView" style="display: none;"></div>
+                        <!-- Trash View (dynamically created) -->
+                        <div id="trashView" style="display: none;"></div>
                     </div>
                     </div>
                 </div>
@@ -680,6 +689,10 @@
                         <div class="sidebar-item" data-filter="archive">
                             <i class="fas fa-archive"></i>
                             <span class="item-text">Archive</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="trash">
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="item-text">Trash</span>
                         </div>
                         <div class="sidebar-item" data-filter="quick-quote">
                             <i class="fas fa-bolt"></i>
@@ -1128,10 +1141,56 @@
             }
         }
 
+        // Clear any potential cross-contamination from quick quotes/invoices
+        function clearQuickQuoteInvoiceData() {
+            // Clear quick quote service items container
+            const quickQuoteContainer = document.getElementById('quickQuoteServiceItems');
+            if (quickQuoteContainer) {
+                quickQuoteContainer.innerHTML = '';
+            }
+            
+            // Clear quick invoice service items container
+            const quickInvoiceContainer = document.getElementById('quickInvoiceServiceItems');
+            if (quickInvoiceContainer) {
+                quickInvoiceContainer.innerHTML = '';
+            }
+            
+            // Clear quick quote form fields
+            const quickQuoteFields = ['quickQuoteClientName', 'quickQuoteClientPhone', 'quickQuoteClientAddress', 'quickQuoteClientEmail', 'quickQuoteDate'];
+            quickQuoteFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.value = '';
+            });
+            
+            // Clear quick invoice form fields
+            const quickInvoiceFields = ['quickInvoiceClientName', 'quickInvoiceClientPhone', 'quickInvoiceClientAddress', 'quickInvoiceClientEmail', 'quickInvoiceDate'];
+            quickInvoiceFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.value = '';
+            });
+            
+            // Reset quick quote tax toggle
+            const quickQuoteTaxToggle = document.getElementById('quickQuoteTaxToggle');
+            if (quickQuoteTaxToggle) quickQuoteTaxToggle.checked = false;
+            
+            // Reset quick invoice tax toggle
+            const quickInvoiceTaxToggle = document.getElementById('quickInvoiceTaxToggle');
+            if (quickInvoiceTaxToggle) quickInvoiceTaxToggle.checked = false;
+            
+            console.log('Cleared quick quote/invoice data to prevent cross-contamination');
+        }
+
         // Clear cached quote and invoice data
         function clearCachedData() {
             currentQuoteData = null;
             window.currentInvoiceData = null;
+            itemCounter = 0;
+            
+            // Clear any temporary photo data
+            if (window.tempPhotos) {
+                window.tempPhotos = {};
+            }
+            
             console.log('Cleared cached quote and invoice data');
         }
 
@@ -1143,6 +1202,15 @@
             if (window.currentInvoiceData && window.currentInvoiceData.bookingId !== bookingId) {
                 window.currentInvoiceData = null;
             }
+            
+            // Reset item counter when switching bookings
+            itemCounter = 0;
+            
+            // Clear any temporary photo data for this booking
+            if (window.tempPhotos) {
+                window.tempPhotos = {};
+            }
+            
             console.log(`Cleared cached data for booking: ${bookingId}`);
         }
 
@@ -1462,8 +1530,8 @@
 
         // Render active bookings (pending and scheduled)
         function renderActiveBookings() {
-            // Don't render if archive filter is active
-            if (currentFilter === 'archive') {
+            // Don't render if archive or trash filter is active
+            if (currentFilter === 'archive' || currentFilter === 'trash') {
                 return;
             }
             
@@ -1512,8 +1580,8 @@
             }
 
             if (filteredBookings.length === 0) {
-                // Don't show "No bookings found" if archive filter is active
-                if (currentFilter === 'archive') {
+                // Don't show "No bookings found" if archive or trash filter is active
+                if (currentFilter === 'archive' || currentFilter === 'trash') {
                     return;
                 }
                 grid.innerHTML = '<div class="empty-state">No bookings found</div>';
@@ -2104,21 +2172,62 @@
             }
         }
 
-        // Delete booking permanently
+        // Move booking to trash
         async function deleteBooking(bookingId) {
-            if (!confirm('Are you sure you want to permanently delete this booking? This action cannot be undone.')) {
+            if (!confirm('Are you sure you want to move this booking to trash? It can be restored within 30 days.')) {
                 return;
             }
 
             try {
-                const response = await fetch(`/api/bookings/${bookingId}`, {
-                    method: 'DELETE',
+                const response = await fetch(`/api/bookings/${bookingId}/trash`, {
+                    method: 'POST',
                     headers: getAuthHeaders()
                 });
 
                 if (response.ok) {
-                    showNotification('Booking deleted successfully', 'success');
-                    loadBookings(); // Reload to get updated data
+                    const trashedBooking = await response.json();
+                    showNotification('Booking moved to trash', 'success');
+                    
+                    // Close any open modals
+                    const modals = document.querySelectorAll('.modal.show, .modal[style*="display: block"], .modal[style*="display:block"]');
+                    modals.forEach(modal => {
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                    });
+                    
+                    // Remove modal-open class from body
+                    document.body.classList.remove('modal-open');
+                    
+                    // Restore body scrolling
+                    document.body.style.overflow = '';
+                    
+                    // Remove the booking from the allBookings array immediately
+                    if (window.allBookings) {
+                        window.allBookings = window.allBookings.filter(b => b.booking_id !== bookingId);
+                    }
+                    
+                    // Add to trash immediately (always)
+                    if (window.adminTrash) {
+                        window.adminTrash.trashedBookings.unshift(trashedBooking);
+                        window.adminTrash.isLoaded = true; // Mark as loaded to prevent double-loading
+                        // If trash view is currently open, update it immediately
+                        if (currentFilter === 'trash') {
+                            window.adminTrash.renderTrashedBookings();
+                        }
+                    }
+                    
+                    // Update the UI immediately
+                    if (typeof renderActiveBookings === 'function') {
+                        renderActiveBookings();
+                    }
+                    
+                    // Update statistics
+                    if (typeof updateStatistics === 'function') {
+                        updateStatistics();
+                    }
+                    
+                    // Reload bookings to ensure sync with server
+                    loadBookings();
                     
                     // Explicitly refresh calendar if it's currently visible
                     if (currentFilter === 'calendar') {
@@ -2129,11 +2238,11 @@
                     setTimeout(() => logout(), 2000);
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || error.message || 'Failed to delete booking', 'error');
+                    showNotification(error.error || error.message || 'Failed to move booking to trash', 'error');
                 }
             } catch (error) {
-                console.error('Error deleting booking:', error);
-                showNotification('Network error deleting booking', 'error');
+                console.error('Error moving booking to trash:', error);
+                showNotification('Network error moving booking to trash', 'error');
             }
         }
 
@@ -2181,10 +2290,27 @@
                     if (activeBookingsGrid) {
                         activeBookingsGrid.innerHTML = '';
                     }
+                } else if (currentFilter === 'trash') {
+                    document.getElementById('activeBookingsGrid').style.display = 'none';
+                    document.getElementById('calendarView').style.display = 'none';
+                    document.getElementById('archiveView').style.display = 'none';
+                    document.getElementById('trashView').style.display = 'block';
+                    
+                    // Load trashed bookings if not already loaded
+                    if (window.adminTrash && !window.adminTrash.isLoaded) {
+                        window.adminTrash.loadTrashedBookings();
+                    }
+                    
+                    // Clear the active bookings grid to prevent "No bookings found" message
+                    const activeBookingsGrid = document.getElementById('activeBookingsGrid');
+                    if (activeBookingsGrid) {
+                        activeBookingsGrid.innerHTML = '';
+                    }
                 } else {
                     document.getElementById('activeBookingsGrid').style.display = 'grid';
                     document.getElementById('calendarView').style.display = 'none';
                     document.getElementById('archiveView').style.display = 'none';
+                    document.getElementById('trashView').style.display = 'none';
                     renderActiveBookings();
                 }
             }
@@ -2824,7 +2950,7 @@
                 document.body.classList.remove('modal-open');
                 
                 // Clear any cached data when closing quote/invoice modals
-                if (modalId === 'quoteModal' || modalId === 'invoiceModal') {
+                if (modalId === 'quoteModal' || modalId === 'invoiceModal' || modalId === 'quickQuoteModal' || modalId === 'quickInvoiceModal') {
                     clearModalData(modalId);
                 }
                 
@@ -2861,6 +2987,10 @@
                 const taxToggle = document.getElementById('taxToggle');
                 if (taxToggle) taxToggle.checked = false;
                 
+                // Clear global state
+                currentQuoteData = null;
+                itemCounter = 0;
+                
             } else if (modalId === 'invoiceModal') {
                 // Clear invoice form data
                 const invoiceFields = ['invoiceClientName', 'invoiceClientPhone', 'invoiceClientAddress', 'invoiceClientEmail', 'invoiceDate'];
@@ -2884,6 +3014,59 @@
                 
                 // Reset tax toggle
                 const taxToggle = document.getElementById('invoiceTaxToggle');
+                if (taxToggle) taxToggle.checked = false;
+                
+                // Clear global state
+                window.currentInvoiceData = null;
+                
+            } else if (modalId === 'quickQuoteModal') {
+                // Clear quick quote form data
+                const quickQuoteFields = ['quickQuoteClientName', 'quickQuoteClientPhone', 'quickQuoteClientAddress', 'quickQuoteClientEmail', 'quickQuoteDate'];
+                quickQuoteFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.value = '';
+                });
+                
+                // Clear service items container
+                const serviceContainer = document.getElementById('quickQuoteServiceItems');
+                if (serviceContainer) {
+                    serviceContainer.innerHTML = '';
+                }
+                
+                // Reset totals
+                const totalElements = ['quickQuoteSubtotalAmount', 'quickQuoteTaxAmount', 'quickQuoteGrandTotalAmount'];
+                totalElements.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) element.textContent = '$0.00';
+                });
+                
+                // Reset tax toggle
+                const taxToggle = document.getElementById('quickQuoteTaxToggle');
+                if (taxToggle) taxToggle.checked = false;
+                
+            } else if (modalId === 'quickInvoiceModal') {
+                // Clear quick invoice form data
+                const quickInvoiceFields = ['quickInvoiceClientName', 'quickInvoiceClientPhone', 'quickInvoiceClientAddress', 'quickInvoiceClientEmail', 'quickInvoiceDate'];
+                quickInvoiceFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.value = '';
+                });
+                
+                // Clear service items container
+                const serviceContainer = document.getElementById('quickInvoiceServiceItems');
+                if (serviceContainer) {
+                    serviceContainer.innerHTML = '';
+                }
+                
+                // Reset totals
+                const totalElements = ['quickInvoiceSubtotalAmount', 'quickInvoiceTaxAmount', 'quickInvoiceGrandTotalAmount'];
+                totalElements.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) element.textContent = '$0.00';
+                });
+                
+                // Reset tax toggle
+                const taxToggle = document.getElementById('quickInvoiceTaxToggle');
                 if (taxToggle) taxToggle.checked = false;
             }
         }
@@ -3764,7 +3947,7 @@
 
                 // Ensure modal elements are available
                 const quoteModal = document.getElementById('quoteModal');
-                const serviceContainer = document.querySelector('.service-items-container');
+                const modalServiceContainer = document.querySelector('.service-items-container');
                 
                 if (!quoteModal) {
                     console.error('Quote modal not found in DOM');
@@ -3772,7 +3955,7 @@
                     return;
                 }
                 
-                if (!serviceContainer) {
+                if (!modalServiceContainer) {
                     console.error('Service items container not found in DOM');
                     showNotification('Service items container not found', 'error');
                     return;
@@ -3782,6 +3965,18 @@
                 if (currentQuoteData && currentQuoteData.bookingId !== booking.booking_id) {
                     clearCachedDataForBooking(booking.booking_id);
                 }
+
+                // Ensure complete isolation by clearing service items container first
+                const quoteServiceContainer = document.querySelector('.service-items-container');
+                if (quoteServiceContainer) {
+                    quoteServiceContainer.innerHTML = '';
+                }
+                
+                // Reset item counter to ensure clean state
+                itemCounter = 0;
+                
+                // Clear any potential cross-contamination from quick quotes/invoices
+                clearQuickQuoteInvoiceData();
 
                 currentQuoteData = {
                     bookingId: booking.booking_id,
@@ -3828,6 +4023,9 @@
             try {
                 // Reset item counter when opening quote modal
                 itemCounter = 0;
+                
+                // Clear any potential cross-contamination from quick quotes/invoices
+                clearQuickQuoteInvoiceData();
                 
                 // Store the quote ID for updates
                 currentQuoteData.quoteId = quote.quote_id;
@@ -3902,6 +4100,9 @@
                 // Reset item counter when opening quote modal
                 itemCounter = 0;
                 
+                // Clear any potential cross-contamination from quick quotes/invoices
+                clearQuickQuoteInvoiceData();
+                
                 // Set current quote data with booking information
                 currentQuoteData = {
                     bookingId: booking.booking_id,
@@ -3973,7 +4174,13 @@
         function loadServiceItems(serviceItems) {
             const container = document.querySelector('.service-items-container');
             
-            // Clear existing items
+            // Validate that we're operating on the correct container
+            if (!container) {
+                console.error('Service items container not found - this should be the regular quote container');
+                return;
+            }
+            
+            // Clear existing items completely
             container.innerHTML = '';
 
             console.log('Loading service items:', serviceItems);
@@ -5672,237 +5879,392 @@
             return `QT-${year}${month}${day}-${random}`;
         }
 
-        // Print Quote
-        function printQuote() {
-            const printWindow = window.open('', '_blank');
-            const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Quote - Stellar Tree Management</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        // Universal styling function for consistent appearance
+        function getUniversalDocumentStyles() {
+            return `
                     <style>
-                        * { box-sizing: border-box; }
-                        body { 
-                            font-family: 'Arial', sans-serif; 
-                            margin: 0; 
-                            padding: 20px; 
-                            background: #fff;
+                
+                #quotePreviewContent,
+                #invoicePreviewContent {
+                    font-family: 'Arial', sans-serif;
+                    line-height: 1.6;
                             color: #333;
-                            line-height: 1.6;
-                            font-size: 14px;
                         }
-                        
-                        /* Quote Document Styles - Matching Preview */
-                        .quote-document {
-                            font-family: 'Arial', sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 800px;
-                            margin: 0 auto;
+
+                /* Quote Document Styles - Matching the Design */
+                        .quote-document { 
+                    font-family: 'Arial', sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                            max-width: 800px; 
+                            margin: 0 auto; 
                             background: white;
                             border-radius: 8px;
                             overflow: hidden;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                         }
-
-                        .quote-header {
+                        
+                        .quote-header { 
                             background: white;
                             color: #333;
                             padding: 24px;
                             display: flex;
                             justify-content: space-between;
                             align-items: flex-start;
-                            border-bottom: 2px solid #8cc63f;
+                    border-bottom: 2px solid #8cc63f;
+                }
+
+                .company-brand {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 16px;
+                }
+
+                .company-logo {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                        .company-name { 
+                    font-size: 1.8rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
+
+                .company-contact {
+                    margin: 0;
+                }
+
+                .company-contact p {
+                    margin: 4px 0;
+                    font-size: 0.9rem;
+                    color: #666;
+                            display: flex; 
+                            align-items: center; 
+                            gap: 8px; 
                         }
 
-                        .company-brand {
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 16px;
-                        }
-
-                        .company-logo {
-                            width: 60px;
-                            height: 60px;
-                            border-radius: 50%;
-                            object-fit: cover;
-                        }
-
-                        .company-name {
-                            font-size: 1.8rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .company-contact {
-                            margin: 0;
-                        }
-
-                        .company-contact p {
-                            margin: 4px 0;
-                            font-size: 0.9rem;
-                            color: #666;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-
-                        .company-contact i {
+                .company-contact i {
                             color: #8cc63f;
-                            width: 16px;
+                    width: 16px;
                         }
 
-                        .quote-details {
+                .quote-details {
                             text-align: right;
-                        }
+                }
 
-                        .quote-title {
-                            font-size: 2.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
+                .quote-title {
+                    font-size: 2.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
 
-                        .quote-number {
-                            font-size: 1.1rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 4px 0;
-                        }
+                .quote-number {
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 4px 0;
+                }
 
-                        .quote-date {
-                            font-size: 1rem;
+                .quote-date {
+                    font-size: 1rem;
                             color: #666;
-                            margin: 0;
-                        }
+                    margin: 0;
+                }
 
-                        .client-info-section {
+                .client-info-section {
                             background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            display: flex;
-                            gap: 40px;
-                        }
+                    padding: 20px;
+                    margin: 0;
+                    display: flex;
+                    gap: 40px;
+                }
 
-                        .client-info-column,
-                        .bill-to-column {
-                            flex: 1;
-                        }
+                .client-info-column,
+                .bill-to-column {
+                    flex: 1;
+                }
 
-                        .client-info-column h3,
-                        .bill-to-column h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
+                .client-info-column h3,
+                .bill-to-column h3 {
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
+
+                .info-line {
+                    height: 2px;
+                    background: #8cc63f;
+                    width: 60%;
+                    margin-bottom: 12px;
+                }
+
+                .info-content p {
+                    margin: 6px 0;
+                    font-size: 0.95rem;
                             color: #333;
-                            margin: 0 0 8px 0;
-                        }
+                }
 
-                        .info-line {
-                            height: 2px;
-                            background: #8cc63f;
-                            width: 60%;
-                            margin-bottom: 12px;
-                        }
+                .services-section {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    margin: 0;
+                }
 
-                        .info-content p {
-                            margin: 6px 0;
-                            font-size: 0.95rem;
-                            color: #333;
-                        }
+                .services-section h3 {
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
 
-                        .services-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
+                        .services-table { 
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 16px;
+                    background: white;
+                }
 
-                        .services-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .services-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 16px;
-                            background: white;
-                        }
-
-                        .services-table thead {
-                            background: #333;
+                .services-table thead {
+                    background: #333;
                             color: white;
                         }
 
-                        .services-table th {
-                            padding: 12px 8px;
+                .services-table th {
+                    padding: 12px 8px;
                             text-align: left;
-                            font-weight: bold;
-                            font-size: 0.9rem;
-                        }
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                }
 
-                        .services-table td {
-                            padding: 12px 8px;
-                            border-bottom: 1px solid #ddd;
-                            font-size: 0.9rem;
-                        }
+                .services-table td {
+                    padding: 12px 8px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 0.9rem;
+                }
 
-                        .services-table tbody tr:nth-child(even) {
-                            background: #f9f9f9;
-                        }
+                .services-table tbody tr:nth-child(even) {
+                    background: #f9f9f9;
+                }
 
-                        .totals-section {
+                        .totals-section { 
                             background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            text-align: right;
-                            max-width: 300px;
-                            margin-left: auto;
-                        }
+                    padding: 20px;
+                    margin: 0;
+                    text-align: right;
+                    max-width: 300px;
+                    margin-left: auto;
+                }
 
-                        .total-row {
+                        .total-row { 
                             display: flex;
                             justify-content: space-between;
-                            padding: 6px 0;
-                            font-size: 1rem;
-                        }
+                    padding: 6px 0;
+                    font-size: 1rem;
+                }
 
-                        .total-line {
-                            height: 1px;
-                            background: #8cc63f;
-                            margin: 8px 0;
-                        }
+                .total-line {
+                    height: 1px;
+                    background: #8cc63f;
+                    margin: 8px 0;
+                }
 
-                        .grand-total {
-                            font-weight: bold;
-                            font-size: 1.1rem;
-                        }
+                .grand-total {
+                    font-weight: bold;
+                    font-size: 1.1rem;
+                }
 
-                        .terms-section {
+                        .terms-section { 
                             background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
+                    padding: 20px;
+                    margin: 0;
+                }
 
-                        .terms-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
+                .terms-section h3 {
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
 
-                        .terms-content p {
+                        .terms-content p { 
                             margin: 0;
-                            font-size: 0.95rem;
+                    font-size: 0.95rem;
                             color: #666;
-                            line-height: 1.5;
+                    line-height: 1.5;
                         }
+
+                /* Print/Export specific tweaks (do not affect on-screen preview) */
+                .print-export .terms-section { 
+                    padding-top: 12px;
+                }
+                .print-export .terms-section h3 {
+                    font-size: 1rem;
+                    font-weight: 600;
+                }
+                .print-export .terms-content p {
+                    font-size: 0.85rem;
+                    font-weight: 400;
+                    color: #777;
+                }
+
+                /* Additional styles for Quick Billing structure */
+                .contact-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin: 4px 0;
+                    font-size: 0.9rem;
+                    color: #666;
+                }
+
+                .contact-item i {
+                    color: #8cc63f;
+                    width: 16px;
+                }
+
+                .document-info {
+                    text-align: right;
+                }
+
+                .document-type {
+                    font-size: 2.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
+
+                .document-number {
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 4px 0;
+                }
+
+                .document-date {
+                    font-size: 1rem;
+                    color: #666;
+                    margin: 0;
+                }
+
+                .client-billing-section {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    margin: 0;
+                    display: flex;
+                    gap: 40px;
+                }
+
+                .client-billing-section > div {
+                    flex: 1;
+                }
+
+                .section-heading {
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 0 8px 0;
+                }
+
+                .data-row {
+                    display: flex;
+                    margin: 6px 0;
+                    font-size: 0.95rem;
+                }
+
+                .data-row .label {
+                    font-weight: bold;
+                    color: #333;
+                    min-width: 80px;
+                    margin-right: 8px;
+                }
+
+                .data-row .value {
+                    color: #333;
+                    flex: 1;
+                }
+
+                .table-header {
+                    display: flex;
+                    background: #333;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                }
+
+                .table-body {
+                    background: white;
+                }
+
+                .table-row {
+                    display: flex;
+                    border-bottom: 1px solid #ddd;
+                }
+
+                .table-row:nth-child(even) {
+                    background: #f9f9f9;
+                }
+
+                .header-item,
+                .table-cell {
+                    padding: 12px 8px;
+                    font-size: 0.9rem;
+                }
+
+                .header-item:first-child,
+                .table-cell:first-child {
+                    width: 40px;
+                    text-align: center;
+                }
+
+                .header-item.description,
+                .table-cell.description {
+                    flex: 2;
+                }
+
+                .header-item.quantity,
+                .table-cell.quantity {
+                    width: 60px;
+                    text-align: center;
+                }
+
+                .header-item.price,
+                .table-cell.price {
+                    width: 100px;
+                    text-align: right;
+                }
+
+                .header-item.total,
+                .table-cell.total {
+                    width: 100px;
+                    text-align: right;
+                    font-weight: bold;
+                }
+
+                .totals-container {
+                    max-width: 300px;
+                    margin-left: auto;
+                }
+
+                .total-label {
+                    font-weight: bold;
+                }
+
+                .total-value {
+                    font-weight: bold;
+                }
+
+                .grand-total .total-label,
+                .grand-total .total-value {
+                    font-size: 1.1rem;
+                }
                         
+                /* Print Styles */
                         @media print { 
                             body { 
                                 margin: 0; 
@@ -5915,7 +6277,23 @@
                                 border-radius: 0;
                             }
                         }
+                    
                     </style>
+            `;
+        }
+
+        // Print Quote
+        function printQuote() {
+            const printWindow = window.open('', '_blank');
+            const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Quote</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                    ${getUniversalDocumentStyles()}
                 </head>
                 <body>
                     ${quoteContent}
@@ -5933,6 +6311,33 @@
             // In a production environment, you'd want to use a proper PDF library like jsPDF
             showNotification('PDF download feature coming soon. Use print function for now.', 'info');
             printQuote();
+        }
+
+        // Download Quote (for quick billing compatibility)
+        function downloadQuote() {
+            const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Quote - Stellar Tree Management</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                    ${getUniversalDocumentStyles()}
+                </head>
+                <body>
+                    ${quoteContent}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            // Trigger download
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
         }
 
         // Send Quote
@@ -7023,239 +7428,7 @@
                 <head>
                     <title>Invoice - Stellar Tree Management</title>
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                    <style>
-                        * { box-sizing: border-box; }
-                        body { 
-                            font-family: 'Arial', sans-serif; 
-                            margin: 0; 
-                            padding: 20px; 
-                            background: #fff;
-                            color: #333;
-                            line-height: 1.6;
-                            font-size: 14px;
-                        }
-                        
-                        /* Quote Document Styles - Matching Preview */
-                        .quote-document {
-                            font-family: 'Arial', sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 800px;
-                            margin: 0 auto;
-                            background: white;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
-
-                        .quote-header {
-                            background: white;
-                            color: #333;
-                            padding: 24px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-start;
-                            border-bottom: 2px solid #8cc63f;
-                        }
-
-                        .company-brand {
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 16px;
-                        }
-
-                        .company-logo {
-                            width: 60px;
-                            height: 60px;
-                            border-radius: 50%;
-                            object-fit: cover;
-                        }
-
-                        .company-name {
-                            font-size: 1.8rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .company-contact {
-                            margin: 0;
-                        }
-
-                        .company-contact p {
-                            margin: 4px 0;
-                            font-size: 0.9rem;
-                            color: #666;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-
-                        .company-contact i {
-                            color: #8cc63f;
-                            width: 16px;
-                        }
-
-                        .quote-details {
-                            text-align: right;
-                        }
-
-                        .quote-title {
-                            font-size: 2.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .quote-number {
-                            font-size: 1.1rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 4px 0;
-                        }
-
-                        .quote-date {
-                            font-size: 1rem;
-                            color: #666;
-                            margin: 0;
-                        }
-
-                        .client-info-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            display: flex;
-                            gap: 40px;
-                        }
-
-                        .client-info-column,
-                        .bill-to-column {
-                            flex: 1;
-                        }
-
-                        .client-info-column h3,
-                        .bill-to-column h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .info-line {
-                            height: 2px;
-                            background: #8cc63f;
-                            width: 60%;
-                            margin-bottom: 12px;
-                        }
-
-                        .info-content p {
-                            margin: 6px 0;
-                            font-size: 0.95rem;
-                            color: #333;
-                        }
-
-                        .services-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .services-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .services-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 16px;
-                            background: white;
-                        }
-
-                        .services-table thead {
-                            background: #333;
-                            color: white;
-                        }
-
-                        .services-table th {
-                            padding: 12px 8px;
-                            text-align: left;
-                            font-weight: bold;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table td {
-                            padding: 12px 8px;
-                            border-bottom: 1px solid #ddd;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table tbody tr:nth-child(even) {
-                            background: #f9f9f9;
-                        }
-
-                        .totals-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            text-align: right;
-                            max-width: 300px;
-                            margin-left: auto;
-                        }
-
-                        .total-row {
-                            display: flex;
-                            justify-content: space-between;
-                            padding: 6px 0;
-                            font-size: 1rem;
-                        }
-
-                        .total-line {
-                            height: 1px;
-                            background: #8cc63f;
-                            margin: 8px 0;
-                        }
-
-                        .grand-total {
-                            font-weight: bold;
-                            font-size: 1.1rem;
-                        }
-
-                        .terms-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .terms-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .terms-content p {
-                            margin: 0;
-                            font-size: 0.95rem;
-                            color: #666;
-                            line-height: 1.5;
-                        }
-                        
-                        @media print { 
-                            body { 
-                                margin: 0; 
-                                padding: 20px;
-                                -webkit-print-color-adjust: exact;
-                                color-adjust: exact;
-                            }
-                            .quote-document { 
-                                box-shadow: none;
-                                border-radius: 0;
-                            }
-                        }
-                    </style>
+                    ${getUniversalDocumentStyles()}
                 </head>
                 <body>
                     ${invoiceContent}
@@ -7275,6 +7448,33 @@
             printInvoice();
         }
 
+        // Download Invoice (for quick billing compatibility)
+        function downloadInvoice() {
+            const invoiceContent = document.getElementById('invoicePreviewContent').innerHTML;
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Invoice - Stellar Tree Management</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                    ${getUniversalDocumentStyles()}
+                </head>
+                <body>
+                    ${invoiceContent}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            // Trigger download
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
         // Quick Billing Print Functions
         function printQuickQuote(content) {
             const printWindow = window.open('', '_blank');
@@ -7285,248 +7485,22 @@
                 <head>
                     <title>Quote - Stellar Tree Management</title>
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                    <style>
-                        * { box-sizing: border-box; }
-                        body { 
-                            font-family: 'Arial', sans-serif; 
-                            margin: 0; 
-                            padding: 20px; 
-                            background: #fff;
-                            color: #333;
-                            line-height: 1.6;
-                            font-size: 14px;
-                        }
-                        
-                        /* Quote Document Styles - Matching Preview */
-                        .quote-document {
-                            font-family: 'Arial', sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 800px;
-                            margin: 0 auto;
-                            background: white;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
-
-                        .quote-header {
-                            background: white;
-                            color: #333;
-                            padding: 24px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-start;
-                            border-bottom: 2px solid #8cc63f;
-                        }
-
-                        .company-brand {
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 16px;
-                        }
-
-                        .company-logo {
-                            width: 60px;
-                            height: 60px;
-                            border-radius: 50%;
-                            object-fit: cover;
-                        }
-
-                        .company-name {
-                            font-size: 1.8rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .company-contact {
-                            margin: 0;
-                        }
-
-                        .company-contact p {
-                            margin: 4px 0;
-                            font-size: 0.9rem;
-                            color: #666;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-
-                        .company-contact i {
-                            color: #8cc63f;
-                            width: 16px;
-                        }
-
-                        .quote-details {
-                            text-align: right;
-                        }
-
-                        .quote-title {
-                            font-size: 2.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .quote-number {
-                            font-size: 1.1rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 4px 0;
-                        }
-
-                        .quote-date {
-                            font-size: 1rem;
-                            color: #666;
-                            margin: 0;
-                        }
-
-                        .client-info-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            display: flex;
-                            gap: 40px;
-                        }
-
-                        .client-info-column,
-                        .bill-to-column {
-                            flex: 1;
-                        }
-
-                        .client-info-column h3,
-                        .bill-to-column h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .info-line {
-                            height: 2px;
-                            background: #8cc63f;
-                            width: 60%;
-                            margin-bottom: 12px;
-                        }
-
-                        .info-content p {
-                            margin: 6px 0;
-                            font-size: 0.95rem;
-                            color: #333;
-                        }
-
-                        .services-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .services-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .services-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 16px;
-                            background: white;
-                        }
-
-                        .services-table thead {
-                            background: #333;
-                            color: white;
-                        }
-
-                        .services-table th {
-                            padding: 12px 8px;
-                            text-align: left;
-                            font-weight: bold;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table td {
-                            padding: 12px 8px;
-                            border-bottom: 1px solid #ddd;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table tbody tr:nth-child(even) {
-                            background: #f9f9f9;
-                        }
-
-                        .totals-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            text-align: right;
-                            max-width: 300px;
-                            margin-left: auto;
-                        }
-
-                        .total-row {
-                            display: flex;
-                            justify-content: space-between;
-                            padding: 6px 0;
-                            font-size: 1rem;
-                        }
-
-                        .total-line {
-                            height: 1px;
-                            background: #8cc63f;
-                            margin: 8px 0;
-                        }
-
-                        .grand-total {
-                            font-weight: bold;
-                            font-size: 1.1rem;
-                        }
-
-                        .terms-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .terms-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .terms-content p {
-                            margin: 0;
-                            font-size: 0.95rem;
-                            color: #666;
-                            line-height: 1.5;
-                        }
-                        
-                        @media print { 
-                            body { 
-                                margin: 0; 
-                                padding: 20px;
-                                -webkit-print-color-adjust: exact;
-                                color-adjust: exact;
-                            }
-                            .quote-document { 
-                                box-shadow: none;
-                                border-radius: 0;
-                            }
-                        }
-                    </style>
+                    ${getUniversalDocumentStyles()}
                 </head>
-                <body>
+                <body class="print-export">
                     ${content}
                 </body>
                 </html>
             `);
             
             printWindow.document.close();
-            printWindow.print();
+            
+            // Wait for resources to load before printing
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            };
         }
 
         function printQuickInvoice(content) {
@@ -7538,259 +7512,205 @@
                 <head>
                     <title>Invoice - Stellar Tree Management</title>
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                    <style>
-                        * { box-sizing: border-box; }
-                        body { 
-                            font-family: 'Arial', sans-serif; 
-                            margin: 0; 
-                            padding: 20px; 
-                            background: #fff;
-                            color: #333;
-                            line-height: 1.6;
-                            font-size: 14px;
-                        }
-                        
-                        /* Quote Document Styles - Matching Preview */
-                        .quote-document {
-                            font-family: 'Arial', sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 800px;
-                            margin: 0 auto;
-                            background: white;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
-
-                        .quote-header {
-                            background: white;
-                            color: #333;
-                            padding: 24px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-start;
-                            border-bottom: 2px solid #8cc63f;
-                        }
-
-                        .company-brand {
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 16px;
-                        }
-
-                        .company-logo {
-                            width: 60px;
-                            height: 60px;
-                            border-radius: 50%;
-                            object-fit: cover;
-                        }
-
-                        .company-name {
-                            font-size: 1.8rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .company-contact {
-                            margin: 0;
-                        }
-
-                        .company-contact p {
-                            margin: 4px 0;
-                            font-size: 0.9rem;
-                            color: #666;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-
-                        .company-contact i {
-                            color: #8cc63f;
-                            width: 16px;
-                        }
-
-                        .quote-details {
-                            text-align: right;
-                        }
-
-                        .quote-title {
-                            font-size: 2.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .quote-number {
-                            font-size: 1.1rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 4px 0;
-                        }
-
-                        .quote-date {
-                            font-size: 1rem;
-                            color: #666;
-                            margin: 0;
-                        }
-
-                        .client-info-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            display: flex;
-                            gap: 40px;
-                        }
-
-                        .client-info-column,
-                        .bill-to-column {
-                            flex: 1;
-                        }
-
-                        .client-info-column h3,
-                        .bill-to-column h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .info-line {
-                            height: 2px;
-                            background: #8cc63f;
-                            width: 60%;
-                            margin-bottom: 12px;
-                        }
-
-                        .info-content p {
-                            margin: 6px 0;
-                            font-size: 0.95rem;
-                            color: #333;
-                        }
-
-                        .services-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .services-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .services-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 16px;
-                            background: white;
-                        }
-
-                        .services-table thead {
-                            background: #333;
-                            color: white;
-                        }
-
-                        .services-table th {
-                            padding: 12px 8px;
-                            text-align: left;
-                            font-weight: bold;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table td {
-                            padding: 12px 8px;
-                            border-bottom: 1px solid #ddd;
-                            font-size: 0.9rem;
-                        }
-
-                        .services-table tbody tr:nth-child(even) {
-                            background: #f9f9f9;
-                        }
-
-                        .totals-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                            text-align: right;
-                            max-width: 300px;
-                            margin-left: auto;
-                        }
-
-                        .total-row {
-                            display: flex;
-                            justify-content: space-between;
-                            padding: 6px 0;
-                            font-size: 1rem;
-                        }
-
-                        .total-line {
-                            height: 1px;
-                            background: #8cc63f;
-                            margin: 8px 0;
-                        }
-
-                        .grand-total {
-                            font-weight: bold;
-                            font-size: 1.1rem;
-                        }
-
-                        .terms-section {
-                            background: #f8f9fa;
-                            padding: 20px;
-                            margin: 0;
-                        }
-
-                        .terms-section h3 {
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            color: #333;
-                            margin: 0 0 8px 0;
-                        }
-
-                        .terms-content p {
-                            margin: 0;
-                            font-size: 0.95rem;
-                            color: #666;
-                            line-height: 1.5;
-                        }
-                        
-                        @media print { 
-                            body { 
-                                margin: 0; 
-                                padding: 20px;
-                                -webkit-print-color-adjust: exact;
-                                color-adjust: exact;
-                            }
-                            .quote-document { 
-                                box-shadow: none;
-                                border-radius: 0;
-                            }
-                        }
-                    </style>
+                    ${getUniversalDocumentStyles()}
                 </head>
-                <body>
+                <body class="print-export">
                     ${content}
                 </body>
                 </html>
             `);
             
             printWindow.document.close();
-            printWindow.print();
+            
+            // Wait for resources to load before printing
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            };
         }
 
         // Quick Billing Download Functions
         function downloadQuickQuotePDF(content) {
-            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
-            printQuickQuote(content);
+            const ensureHtml2Pdf = () => new Promise((resolve, reject) => {
+                if (window.html2pdf) return resolve();
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error('Failed to load PDF library'));
+                document.head.appendChild(s);
+            });
+
+            ensureHtml2Pdf().then(() => {
+                // Create container with proper dimensions and background
+                const container = document.createElement('div');
+                container.style.cssText = 'position: fixed; left: 0; top: 0; width: 800px; background: white; padding: 20px; visibility: hidden; z-index: -1;';
+                
+                // Create content wrapper with print-export class
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'print-export';
+                contentWrapper.innerHTML = content;
+                container.appendChild(contentWrapper);
+                document.body.appendChild(container);
+
+                // Inject styles temporarily
+                const styleElement = document.createElement('style');
+                styleElement.id = 'temp-pdf-styles';
+                styleElement.textContent = getUniversalDocumentStyles().replace(/<style>|<\/style>/g, '');
+                document.head.appendChild(styleElement);
+
+                // Wait for images and fonts to load
+                const waitForResources = () => {
+                    const images = container.querySelectorAll('img');
+                    const imagePromises = Array.from(images).map(img => {
+                        return new Promise(resolve => {
+                            if (img.complete) {
+                                resolve();
+                            } else {
+                                img.onload = () => resolve();
+                                img.onerror = () => resolve(); // Continue even if image fails
+                                setTimeout(() => resolve(), 5000);
+                            }
+                        });
+                    });
+                    
+                    // Wait for fonts to load
+                    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
+                    
+                    return Promise.all([...imagePromises, fontPromise]);
+                };
+
+                waitForResources().then(() => {
+                    // Add small delay to ensure DOM is fully rendered
+                    setTimeout(() => {
+                        const opts = {
+                            margin: [10, 10, 10, 10],
+                            filename: 'Quote.pdf',
+                            html2canvas: { 
+                                scale: 3,
+                                useCORS: true,
+                                allowTaint: true,
+                                imageTimeout: 15000,
+                                logging: false,
+                                letterRendering: true,
+                                windowWidth: 1200,
+                                windowHeight: 1600
+                            },
+                            jsPDF: { 
+                                unit: 'pt', 
+                                format: 'letter', 
+                                orientation: 'portrait',
+                                compress: true
+                            },
+                            pagebreak: { mode: 'avoid-all' }
+                        };
+
+                        window.html2pdf().from(contentWrapper).set(opts).save().then(() => {
+                            // Cleanup
+                            container.remove();
+                            styleElement.remove();
+                        }).catch((e) => {
+                            console.error('PDF generation failed:', e);
+                            container.remove();
+                            styleElement.remove();
+                            showNotification('Failed to generate PDF. Please try again.', 'error');
+                        });
+                    }, 250); // 250ms delay for DOM rendering
+                });
+            }).catch(() => {
+                showNotification('PDF library failed to load. Please check your connection.', 'error');
+            });
         }
 
         function downloadQuickInvoicePDF(content) {
-            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
-            printQuickInvoice(content);
+            const ensureHtml2Pdf = () => new Promise((resolve, reject) => {
+                if (window.html2pdf) return resolve();
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error('Failed to load PDF library'));
+                document.head.appendChild(s);
+            });
+
+            ensureHtml2Pdf().then(() => {
+                // Create container with proper dimensions and background
+                const container = document.createElement('div');
+                container.style.cssText = 'position: fixed; left: 0; top: 0; width: 800px; background: white; padding: 20px; visibility: hidden; z-index: -1;';
+                
+                // Create content wrapper with print-export class
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'print-export';
+                contentWrapper.innerHTML = content;
+                container.appendChild(contentWrapper);
+                document.body.appendChild(container);
+
+                // Inject styles temporarily
+                const styleElement = document.createElement('style');
+                styleElement.id = 'temp-pdf-styles';
+                styleElement.textContent = getUniversalDocumentStyles().replace(/<style>|<\/style>/g, '');
+                document.head.appendChild(styleElement);
+
+                // Wait for images and fonts to load
+                const waitForResources = () => {
+                    const images = container.querySelectorAll('img');
+                    const imagePromises = Array.from(images).map(img => {
+                        return new Promise(resolve => {
+                            if (img.complete) {
+                                resolve();
+                            } else {
+                                img.onload = () => resolve();
+                                img.onerror = () => resolve(); // Continue even if image fails
+                                setTimeout(() => resolve(), 5000);
+                            }
+                        });
+                    });
+                    
+                    // Wait for fonts to load
+                    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
+                    
+                    return Promise.all([...imagePromises, fontPromise]);
+                };
+
+                waitForResources().then(() => {
+                    // Add small delay to ensure DOM is fully rendered
+                    setTimeout(() => {
+                        const opts = {
+                            margin: [10, 10, 10, 10],
+                            filename: 'Invoice.pdf',
+                            html2canvas: { 
+                                scale: 3,
+                                useCORS: true,
+                                allowTaint: true,
+                                imageTimeout: 15000,
+                                logging: false,
+                                letterRendering: true,
+                                windowWidth: 1200,
+                                windowHeight: 1600
+                            },
+                            jsPDF: { 
+                                unit: 'pt', 
+                                format: 'letter', 
+                                orientation: 'portrait',
+                                compress: true
+                            },
+                            pagebreak: { mode: 'avoid-all' }
+                        };
+
+                        window.html2pdf().from(contentWrapper).set(opts).save().then(() => {
+                            // Cleanup
+                            container.remove();
+                            styleElement.remove();
+                        }).catch((e) => {
+                            console.error('PDF generation failed:', e);
+                            container.remove();
+                            styleElement.remove();
+                            showNotification('Failed to generate PDF. Please try again.', 'error');
+                        });
+                    }, 250); // 250ms delay for DOM rendering
+                });
+            }).catch(() => {
+                showNotification('PDF library failed to load. Please check your connection.', 'error');
+            });
         }
 
         // Send Invoice Email
@@ -9423,7 +9343,7 @@
                     <button type="button" class="btn-primary" onclick="printQuote()">
                         <i class="fas fa-print"></i> Print
                     </button>
-                    <button type="button" class="btn-success" onclick="downloadQuotePDF()">
+                    <button type="button" class="btn-success" onclick="downloadQuote()">
                         <i class="fas fa-download"></i> Download PDF
                     </button>
                         <button class="action-btn confirm">
@@ -9550,7 +9470,7 @@
                     <button type="button" class="btn-primary" onclick="printInvoice()">
                         <i class="fas fa-print"></i> Print
                     </button>
-                    <button type="button" class="btn-success" onclick="downloadInvoicePDF()">
+                    <button type="button" class="btn-success" onclick="downloadInvoice()">
                         <i class="fas fa-download"></i> Download PDF
                     </button>
                                             <button type="button" class="btn-info" onclick="sendInvoiceEmail(event)">

@@ -2393,6 +2393,250 @@
             }
         }
 
+        // Universal styling function for consistent appearance
+        function getUniversalDocumentStyles() {
+            return `
+                <style>
+                    * { 
+                        box-sizing: border-box; 
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    body { 
+                        font-family: 'Arial', sans-serif; 
+                        margin: 0; 
+                        padding: 20px; 
+                        background: #fff;
+                        color: #333;
+                        line-height: 1.6;
+                        font-size: 14px;
+                    }
+                    
+                    /* Quote Document Styles - Matching the Design */
+                    .quote-document {
+                        font-family: 'Arial', sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .quote-header {
+                        background: white;
+                        color: #333;
+                        padding: 24px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        border-bottom: 2px solid #8cc63f;
+                    }
+
+                    .company-brand {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 16px;
+                    }
+
+                    .company-logo {
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                    }
+
+                    .company-name {
+                        font-size: 1.8rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 8px 0;
+                    }
+
+                    .company-contact {
+                        margin: 0;
+                    }
+
+                    .company-contact p {
+                        margin: 4px 0;
+                        font-size: 0.9rem;
+                        color: #666;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+
+                    .company-contact i {
+                        color: #8cc63f;
+                        width: 16px;
+                    }
+
+                    .quote-details {
+                        text-align: right;
+                    }
+
+                    .quote-title {
+                        font-size: 2.2rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 8px 0;
+                    }
+
+                    .quote-number {
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 4px 0;
+                    }
+
+                    .quote-date {
+                        font-size: 1rem;
+                        color: #666;
+                        margin: 0;
+                    }
+
+                    .client-info-section {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        margin: 0;
+                        display: flex;
+                        gap: 40px;
+                    }
+
+                    .client-info-column,
+                    .bill-to-column {
+                        flex: 1;
+                    }
+
+                    .client-info-column h3,
+                    .bill-to-column h3 {
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 8px 0;
+                    }
+
+                    .info-line {
+                        height: 2px;
+                        background: #8cc63f;
+                        width: 60%;
+                        margin-bottom: 12px;
+                    }
+
+                    .info-content p {
+                        margin: 6px 0;
+                        font-size: 0.95rem;
+                        color: #333;
+                    }
+
+                    .services-section {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        margin: 0;
+                    }
+
+                    .services-section h3 {
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 8px 0;
+                    }
+
+                    .services-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 16px;
+                        background: white;
+                    }
+
+                    .services-table thead {
+                        background: #333;
+                        color: white;
+                    }
+
+                    .services-table th {
+                        padding: 12px 8px;
+                        text-align: left;
+                        font-weight: bold;
+                        font-size: 0.9rem;
+                    }
+
+                    .services-table td {
+                        padding: 12px 8px;
+                        border-bottom: 1px solid #ddd;
+                        font-size: 0.9rem;
+                    }
+
+                    .services-table tbody tr:nth-child(even) {
+                        background: #f9f9f9;
+                    }
+
+                    .totals-section {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        margin: 0;
+                        text-align: right;
+                        max-width: 300px;
+                        margin-left: auto;
+                    }
+
+                    .total-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 6px 0;
+                        font-size: 1rem;
+                    }
+
+                    .total-line {
+                        height: 1px;
+                        background: #8cc63f;
+                        margin: 8px 0;
+                    }
+
+                    .grand-total {
+                        font-weight: bold;
+                        font-size: 1.1rem;
+                    }
+
+                    .terms-section {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        margin: 0;
+                    }
+
+                    .terms-section h3 {
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        color: #333;
+                        margin: 0 0 8px 0;
+                    }
+
+                    .terms-content p {
+                        margin: 0;
+                        font-size: 0.95rem;
+                        color: #666;
+                        line-height: 1.5;
+                    }
+                    
+                    @media print { 
+                        body { 
+                            margin: 0; 
+                            padding: 20px;
+                            -webkit-print-color-adjust: exact;
+                            color-adjust: exact;
+                        }
+                        .quote-document { 
+                            box-shadow: none;
+                            border-radius: 0;
+                        }
+                    }
+                </style>
+            `;
+        }
+
         // Download quote as PDF
         function downloadQuote() {
             try {

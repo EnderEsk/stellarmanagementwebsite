@@ -484,7 +484,10 @@ function requireAdminAuth(req, res, next) {
 app.get('/api/bookings', requireAdminAuth, async (req, res) => {
     try {
         const bookings = await db.collection('bookings')
-            .find({ archived: { $ne: true } }) // Exclude archived bookings
+            .find({ 
+                archived: { $ne: true },  // Exclude archived bookings
+                trashed: { $ne: true }     // Exclude trashed bookings
+            })
             .sort({ date: 1, time: 1 })
             .toArray();
         
@@ -1108,6 +1111,74 @@ app.get('/api/bookings/archived', requireAdminAuth, async (req, res) => {
     }
 });
 
+// Get trashed bookings (admin only) - MUST be before /:bookingId route
+app.get('/api/bookings/trashed', requireAdminAuth, async (req, res) => {
+    try {
+        const db = getDatabase();
+        
+        const trashedBookings = await db.collection('bookings')
+            .find({ trashed: true })
+            .sort({ trashed_at: -1 })
+            .toArray();
+        
+        res.json(trashedBookings);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Cleanup expired trash (admin only) - MUST be before /:bookingId route
+app.delete('/api/bookings/trash/cleanup', requireAdminAuth, async (req, res) => {
+    try {
+        const db = getDatabase();
+        
+        // Calculate date 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Find expired trashed bookings
+        const expiredBookings = await db.collection('bookings')
+            .find({ 
+                trashed: true,
+                trashed_at: { $lt: thirtyDaysAgo }
+            })
+            .toArray();
+        
+        let deletedCount = 0;
+        
+        // Delete each expired booking and its images
+        for (const booking of expiredBookings) {
+            // Delete associated images from MongoDB
+            try {
+                if (booking.images) {
+                    const imagePaths = JSON.parse(booking.images);
+                    for (const imagePath of imagePaths) {
+                        const imageId = imagePath.split('/').pop(); // Extract ID from path
+                        await db.collection('images').deleteOne({ _id: new ObjectId(imageId) });
+                        console.log(`🗑️ Deleted expired image: ${imageId}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting images:', error);
+            }
+            
+            // Delete the booking
+            await db.collection('bookings').deleteOne({ booking_id: booking.booking_id });
+            deletedCount++;
+            console.log(`🗑️ Deleted expired booking: ${booking.booking_id}`);
+        }
+        
+        res.json({ 
+            message: `Cleaned up ${deletedCount} expired bookings`,
+            deletedCount: deletedCount
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Get booking by ID
 app.get('/api/bookings/:bookingId', async (req, res) => {
     try {
@@ -1237,7 +1308,86 @@ app.post('/api/bookings/:bookingId/unarchive', requireAdminAuth, async (req, res
     }
 });
 
+// Move booking to trash (admin only)
+app.post('/api/bookings/:bookingId/trash', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const db = getDatabase();
+        
+        // Get the booking first
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Update the booking to mark it as trashed
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    trashed: true,
+                    trashed_at: new Date(),
+                    trashed_by: req.user.email || 'admin',
+                    original_status: booking.status
+                }
+            }
+        );
+        
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({ error: 'Failed to move booking to trash' });
+        }
+        
+        // Get the updated booking
+        const trashedBooking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        
+        res.json(trashedBooking);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
 
+// Restore booking from trash (admin only)
+app.post('/api/bookings/:bookingId/restore', requireAdminAuth, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const db = getDatabase();
+        
+        // Get the booking first
+        const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Update the booking to restore it
+        const result = await db.collection('bookings').updateOne(
+            { booking_id: bookingId },
+            { 
+                $set: { 
+                    status: booking.original_status || 'pending'
+                },
+                $unset: { 
+                    trashed: "",
+                    trashed_at: "",
+                    trashed_by: "",
+                    original_status: ""
+                }
+            }
+        );
+        
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({ error: 'Failed to restore booking' });
+        }
+        
+        // Get the updated booking
+        const restoredBooking = await db.collection('bookings').findOne({ booking_id: bookingId });
+        
+        res.json(restoredBooking);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
 
 // Create new booking from admin panel (admin only)
 app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
