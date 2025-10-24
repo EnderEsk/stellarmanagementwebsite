@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="admin-trash.css">
     <link rel="stylesheet" href="admin-booking-creation/admin-booking-creation.css">
     <script src="simple-google-oauth.js"></script>
+    <script src="templates/universal-quote-invoice-template.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
     <script src="assets/js/admin.js" defer></script>
     <!-- Load admin calendar functionality -->
@@ -5437,124 +5438,21 @@
                 day: 'numeric'
             });
 
-            const quoteHTML = `
-                <div class="quote-document">
-                    <!-- Header Section -->
-                    <div class="quote-header">
-                        <div class="company-brand">
-                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
-                            <div>
-                                <h1 class="company-name">Stellar Tree Management</h1>
-                                <div class="company-contact">
-                                    <div class="contact-item">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-phone"></i>
-                                        <span>(250) 551-1021</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-envelope"></i>
-                                        <span>stellartmanagement@outlook.com</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="document-info">
-                            <div class="document-type">QUOTE</div>
-                            <div class="document-number">#${quoteNumber}</div>
-                            <div class="document-date">${formattedDate}</div>
-                        </div>
-                    </div>
-
-                    <!-- Client & Bill To Section -->
-                    <div class="client-billing-section">
-                        <div>
-                            <h3 class="section-heading">Client Information</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Phone:</span>
-                                <span class="value">${clientPhone}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Email:</span>
-                                <span class="value">${clientEmail}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="section-heading">Bill To</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Services Table -->
-                    <div class="services-section">
-                        <h3 class="section-heading">Services</h3>
-                        <div class="services-table">
-                            <div class="table-header">
-                                <div class="header-item">#</div>
-                                <div class="header-item description">Description</div>
-                                <div class="header-item quantity">Qty</div>
-                                <div class="header-item price">Unit Price</div>
-                                <div class="header-item total">Total</div>
-                            </div>
-                            <div class="table-body">
-                                ${serviceItems.map((item, index) => `
-                                    <div class="table-row">
-                                        <div class="table-cell">${index + 1}</div>
-                                        <div class="table-cell description">${item.description}</div>
-                                        <div class="table-cell quantity">${item.quantity}</div>
-                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
-                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Totals Section -->
-                    <div class="totals-section">
-                        <div class="totals-container">
-                            <div class="total-row">
-                                <span class="total-label">Subtotal:</span>
-                                <span class="total-value">$${subtotal.toFixed(2)}</span>
-                            </div>
-                            ${taxEnabled ? `
-                                <div class="total-row">
-                                    <span class="total-label">Tax (5%):</span>
-                                    <span class="total-value">$${tax.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="total-row grand-total">
-                                <span class="total-label">Total:</span>
-                                <span class="total-value">$${total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Terms Section -->
-                    <div class="terms-section">
-                        <h3 class="section-heading">Terms & Conditions</h3>
-                        <div class="terms-content">
-                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfer.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Use universal template
+            const quoteHTML = generateDocumentHTML({
+                documentType: 'QUOTE',
+                documentNumber: quoteNumber,
+                documentDate: formattedDate,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                clientEmail: clientEmail,
+                clientAddress: clientAddress,
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: tax,
+                totalAmount: total
+            });
 
             document.getElementById('quotePreviewContent').innerHTML = quoteHTML;
             closeModal('quickQuoteModal');
@@ -5585,124 +5483,21 @@
                 day: 'numeric'
             });
 
-            const invoiceHTML = `
-                <div class="quote-document">
-                    <!-- Header Section -->
-                    <div class="quote-header">
-                        <div class="company-brand">
-                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
-                            <div>
-                                <h1 class="company-name">Stellar Tree Management</h1>
-                                <div class="company-contact">
-                                    <div class="contact-item">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>1932 9a Ave NE, Calgary, Alberta</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <i class="fas fa-phone"></i>
-                                        <span>(250) 551-1021</span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <span>stellartmanagement@outlook.com</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="document-info">
-                            <div class="document-type">INVOICE</div>
-                            <div class="document-number">#${invoiceNumber}</div>
-                            <div class="document-date">${formattedDate}</div>
-                        </div>
-                    </div>
-
-                    <!-- Client & Bill To Section -->
-                    <div class="client-billing-section">
-                        <div>
-                            <h3 class="section-heading">Client Information</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Phone:</span>
-                                <span class="value">${clientPhone}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Email:</span>
-                                <span class="value">${clientEmail}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="section-heading">Bill To</h3>
-                            <div class="data-row">
-                                <span class="label">Name:</span>
-                                <span class="value">${clientName}</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">Address:</span>
-                                <span class="value">${clientAddress}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Services Table -->
-                    <div class="services-section">
-                        <h3 class="section-heading">Services</h3>
-                        <div class="services-table">
-                            <div class="table-header">
-                                <div class="header-item">#</div>
-                                <div class="header-item description">Description</div>
-                                <div class="header-item quantity">Qty</div>
-                                <div class="header-item price">Unit Price</div>
-                                <div class="header-item total">Total</div>
-                            </div>
-                            <div class="table-body">
-                                ${serviceItems.map((item, index) => `
-                                    <div class="table-row">
-                                        <div class="table-cell">${index + 1}</div>
-                                        <div class="table-cell description">${item.description}</div>
-                                        <div class="table-cell quantity">${item.quantity}</div>
-                                        <div class="table-cell price">$${item.price.toFixed(2)}</div>
-                                        <div class="table-cell total">$${item.total.toFixed(2)}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Totals Section -->
-                    <div class="totals-section">
-                        <div class="totals-container">
-                            <div class="total-row">
-                                <span class="total-label">Subtotal:</span>
-                                <span class="total-value">$${subtotal.toFixed(2)}</span>
-                            </div>
-                            ${taxEnabled ? `
-                                <div class="total-row">
-                                    <span class="total-label">Tax (5%):</span>
-                                    <span class="total-value">$${tax.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="total-row grand-total">
-                                <span class="total-label">Total:</span>
-                                <span class="total-value">$${total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Terms Section -->
-                    <div class="terms-section">
-                        <h3 class="section-heading">Payment Terms</h3>
-                        <div class="terms-content">
-                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfer. Please include the invoice number with your payment.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Use universal template
+            const invoiceHTML = generateDocumentHTML({
+                documentType: 'INVOICE',
+                documentNumber: invoiceNumber,
+                documentDate: formattedDate,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                clientEmail: clientEmail,
+                clientAddress: clientAddress,
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: tax,
+                totalAmount: total
+            });
 
             document.getElementById('invoicePreviewContent').innerHTML = invoiceHTML;
             closeModal('quickInvoiceModal');
@@ -5734,109 +5529,21 @@
                 day: 'numeric'
             });
 
-            const quoteHTML = `
-                <div class="quote-document">
-                    <!-- Header Section -->
-                    <div class="quote-header">
-                        <div class="company-brand">
-                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
-                            <div>
-                                <h1 class="company-name">Stellar Tree Management</h1>
-                                <div class="company-contact">
-                                    <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
-                                    <p><i class="fas fa-phone"></i> (250) 551-1021</p>
-                                    <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="quote-details">
-                            <h2 class="quote-title">QUOTE</h2>
-                            <p class="quote-number">#${quoteNumber}</p>
-                            <p class="quote-date">${formattedDate}</p>
-                        </div>
-                    </div>
-
-                    <!-- Client Information Section -->
-                    <div class="client-info-section">
-                        <div class="client-info-column">
-                            <h3>Client Information</h3>
-                            <div class="info-line"></div>
-                            <div class="info-content">
-                                <p><strong>Name:</strong> ${clientName}</p>
-                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
-                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
-                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
-                            </div>
-                        </div>
-                        <div class="bill-to-column">
-                            <h3>Bill To</h3>
-                            <div class="info-line"></div>
-                            <div class="info-content">
-                                <p><strong>Name:</strong> ${clientName}</p>
-                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
-                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
-                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Services Section -->
-                    <div class="services-section">
-                        <h3>Services</h3>
-                        <div class="info-line"></div>
-                        <table class="services-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${serviceItems.map((item, index) => `
-                                    <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${item.description}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>$${item.price.toFixed(2)}</td>
-                                        <td>$${item.total.toFixed(2)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Totals Section -->
-                    <div class="totals-section">
-                        <div class="total-row">
-                            <span>Subtotal:</span>
-                            <span>$${subtotal.toFixed(2)}</span>
-                        </div>
-                        ${taxEnabled ? `
-                            <div class="total-row">
-                                <span>Tax (5%):</span>
-                                <span>$${tax.toFixed(2)}</span>
-                            </div>
-                        ` : ''}
-                        <div class="total-line"></div>
-                        <div class="total-row grand-total">
-                            <span>Total:</span>
-                            <span>$${total.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <!-- Terms Section -->
-                    <div class="terms-section">
-                        <h3>Terms & Conditions</h3>
-                        <div class="info-line"></div>
-                        <div class="terms-content">
-                            <p>All estimates are valid for 60 days after the estimate has been delivered. Payment is due upon completion of work unless otherwise agreed upon. We accept check, and e-transfer.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Use universal template
+            const quoteHTML = generateDocumentHTML({
+                documentType: 'QUOTE',
+                documentNumber: quoteNumber,
+                documentDate: formattedDate,
+                clientName: clientName,
+                clientPhone: clientPhone || 'N/A',
+                clientEmail: clientEmail || 'N/A',
+                clientAddress: clientAddress || 'N/A',
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: tax,
+                totalAmount: total
+            });
 
             console.log('🎯 Setting quote preview content...');
             const previewContent = document.getElementById('quotePreviewContent');
@@ -5880,404 +5587,11 @@
         }
 
         // Universal styling function for consistent appearance
+        // NOTE: This function now returns empty string because the universal template
+        // (templates/universal-quote-invoice-template.js) has all styles built-in
         function getUniversalDocumentStyles() {
-            return `
-                    <style>
-                
-                #quotePreviewContent,
-                #invoicePreviewContent {
-                    font-family: 'Arial', sans-serif;
-                    line-height: 1.6;
-                            color: #333;
-                        }
-
-                /* Quote Document Styles - Matching the Design */
-                        .quote-document { 
-                    font-family: 'Arial', sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                            max-width: 800px; 
-                            margin: 0 auto; 
-                            background: white;
-                            border-radius: 8px;
-                            overflow: hidden;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
-                        
-                        .quote-header { 
-                            background: white;
-                            color: #333;
-                            padding: 24px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-start;
-                    border-bottom: 2px solid #8cc63f;
-                }
-
-                .company-brand {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 16px;
-                }
-
-                .company-logo {
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-
-                        .company-name { 
-                    font-size: 1.8rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                .company-contact {
-                    margin: 0;
-                }
-
-                .company-contact p {
-                    margin: 4px 0;
-                    font-size: 0.9rem;
-                    color: #666;
-                            display: flex; 
-                            align-items: center; 
-                            gap: 8px; 
-                        }
-
-                .company-contact i {
-                            color: #8cc63f;
-                    width: 16px;
-                        }
-
-                .quote-details {
-                            text-align: right;
-                }
-
-                .quote-title {
-                    font-size: 2.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                .quote-number {
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 4px 0;
-                }
-
-                .quote-date {
-                    font-size: 1rem;
-                            color: #666;
-                    margin: 0;
-                }
-
-                .client-info-section {
-                            background: #f8f9fa;
-                    padding: 20px;
-                    margin: 0;
-                    display: flex;
-                    gap: 40px;
-                }
-
-                .client-info-column,
-                .bill-to-column {
-                    flex: 1;
-                }
-
-                .client-info-column h3,
-                .bill-to-column h3 {
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                .info-line {
-                    height: 2px;
-                    background: #8cc63f;
-                    width: 60%;
-                    margin-bottom: 12px;
-                }
-
-                .info-content p {
-                    margin: 6px 0;
-                    font-size: 0.95rem;
-                            color: #333;
-                }
-
-                .services-section {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    margin: 0;
-                }
-
-                .services-section h3 {
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                        .services-table { 
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 16px;
-                    background: white;
-                }
-
-                .services-table thead {
-                    background: #333;
-                            color: white;
-                        }
-
-                .services-table th {
-                    padding: 12px 8px;
-                            text-align: left;
-                    font-weight: bold;
-                    font-size: 0.9rem;
-                }
-
-                .services-table td {
-                    padding: 12px 8px;
-                    border-bottom: 1px solid #ddd;
-                    font-size: 0.9rem;
-                }
-
-                .services-table tbody tr:nth-child(even) {
-                    background: #f9f9f9;
-                }
-
-                        .totals-section { 
-                            background: #f8f9fa;
-                    padding: 20px;
-                    margin: 0;
-                    text-align: right;
-                    max-width: 300px;
-                    margin-left: auto;
-                }
-
-                        .total-row { 
-                            display: flex;
-                            justify-content: space-between;
-                    padding: 6px 0;
-                    font-size: 1rem;
-                }
-
-                .total-line {
-                    height: 1px;
-                    background: #8cc63f;
-                    margin: 8px 0;
-                }
-
-                .grand-total {
-                    font-weight: bold;
-                    font-size: 1.1rem;
-                }
-
-                        .terms-section { 
-                            background: #f8f9fa;
-                    padding: 20px;
-                    margin: 0;
-                }
-
-                .terms-section h3 {
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                        .terms-content p { 
-                            margin: 0;
-                    font-size: 0.95rem;
-                            color: #666;
-                    line-height: 1.5;
-                        }
-
-                /* Print/Export specific tweaks (do not affect on-screen preview) */
-                .print-export .terms-section { 
-                    padding-top: 12px;
-                }
-                .print-export .terms-section h3 {
-                    font-size: 1rem;
-                    font-weight: 600;
-                }
-                .print-export .terms-content p {
-                    font-size: 0.85rem;
-                    font-weight: 400;
-                    color: #777;
-                }
-
-                /* Additional styles for Quick Billing structure */
-                .contact-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin: 4px 0;
-                    font-size: 0.9rem;
-                    color: #666;
-                }
-
-                .contact-item i {
-                    color: #8cc63f;
-                    width: 16px;
-                }
-
-                .document-info {
-                    text-align: right;
-                }
-
-                .document-type {
-                    font-size: 2.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                .document-number {
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 4px 0;
-                }
-
-                .document-date {
-                    font-size: 1rem;
-                    color: #666;
-                    margin: 0;
-                }
-
-                .client-billing-section {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    margin: 0;
-                    display: flex;
-                    gap: 40px;
-                }
-
-                .client-billing-section > div {
-                    flex: 1;
-                }
-
-                .section-heading {
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: #333;
-                    margin: 0 0 8px 0;
-                }
-
-                .data-row {
-                    display: flex;
-                    margin: 6px 0;
-                    font-size: 0.95rem;
-                }
-
-                .data-row .label {
-                    font-weight: bold;
-                    color: #333;
-                    min-width: 80px;
-                    margin-right: 8px;
-                }
-
-                .data-row .value {
-                    color: #333;
-                    flex: 1;
-                }
-
-                .table-header {
-                    display: flex;
-                    background: #333;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 0.9rem;
-                }
-
-                .table-body {
-                    background: white;
-                }
-
-                .table-row {
-                    display: flex;
-                    border-bottom: 1px solid #ddd;
-                }
-
-                .table-row:nth-child(even) {
-                    background: #f9f9f9;
-                }
-
-                .header-item,
-                .table-cell {
-                    padding: 12px 8px;
-                    font-size: 0.9rem;
-                }
-
-                .header-item:first-child,
-                .table-cell:first-child {
-                    width: 40px;
-                    text-align: center;
-                }
-
-                .header-item.description,
-                .table-cell.description {
-                    flex: 2;
-                }
-
-                .header-item.quantity,
-                .table-cell.quantity {
-                    width: 60px;
-                    text-align: center;
-                }
-
-                .header-item.price,
-                .table-cell.price {
-                    width: 100px;
-                    text-align: right;
-                }
-
-                .header-item.total,
-                .table-cell.total {
-                    width: 100px;
-                    text-align: right;
-                    font-weight: bold;
-                }
-
-                .totals-container {
-                    max-width: 300px;
-                    margin-left: auto;
-                }
-
-                .total-label {
-                    font-weight: bold;
-                }
-
-                .total-value {
-                    font-weight: bold;
-                }
-
-                .grand-total .total-label,
-                .grand-total .total-value {
-                    font-size: 1.1rem;
-                }
-                        
-                /* Print Styles */
-                        @media print { 
-                            body { 
-                                margin: 0; 
-                                padding: 20px;
-                                -webkit-print-color-adjust: exact;
-                                color-adjust: exact;
-                            }
-                            .quote-document { 
-                                box-shadow: none;
-                                border-radius: 0;
-                            }
-                        }
-                    
+            return `<style>
+                    /* Styles now handled by universal template (templates/universal-quote-invoice-template.js) */
                     </style>
             `;
         }
@@ -6305,40 +5619,7 @@
             printWindow.print();
         }
 
-        // Download Quote as PDF
-        function downloadQuotePDF() {
-            // For now, we'll use the print function as a fallback
-            // In a production environment, you'd want to use a proper PDF library like jsPDF
-            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
-            printQuote();
-        }
 
-        // Download Quote (for quick billing compatibility)
-        function downloadQuote() {
-            const quoteContent = document.getElementById('quotePreviewContent').innerHTML;
-            const printWindow = window.open('', '_blank');
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Quote - Stellar Tree Management</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                    ${getUniversalDocumentStyles()}
-                </head>
-                <body>
-                    ${quoteContent}
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            
-            // Trigger download
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
-        }
 
         // Send Quote
         async function sendQuoteEmail(event) {
@@ -7283,109 +6564,21 @@
                 day: 'numeric'
             });
 
-            const invoiceHTML = `
-                <div class="quote-document">
-                    <!-- Header Section -->
-                    <div class="quote-header">
-                        <div class="company-brand">
-                            <img src="images/logo.png" alt="Stellar Tree Management" class="company-logo">
-                            <div>
-                                <h1 class="company-name">Stellar Tree Management</h1>
-                                <div class="company-contact">
-                                    <p><i class="fas fa-map-marker-alt"></i> 1932 9a Ave NE, Calgary, Alberta</p>
-                                    <p><i class="fas fa-phone"></i> (250) 551-1021</p>
-                                    <p><i class="fas fa-envelope"></i> stellartmanagement@outlook.com</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="quote-details">
-                            <h2 class="quote-title">INVOICE</h2>
-                            <p class="quote-number">#${invoiceNumber}</p>
-                            <p class="quote-date">${formattedDate}</p>
-                        </div>
-                    </div>
-
-                    <!-- Client Information Section -->
-                    <div class="client-info-section">
-                        <div class="client-info-column">
-                            <h3>Client Information</h3>
-                            <div class="info-line"></div>
-                            <div class="info-content">
-                                <p><strong>Name:</strong> ${clientName}</p>
-                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
-                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
-                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
-                            </div>
-                        </div>
-                        <div class="bill-to-column">
-                            <h3>Bill To</h3>
-                            <div class="info-line"></div>
-                            <div class="info-content">
-                                <p><strong>Name:</strong> ${clientName}</p>
-                                <p><strong>Phone:</strong> ${clientPhone || 'N/A'}</p>
-                                <p><strong>Email:</strong> ${clientEmail || 'N/A'}</p>
-                                <p><strong>Address:</strong> ${clientAddress || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Services Section -->
-                    <div class="services-section">
-                        <h3>Services</h3>
-                        <div class="info-line"></div>
-                        <table class="services-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${serviceItems.map((item, index) => `
-                                    <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${item.description}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>$${item.price.toFixed(2)}</td>
-                                        <td>$${item.total.toFixed(2)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Totals Section -->
-                    <div class="totals-section">
-                        <div class="total-row">
-                            <span>Subtotal:</span>
-                            <span>$${subtotal.toFixed(2)}</span>
-                        </div>
-                        ${taxEnabled ? `
-                            <div class="total-row">
-                                <span>Tax (5%):</span>
-                                <span>$${tax.toFixed(2)}</span>
-                            </div>
-                        ` : ''}
-                        <div class="total-line"></div>
-                        <div class="total-row grand-total">
-                            <span>Total:</span>
-                            <span>$${total.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <!-- Terms Section -->
-                    <div class="terms-section">
-                        <h3>Payment Terms</h3>
-                        <div class="info-line"></div>
-                        <div class="terms-content">
-                            <p>Payment is due upon receipt of this invoice. We accept check, and e-transfer. Please include the invoice number with your payment.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Use universal template
+            const invoiceHTML = generateDocumentHTML({
+                documentType: 'INVOICE',
+                documentNumber: invoiceNumber,
+                documentDate: formattedDate,
+                clientName: clientName,
+                clientPhone: clientPhone || 'N/A',
+                clientEmail: clientEmail || 'N/A',
+                clientAddress: clientAddress || 'N/A',
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: tax,
+                totalAmount: total
+            });
 
             console.log('🎯 Setting invoice preview content...');
             const invoicePreviewContent = document.getElementById('invoicePreviewContent');
@@ -7440,40 +6633,7 @@
             printWindow.print();
         }
 
-        // Download Invoice as PDF
-        function downloadInvoicePDF() {
-            // For now, we'll use the print function as a fallback
-            // In a production environment, you'd want to use a proper PDF library like jsPDF
-            showNotification('PDF download feature coming soon. Use print function for now.', 'info');
-            printInvoice();
-        }
 
-        // Download Invoice (for quick billing compatibility)
-        function downloadInvoice() {
-            const invoiceContent = document.getElementById('invoicePreviewContent').innerHTML;
-            const printWindow = window.open('', '_blank');
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Invoice - Stellar Tree Management</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                    ${getUniversalDocumentStyles()}
-                </head>
-                <body>
-                    ${invoiceContent}
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            
-            // Trigger download
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
-        }
 
         // Quick Billing Print Functions
         function printQuickQuote(content) {
@@ -7530,187 +6690,117 @@
             };
         }
 
-        // Quick Billing Download Functions
-        function downloadQuickQuotePDF(content) {
-            const ensureHtml2Pdf = () => new Promise((resolve, reject) => {
-                if (window.html2pdf) return resolve();
-                const s = document.createElement('script');
-                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                s.onload = () => resolve();
-                s.onerror = () => reject(new Error('Failed to load PDF library'));
-                document.head.appendChild(s);
-            });
-
-            ensureHtml2Pdf().then(() => {
-                // Create container with proper dimensions and background
-                const container = document.createElement('div');
-                container.style.cssText = 'position: fixed; left: 0; top: 0; width: 800px; background: white; padding: 20px; visibility: hidden; z-index: -1;';
-                
-                // Create content wrapper with print-export class
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'print-export';
-                contentWrapper.innerHTML = content;
-                container.appendChild(contentWrapper);
-                document.body.appendChild(container);
-
-                // Inject styles temporarily
-                const styleElement = document.createElement('style');
-                styleElement.id = 'temp-pdf-styles';
-                styleElement.textContent = getUniversalDocumentStyles().replace(/<style>|<\/style>/g, '');
-                document.head.appendChild(styleElement);
-
-                // Wait for images and fonts to load
-                const waitForResources = () => {
-                    const images = container.querySelectorAll('img');
-                    const imagePromises = Array.from(images).map(img => {
-                        return new Promise(resolve => {
-                            if (img.complete) {
-                                resolve();
-                            } else {
-                                img.onload = () => resolve();
-                                img.onerror = () => resolve(); // Continue even if image fails
-                                setTimeout(() => resolve(), 5000);
-                            }
-                        });
-                    });
-                    
-                    // Wait for fonts to load
-                    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
-                    
-                    return Promise.all([...imagePromises, fontPromise]);
-                };
-
-                waitForResources().then(() => {
-                    // Add small delay to ensure DOM is fully rendered
-                    setTimeout(() => {
-                        const opts = {
-                            margin: [10, 10, 10, 10],
-                            filename: 'Quote.pdf',
-                            html2canvas: { 
-                                scale: 3,
-                                useCORS: true,
-                                allowTaint: true,
-                                imageTimeout: 15000,
-                                logging: false,
-                                letterRendering: true,
-                                windowWidth: 1200,
-                                windowHeight: 1600
-                            },
-                            jsPDF: { 
-                                unit: 'pt', 
-                                format: 'letter', 
-                                orientation: 'portrait',
-                                compress: true
-                            },
-                            pagebreak: { mode: 'avoid-all' }
-                        };
-
-                        window.html2pdf().from(contentWrapper).set(opts).save().then(() => {
-                            // Cleanup
-                            container.remove();
-                            styleElement.remove();
-                        }).catch((e) => {
-                            console.error('PDF generation failed:', e);
-                            container.remove();
-                            styleElement.remove();
-                            showNotification('Failed to generate PDF. Please try again.', 'error');
-                        });
-                    }, 250); // 250ms delay for DOM rendering
+        // PDF Library Loading Helper
+        async function ensurePDFLibraries() {
+            // Load html2canvas
+            if (!window.html2canvas) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
                 });
-            }).catch(() => {
-                showNotification('PDF library failed to load. Please check your connection.', 'error');
-            });
+            }
+            
+            // Load jsPDF
+            if (!window.jspdf) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
         }
 
-        function downloadQuickInvoicePDF(content) {
-            const ensureHtml2Pdf = () => new Promise((resolve, reject) => {
-                if (window.html2pdf) return resolve();
-                const s = document.createElement('script');
-                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                s.onload = () => resolve();
-                s.onerror = () => reject(new Error('Failed to load PDF library'));
-                document.head.appendChild(s);
-            });
-
-            ensureHtml2Pdf().then(() => {
-                // Create container with proper dimensions and background
-                const container = document.createElement('div');
-                container.style.cssText = 'position: fixed; left: 0; top: 0; width: 800px; background: white; padding: 20px; visibility: hidden; z-index: -1;';
+        // New PDF Download Functions
+        async function downloadQuote() {
+            try {
+                await ensurePDFLibraries();
+                const previewDiv = document.getElementById('quotePreviewContent');
                 
-                // Create content wrapper with print-export class
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'print-export';
-                contentWrapper.innerHTML = content;
-                container.appendChild(contentWrapper);
-                document.body.appendChild(container);
-
-                // Inject styles temporarily
-                const styleElement = document.createElement('style');
-                styleElement.id = 'temp-pdf-styles';
-                styleElement.textContent = getUniversalDocumentStyles().replace(/<style>|<\/style>/g, '');
-                document.head.appendChild(styleElement);
-
-                // Wait for images and fonts to load
-                const waitForResources = () => {
-                    const images = container.querySelectorAll('img');
-                    const imagePromises = Array.from(images).map(img => {
-                        return new Promise(resolve => {
-                            if (img.complete) {
-                                resolve();
-                            } else {
-                                img.onload = () => resolve();
-                                img.onerror = () => resolve(); // Continue even if image fails
-                                setTimeout(() => resolve(), 5000);
-                            }
-                        });
-                    });
-                    
-                    // Wait for fonts to load
-                    const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
-                    
-                    return Promise.all([...imagePromises, fontPromise]);
-                };
-
-                waitForResources().then(() => {
-                    // Add small delay to ensure DOM is fully rendered
-                    setTimeout(() => {
-                        const opts = {
-                            margin: [10, 10, 10, 10],
-                            filename: 'Invoice.pdf',
-                            html2canvas: { 
-                                scale: 3,
+                const canvas = await html2canvas(previewDiv, {
+                                scale: 2,
                                 useCORS: true,
-                                allowTaint: true,
-                                imageTimeout: 15000,
-                                logging: false,
-                                letterRendering: true,
-                                windowWidth: 1200,
-                                windowHeight: 1600
-                            },
-                            jsPDF: { 
-                                unit: 'pt', 
-                                format: 'letter', 
-                                orientation: 'portrait',
-                                compress: true
-                            },
-                            pagebreak: { mode: 'avoid-all' }
-                        };
-
-                        window.html2pdf().from(contentWrapper).set(opts).save().then(() => {
-                            // Cleanup
-                            container.remove();
-                            styleElement.remove();
-                        }).catch((e) => {
-                            console.error('PDF generation failed:', e);
-                            container.remove();
-                            styleElement.remove();
-                            showNotification('Failed to generate PDF. Please try again.', 'error');
-                        });
-                    }, 250); // 250ms delay for DOM rendering
+                    allowTaint: false,
+                    backgroundColor: '#ffffff'
                 });
-            }).catch(() => {
-                showNotification('PDF library failed to load. Please check your connection.', 'error');
-            });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'letter');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pdfWidth - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                pdf.save('Quote.pdf');
+                
+                showNotification('Quote PDF downloaded successfully', 'success');
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showNotification('Failed to generate PDF', 'error');
+            }
+        }
+
+        async function downloadInvoice() {
+            try {
+                await ensurePDFLibraries();
+                const previewDiv = document.getElementById('invoicePreviewContent');
+                
+                const canvas = await html2canvas(previewDiv, {
+                                scale: 2,
+                                useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'letter');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pdfWidth - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                pdf.save('Invoice.pdf');
+                
+                showNotification('Invoice PDF downloaded successfully', 'success');
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showNotification('Failed to generate PDF', 'error');
+            }
+        }
+
+        // Quick Billing Download Function
+        async function downloadQuickBillingPDF(contentArea, type) {
+            try {
+                await ensurePDFLibraries();
+                
+                const canvas = await html2canvas(contentArea, {
+                                scale: 2,
+                                useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'letter');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pdfWidth - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                pdf.save(`${type === 'quote' ? 'Quote' : 'Invoice'}.pdf`);
+                
+                showNotification(`${type === 'quote' ? 'Quote' : 'Invoice'} PDF downloaded successfully`, 'success');
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showNotification('Failed to generate PDF', 'error');
+            }
         }
 
         // Send Invoice Email
@@ -10531,11 +9621,7 @@
                 cursor: pointer !important;
             `;
             downloadBtn.onclick = () => {
-                if (type === 'quote') {
-                    downloadQuickQuotePDF(content);
-                } else {
-                    downloadQuickInvoicePDF(content);
-                }
+                downloadQuickBillingPDF(contentArea, type);
             };
             
             actions.appendChild(doneBtn);

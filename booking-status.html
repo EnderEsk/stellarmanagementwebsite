@@ -1644,6 +1644,7 @@
         </div>
     </div>
 
+    <script src="templates/universal-quote-invoice-template.js"></script>
     <script>
         // Get booking ID from URL
         function getBookingIdFromUrl() {
@@ -2207,74 +2208,58 @@
         function populateQuotePreview(quoteData) {
             console.log('📋 Populating quote preview with data:', quoteData);
             
-            // Populate quote header
-            document.getElementById('quote-number').textContent = quoteData.quote_number || 'QT-' + Date.now();
-            document.getElementById('quote-date').textContent = new Date(quoteData.quote_date || Date.now()).toLocaleDateString('en-US', {
+            // Format date
+            const formattedDate = new Date(quoteData.quote_date || Date.now()).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
 
-            // Populate client information
-            document.getElementById('quote-client-name').textContent = quoteData.client_name || 'N/A';
-            document.getElementById('quote-client-phone').textContent = quoteData.client_phone || 'N/A';
-            document.getElementById('quote-client-email').textContent = quoteData.client_email || 'N/A';
-            document.getElementById('quote-client-address').textContent = quoteData.client_address || 'N/A';
-
-            // Populate bill to information
-            document.getElementById('quote-bill-name').textContent = quoteData.bill_name || quoteData.client_name || 'N/A';
-            document.getElementById('quote-bill-address').textContent = quoteData.bill_address || quoteData.client_address || 'N/A';
-
-            // Populate services
-            const servicesBody = document.getElementById('quote-services-body');
-            servicesBody.innerHTML = '';
-            
+            // Prepare service items
+            let serviceItems = [];
             if (quoteData.services && quoteData.services.length > 0) {
-                console.log('📋 Loading services:', quoteData.services);
-                quoteData.services.forEach((service, index) => {
-                    const serviceRow = document.createElement('div');
-                    serviceRow.className = 'table-row';
-                    serviceRow.innerHTML = `
-                        <div class="table-cell">${index + 1}</div>
-                        <div class="table-cell description">${service.description || 'Service'}</div>
-                        <div class="table-cell quantity">${service.quantity || 1}</div>
-                        <div class="table-cell price">$${(service.unit_price || 0).toFixed(2)}</div>
-                        <div class="table-cell total">$${(service.total || 0).toFixed(2)}</div>
-                    `;
-                    servicesBody.appendChild(serviceRow);
-                });
+                serviceItems = quoteData.services.map(service => ({
+                    description: service.description || 'Service',
+                    quantity: service.quantity || 1,
+                    price: service.unit_price || 0,
+                    total: service.total || 0
+                }));
             } else {
                 // Fallback to basic service info
-                console.log('📋 No services found, using fallback');
-                const serviceRow = document.createElement('div');
-                serviceRow.className = 'table-row';
-                serviceRow.innerHTML = `
-                    <div class="table-cell">1</div>
-                    <div class="table-cell description">Tree Service</div>
-                    <div class="table-cell quantity">1</div>
-                    <div class="table-cell price">$${(quoteData.estimated_cost || 0).toFixed(2)}</div>
-                    <div class="table-cell total">$${(quoteData.estimated_cost || 0).toFixed(2)}</div>
-                `;
-                servicesBody.appendChild(serviceRow);
+                serviceItems = [{
+                    description: 'Tree Service',
+                    quantity: 1,
+                    price: quoteData.estimated_cost || 0,
+                    total: quoteData.estimated_cost || 0
+                }];
             }
 
-            // Populate summary
+            // Calculate totals
             const subtotal = quoteData.subtotal || quoteData.estimated_cost || 0;
-            const total = quoteData.total || quoteData.estimated_cost || 0;
-            const tax = quoteData.tax || 0;
-            const taxEnabled = quoteData.tax_enabled;
-            
-            document.getElementById('quote-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-            document.getElementById('quote-total').textContent = `$${total.toFixed(2)}`;
-            
-            // Handle tax row
-            const taxRow = document.getElementById('quote-tax-row');
-            const taxValue = document.getElementById('quote-tax');
-            if (taxEnabled && tax > 0) {
-                taxRow.style.display = 'flex';
-                taxValue.textContent = `$${tax.toFixed(2)}`;
-            } else {
-                taxRow.style.display = 'none';
+            const taxEnabled = quoteData.tax_enabled || false;
+            const taxAmount = quoteData.tax || 0;
+            const totalAmount = quoteData.total || quoteData.estimated_cost || 0;
+
+            // Use universal template
+            const quoteHTML = generateDocumentHTML({
+                documentType: 'QUOTE',
+                documentNumber: quoteData.quote_number || 'QT-' + Date.now(),
+                documentDate: formattedDate,
+                clientName: quoteData.client_name || 'N/A',
+                clientPhone: quoteData.client_phone || 'N/A',
+                clientEmail: quoteData.client_email || 'N/A',
+                clientAddress: quoteData.client_address || 'N/A',
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount
+            });
+
+            // Update the quote preview content
+            const quotePreviewContent = document.getElementById('quote-preview-content');
+            if (quotePreviewContent) {
+                quotePreviewContent.innerHTML = quoteHTML;
             }
             
             console.log('✅ Quote preview populated successfully');
@@ -3452,76 +3437,63 @@
         function populateInvoicePreview(invoice) {
             console.log('📋 Populating invoice preview:', invoice);
             
-            // Set invoice details
-            document.getElementById('invoice-number').textContent = invoice.invoice_id;
-            document.getElementById('invoice-date').textContent = formatDate(invoice.invoice_date);
-            document.getElementById('invoice-client-name').textContent = invoice.client_name;
-            document.getElementById('invoice-client-phone').textContent = invoice.client_phone;
-            document.getElementById('invoice-client-email').textContent = invoice.client_email;
-            document.getElementById('invoice-client-address').textContent = invoice.client_address;
-            document.getElementById('invoice-bill-name').textContent = invoice.client_name;
-            document.getElementById('invoice-bill-address').textContent = invoice.client_address;
+            // Format date
+            const formattedDate = new Date(invoice.invoice_date || Date.now()).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Prepare service items
+            let serviceItems = [];
+            let serviceItemsArray = invoice.service_items || invoice.services || [];
             
-            // Set totals
-            document.getElementById('invoice-subtotal').textContent = `$${parseFloat(invoice.subtotal).toFixed(2)}`;
-            document.getElementById('invoice-total').textContent = `$${parseFloat(invoice.total_amount).toFixed(2)}`;
-            
-            // Handle tax
-            const taxRow = document.getElementById('invoice-tax-row');
-            if (invoice.tax_enabled && parseFloat(invoice.tax_amount) > 0) {
-                document.getElementById('invoice-tax').textContent = `$${parseFloat(invoice.tax_amount).toFixed(2)}`;
-                taxRow.style.display = 'flex';
-            } else {
-                taxRow.style.display = 'none';
-            }
-            
-            // Populate service items
-            const servicesBody = document.getElementById('invoice-services-body');
-            servicesBody.innerHTML = '';
-            
-            console.log('📋 Invoice data for service items:', invoice);
-            console.log('📋 Service items array:', invoice.service_items);
-            console.log('📋 Services array (alternative):', invoice.services);
-            
-            // Try multiple possible service item structures
-            let serviceItems = invoice.service_items || invoice.services || [];
-            
-            if (serviceItems && serviceItems.length > 0) {
-                console.log('📋 Found service items:', serviceItems);
-                serviceItems.forEach((item, index) => {
-                    console.log('📋 Processing service item:', item);
-                    const row = document.createElement('div');
-                    row.className = 'table-row';
-                    
-                    // Handle different service item structures
-                    const description = item.description || item.service_description || 'Service';
-                    const quantity = item.quantity || item.qty || 1;
-                    const price = item.price || item.unit_price || item.unitPrice || 0;
-                    const total = item.total || item.line_total || item.lineTotal || (price * quantity);
-                    
-                    row.innerHTML = `
-                        <div class="table-cell">${index + 1}</div>
-                        <div class="table-cell description">${description}</div>
-                        <div class="table-cell quantity">${quantity}</div>
-                        <div class="table-cell price">$${parseFloat(price).toFixed(2)}</div>
-                        <div class="table-cell total">$${parseFloat(total).toFixed(2)}</div>
-                    `;
-                    servicesBody.appendChild(row);
-                });
+            if (serviceItemsArray && serviceItemsArray.length > 0) {
+                serviceItems = serviceItemsArray.map(item => ({
+                    description: item.description || item.service_description || 'Service',
+                    quantity: item.quantity || item.qty || 1,
+                    price: item.price || item.unit_price || item.unitPrice || 0,
+                    total: item.total || item.line_total || item.lineTotal || 0
+                }));
             } else {
                 // Fallback to basic service info
-                console.log('📋 No services found, using fallback');
-                const row = document.createElement('div');
-                row.className = 'table-row';
-                row.innerHTML = `
-                    <div class="table-cell">1</div>
-                    <div class="table-cell description">Tree Service</div>
-                    <div class="table-cell quantity">1</div>
-                    <div class="table-cell price">$${(invoice.total_amount || 0).toFixed(2)}</div>
-                    <div class="table-cell total">$${(invoice.total_amount || 0).toFixed(2)}</div>
-                `;
-                servicesBody.appendChild(row);
+                serviceItems = [{
+                    description: 'Tree Service',
+                    quantity: 1,
+                    price: invoice.total_amount || 0,
+                    total: invoice.total_amount || 0
+                }];
             }
+
+            // Calculate totals
+            const subtotal = parseFloat(invoice.subtotal) || 0;
+            const taxEnabled = invoice.tax_enabled || false;
+            const taxAmount = parseFloat(invoice.tax_amount) || 0;
+            const totalAmount = parseFloat(invoice.total_amount) || 0;
+
+            // Use universal template
+            const invoiceHTML = generateDocumentHTML({
+                documentType: 'INVOICE',
+                documentNumber: invoice.invoice_id || 'INV-' + Date.now(),
+                documentDate: formattedDate,
+                clientName: invoice.client_name || 'N/A',
+                clientPhone: invoice.client_phone || 'N/A',
+                clientEmail: invoice.client_email || 'N/A',
+                clientAddress: invoice.client_address || 'N/A',
+                serviceItems: serviceItems,
+                subtotal: subtotal,
+                taxEnabled: taxEnabled,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount
+            });
+
+            // Update the invoice preview content
+            const invoicePreviewContent = document.getElementById('invoice-preview-content');
+            if (invoicePreviewContent) {
+                invoicePreviewContent.innerHTML = invoiceHTML;
+            }
+            
+            console.log('✅ Invoice preview populated successfully');
         }
 
         // Create invoice preview from quote data

@@ -6546,20 +6546,78 @@
             background: #138496;
         }
 
-        /* Quote Preview Styles - Matching Quick Billing */
+        /* Quote/Invoice Preview Styles - Universal Template */
         .quote-preview-content {
-            width: 800px;
-            max-width: 90vw;
+            width: 1000px;
+            max-width: 95vw;
+            display: block;
+            margin: 0 auto;
         }
 
         #quotePreviewContent,
         #invoicePreviewContent {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
+            display: block;
+            width: 100%;
+            overflow: visible;
+            margin: 0;
+            padding: 0;
+            transform: scale(0.92);
+            transform-origin: top center;
         }
 
-        /* Removed old quote-preview styles - now using quote-document styles for consistency */
+        /* Ensure parent containers don't interfere with template layout */
+        #quotePreviewContent > *,
+        #invoicePreviewContent > * {
+            max-width: 100%;
+        }
+
+        /* Modal adjustments for quote/invoice preview */
+        .modal-content {
+            max-width: 1200px;
+            width: 95vw;
+        }
+
+        /* Print styles to remove modal interference */
+        @media print {
+            .quote-preview-content,
+            #quotePreviewContent,
+            #invoicePreviewContent {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                transform: none !important;
+            }
+
+            /* Hide modal chrome when printing */
+            .modal-overlay,
+            .modal-header,
+            .modal-actions,
+            .quote-preview-actions {
+                display: none !important;
+            }
+
+            /* Ensure the document is properly centered */
+            body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* Fix print popup layout */
+            .container {
+                margin: 0 auto;
+                padding: 20px;
+                max-width: 100%;
+            }
+        }
+
+        /* Removed old quote-document styles - now using universal template */
 
         .quote-preview-actions {
             display: flex;
@@ -6567,6 +6625,8 @@
             justify-content: center;
             flex-wrap: wrap;
         }
+
+        /* Note: Old quote-document styles below are kept for compatibility but universal template overrides them */
 
         /* Quote Document Styles - Matching Quick Billing Design */
         .quote-document {
@@ -6729,14 +6789,7 @@
             background: #f9f9f9 !important;
         }
 
-        .totals-section {
-            background: #f8f9fa !important;
-            padding: 20px !important;
-            margin: 0 !important;
-            text-align: right !important;
-            max-width: 300px !important;
-            margin-left: auto !important;
-        }
+        /* Removed conflicting totals-section styles - using template's flexbox layout */
 
         .total-row {
             display: flex;
