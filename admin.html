@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="admin-archive.css">
     <link rel="stylesheet" href="admin-trash.css">
     <link rel="stylesheet" href="admin-booking-creation/admin-booking-creation.css">
+    <link rel="stylesheet" href="admin-mobile-booking-modal.css">
     <script src="simple-google-oauth.js"></script>
     <script src="templates/universal-quote-invoice-template.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
@@ -26,6 +27,8 @@
     <script src="admin-archive.js" defer></script>
     <!-- Load admin trash functionality -->
     <script src="admin-trash.js" defer></script>
+    <!-- Load mobile booking modal functionality -->
+    <script src="admin-mobile-booking-modal.js" defer></script>
     
     <style>
         
@@ -9568,6 +9571,7 @@
             
             // Create content area
             const contentArea = document.createElement('div');
+            contentArea.className = 'quick-billing-preview';
             contentArea.innerHTML = content;
             contentArea.style.cssText = 'margin-bottom: 1rem !important;';
             

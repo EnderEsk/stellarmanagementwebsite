@@ -1,0 +1,493 @@
+/* Mobile Booking Details Bottom Sheet Styles */
+/* Only applies to mobile screens (max-width: 767px) */
+
+@media (max-width: 767px) {
+    /* Bottom Sheet Modal Container */
+    .mobile-booking-sheet {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .mobile-booking-sheet.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Backdrop */
+    .mobile-booking-sheet-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    /* Bottom Sheet Content */
+    .mobile-booking-sheet-content {
+        background: #ffffff;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        max-height: 80vh;
+        min-height: 50vh;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        position: relative;
+        z-index: 1;
+    }
+
+    .mobile-booking-sheet.show .mobile-booking-sheet-content {
+        transform: translateY(0);
+    }
+
+    /* Top Bar */
+    .mobile-booking-sheet-header {
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        background: #ffffff;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .mobile-booking-sheet-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .mobile-booking-sheet-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-booking-sheet-close:active {
+        background: #f8f9fa;
+        color: #495057;
+        transform: scale(0.95);
+    }
+
+    /* Scrollable Content Area */
+    .mobile-booking-sheet-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0;
+    }
+
+    /* Quick Actions Section */
+    .mobile-booking-quick-actions {
+        padding: 16px 24px;
+        border-bottom: 1px solid #e9ecef;
+        background: #f8f9fa;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    /* Content Sections */
+    .mobile-booking-section {
+        padding: 16px 24px;
+        border-bottom: 1px solid #e9ecef;
+        background: #ffffff;
+    }
+
+    .mobile-booking-section:last-child {
+        border-bottom: none;
+        padding-bottom: 32px;
+    }
+
+    .mobile-booking-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0 0 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: space-between;
+    }
+
+    .mobile-booking-section-title i {
+        font-size: 1.1rem;
+        color: #8cc63f;
+    }
+
+    /* Status badge in section title */
+    .mobile-booking-section-title .mobile-booking-status-badge {
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    /* Info Rows */
+    .mobile-booking-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 6px 0;
+        min-height: 36px;
+        gap: 16px;
+    }
+
+    .mobile-booking-info-row:not(:last-child) {
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .mobile-booking-info-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #6c757d;
+        min-width: 80px;
+        flex-shrink: 0;
+    }
+
+    .mobile-booking-info-value {
+        font-size: 0.95rem;
+        color: #2c3e50;
+        text-align: right;
+        flex: 1;
+        word-break: break-word;
+    }
+
+    /* Status Badge */
+    .mobile-booking-status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .mobile-booking-status-badge.status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .mobile-booking-status-badge.status-pending-site-visit {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .mobile-booking-status-badge.status-quote-ready {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .mobile-booking-status-badge.status-quote-sent {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .mobile-booking-status-badge.status-quote-accepted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .mobile-booking-status-badge.status-pending-booking {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .mobile-booking-status-badge.status-invoice-ready {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .mobile-booking-status-badge.status-invoice-sent {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .mobile-booking-status-badge.status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .mobile-booking-status-badge.status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Clickable Links */
+    .mobile-booking-link {
+        color: #8cc63f;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+    }
+
+    .mobile-booking-link:active {
+        color: #7ab32e;
+        text-decoration: underline;
+    }
+
+    /* Notes Textarea */
+    .mobile-booking-notes {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        resize: vertical;
+        margin-top: 6px;
+    }
+
+    .mobile-booking-notes:focus {
+        outline: none;
+        border-color: #8cc63f;
+        box-shadow: 0 0 0 2px rgba(140, 198, 63, 0.1);
+    }
+
+    /* Images Grid */
+    .mobile-booking-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .mobile-booking-image {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .mobile-booking-image:active {
+        transform: scale(0.95);
+    }
+
+    .mobile-booking-image-placeholder {
+        width: 100%;
+        height: 80px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    .mobile-booking-image-placeholder i {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+
+    /* Quick Action Buttons */
+    .mobile-booking-quick-action-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+
+    .mobile-booking-quick-action-btn:active {
+        transform: scale(0.98);
+    }
+
+    .mobile-booking-quick-action-btn.forward {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+    }
+
+    .mobile-booking-quick-action-btn.warning {
+        background: #fff8e1;
+        color: #f57c00;
+        border: 1px solid #ffecb3;
+    }
+
+    /* Action Buttons */
+    .mobile-booking-actions {
+        padding: 20px 24px 32px;
+        background: #ffffff;
+    }
+
+    .mobile-booking-action-btn {
+        width: 100%;
+        min-height: 44px;
+        padding: 12px 20px;
+        margin-bottom: 12px;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+
+    .mobile-booking-action-btn:last-child {
+        margin-bottom: 0;
+    }
+
+    .mobile-booking-action-btn:active {
+        transform: scale(0.98);
+    }
+
+    /* Action Button Variants */
+    .mobile-booking-action-btn.message {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+    }
+
+    .mobile-booking-action-btn.quote {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .mobile-booking-action-btn.invoice {
+        background: #fff3e0;
+        color: #f57c00;
+        border: 1px solid #ffcc02;
+    }
+
+    .mobile-booking-action-btn.confirm {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .mobile-booking-action-btn.cancel {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    .mobile-booking-action-btn.complete {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .mobile-booking-action-btn.warning {
+        background: #fff8e1;
+        color: #f57c00;
+        border: 1px solid #ffecb3;
+    }
+
+    .mobile-booking-action-btn.forward {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+    }
+
+    .mobile-booking-action-btn.reopen {
+        background: #f3e5f5;
+        color: #7b1fa2;
+        border: 1px solid #e1bee7;
+    }
+
+    .mobile-booking-action-btn.move {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .mobile-booking-action-btn.archive {
+        background: #f3e5f5;
+        color: #7b1fa2;
+        border: 1px solid #e1bee7;
+    }
+
+    .mobile-booking-action-btn.delete {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    /* Save Notes Button */
+    .mobile-booking-save-notes {
+        margin-top: 8px;
+        padding: 8px 16px;
+        background: #8cc63f;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 36px;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-booking-save-notes:active {
+        background: #7ab32e;
+        transform: scale(0.98);
+    }
+
+    /* Hide desktop modal on mobile */
+    .modal.show .modal-content.booking-details-popup {
+        display: none !important;
+    }
+}
+
+/* Ensure desktop modal works normally on larger screens */
+@media (min-width: 768px) {
+    .mobile-booking-sheet {
+        display: none !important;
+    }
+}

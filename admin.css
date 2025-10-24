@@ -1243,6 +1243,13 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
+        /* Hide desktop booking popup on mobile screens */
+        @media (max-width: 767px) {
+            .booking-details-popup {
+                display: none !important;
+            }
+        }
+
         .detail-popup-grid {
             display: flex;
             flex-direction: column;
@@ -1331,25 +1338,6 @@
             border-radius: 4px;
         }
 
-        /* Very wide phones (iPhone Pro Max, etc.) */
-        @media (min-width: 415px) and (max-width: 480px) {
-            .booking-details-popup {
-                max-width: calc(100vw - 80px);
-                width: calc(100vw - 80px);
-                margin: 40px auto;
-                padding: 16px;
-            }
-        }
-
-        /* Tablet and larger screens - keep popup reasonably sized */
-        @media (min-width: 481px) {
-            .booking-details-popup {
-                max-width: 400px;
-                width: 85%;
-                margin: 30px auto;
-                padding: 20px;
-            }
-        }
 
         /* Wide phone specific adjustments for popup content */
         @media (min-width: 360px) and (max-width: 480px) {
@@ -1994,15 +1982,6 @@
                 -webkit-tap-highlight-color: transparent;
             }
 
-            /* Booking Details Popup */
-            .booking-details-popup {
-                width: calc(100vw - 20px);
-                max-width: 360px;
-                max-height: 90vh;
-                overflow-y: auto;
-                padding: 1rem;
-                box-sizing: border-box;
-            }
 
             .calendar-popup-compact {
                 width: 100%;
@@ -2920,12 +2899,6 @@
             }
         }
 
-        @media (max-height: 600px) {
-            .booking-details-popup {
-                max-height: 98vh;
-                margin: 5px;
-                padding: 0.75rem;
-            }
 
             .detail-popup-grid {
                 gap: 0.5rem;
@@ -3193,11 +3166,6 @@
                 border-radius: 6px;
             }
             
-            .booking-details-popup {
-                max-width: 95vw;
-                width: 95%;
-                padding: 10px;
-            }
         }
 
         /* Very Small Screens */
@@ -3209,11 +3177,6 @@
                 border-radius: 4px;
             }
             
-            .booking-details-popup {
-                max-width: 98vw;
-                width: 98%;
-                padding: 8px;
-            }
         }
 
         /* Tiny Screens */
@@ -3226,13 +3189,6 @@
                 margin: 0;
             }
             
-            .booking-details-popup {
-                max-width: 100vw;
-                width: 100%;
-                margin: 0;
-                padding: 6px;
-                border-radius: 0;
-            }
         }
 
         /* Special Modal Content Overrides */
@@ -4597,15 +4553,6 @@
                 padding: 0.75rem;
             }
 
-            /* Booking Details */
-            .booking-details-popup {
-                width: calc(100vw - 10px);
-                max-width: 320px;
-                margin: 5px;
-                max-height: 95vh;
-                overflow-y: auto;
-                box-sizing: border-box;
-            }
 
             .detail-popup-grid {
                 margin: 0 0.5rem;
@@ -4780,15 +4727,6 @@
                 padding: 0.5rem;
             }
 
-            /* Booking Details Popup for very small screens */
-            .booking-details-popup {
-                width: calc(100vw - 4px);
-                max-width: 300px;
-                margin: 2px;
-                max-height: 98vh;
-                padding: 0.5rem;
-                box-sizing: border-box;
-            }
 
             .detail-popup-actions {
                 gap: 0.3rem;
@@ -6566,6 +6504,52 @@
             padding: 0;
             transform: scale(0.92);
             transform-origin: top center;
+        }
+
+        /* Mobile responsive scaling for preview content */
+        @media (max-width: 768px) {
+            #quotePreviewContent,
+            #invoicePreviewContent,
+            .quick-billing-preview {
+                transform: scale(0.85);
+                transform-origin: top center;
+            }
+            
+            /* Make modal content wider on mobile */
+            .modal-content {
+                width: 98vw;
+                max-width: 98vw;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #quotePreviewContent,
+            #invoicePreviewContent,
+            .quick-billing-preview {
+                transform: scale(0.75);
+                transform-origin: top center;
+            }
+            
+            /* Even wider on small mobile */
+            .modal-content {
+                width: 99vw;
+                max-width: 99vw;
+            }
+        }
+
+        @media (max-width: 360px) {
+            #quotePreviewContent,
+            #invoicePreviewContent,
+            .quick-billing-preview {
+                transform: scale(0.65);
+                transform-origin: top center;
+            }
+            
+            /* Maximum width on very small screens */
+            .modal-content {
+                width: 100vw;
+                max-width: 100vw;
+            }
         }
 
         /* Ensure parent containers don't interfere with template layout */
@@ -10211,13 +10195,6 @@
                 margin: 20px auto;
             }
             
-            .booking-details-popup {
-                max-width: calc(100vw - 40px);
-                width: calc(100vw - 40px);
-                max-height: 85vh;
-                margin: 20px auto;
-                padding: 16px;
-            }
             
             .modal-content,
             .quote-modal-content,
@@ -10257,13 +10234,6 @@
  
        /* Samsung Galaxy S8+ and similar wide phones landscape fixes */
         @media (min-width: 360px) and (max-width: 480px) and (orientation: landscape) {
-            .booking-details-popup {
-                max-width: calc(100vw - 80px);
-                width: calc(100vw - 80px);
-                max-height: 75vh;
-                margin: 40px auto;
-                padding: 12px;
-            }
             
             .detail-popup-grid {
                 gap: 0.4rem;
