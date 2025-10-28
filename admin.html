@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="admin-trash.css">
     <link rel="stylesheet" href="admin-booking-creation/admin-booking-creation.css">
     <link rel="stylesheet" href="admin-mobile-booking-modal.css">
+    <link rel="stylesheet" href="admin-mobile-project-modal.css">
+    <link rel="stylesheet" href="admin-projects.css">
     <script src="simple-google-oauth.js"></script>
     <script src="templates/universal-quote-invoice-template.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
@@ -29,6 +31,10 @@
     <script src="admin-trash.js" defer></script>
     <!-- Load mobile booking modal functionality -->
     <script src="admin-mobile-booking-modal.js" defer></script>
+    <!-- Load mobile project modal functionality -->
+    <script src="admin-mobile-project-modal.js" defer></script>
+    <!-- Load admin projects functionality -->
+    <script src="admin-projects.js" defer></script>
     
     <style>
         
@@ -538,6 +544,10 @@
                         <i class="fas fa-bolt"></i>
                         <span class="item-text">Quick Billing</span>
                     </div>
+                    <div class="sidebar-item" data-filter="projects">
+                        <i class="fas fa-images"></i>
+                        <span class="item-text">Projects</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -612,6 +622,26 @@
                         <div id="archiveView" style="display: none;"></div>
                         <!-- Trash View (dynamically created) -->
                         <div id="trashView" style="display: none;"></div>
+                        <!-- Projects View -->
+                        <div id="projectsView" class="projects-view" style="display: none;">
+                            <div class="projects-header">
+                                <h2><i class="fas fa-images"></i> Projects Management</h2>
+                                <div class="projects-actions">
+                                    <button class="refresh-projects-btn">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                    <button class="create-project-btn">
+                                        <i class="fas fa-plus"></i> Create Project
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="projects-grid" id="projectsGrid">
+                                <div class="loading">
+                                    <i class="fas fa-spinner"></i>
+                                    Loading projects...
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     </div>
                 </div>
@@ -701,6 +731,10 @@
                         <div class="sidebar-item" data-filter="quick-quote">
                             <i class="fas fa-bolt"></i>
                             <span class="item-text">Quick Billing</span>
+                        </div>
+                        <div class="sidebar-item" data-filter="projects">
+                            <i class="fas fa-images"></i>
+                            <span class="item-text">Projects</span>
                         </div>
                     </div>
                 </div>
@@ -7394,16 +7428,19 @@
                 else if (filter === 'calendar') newTitle = 'Calendar View';
                 else if (filter === 'quick-quote') newTitle = 'Quick Quote Generator';
                 else if (filter === 'customers') newTitle = 'Customer Management';
+                else if (filter === 'projects') newTitle = 'Projects Management';
                 
                 // Smooth title transition
                 sectionTitle.style.opacity = '0';
                 sectionTitle.style.transform = 'translateY(-5px)';
                 
                 // Hide all views smoothly first
-                const views = ['activeBookingsGrid', 'calendarView', 'quickQuoteView'];
+                const views = ['activeBookingsGrid', 'calendarView', 'quickQuoteView', 'projectsView'];
                 views.forEach(viewId => {
                     const view = document.getElementById(viewId);
-                    view.classList.add('view-hidden');
+                    if (view) {
+                        view.classList.add('view-hidden');
+                    }
                 });
                 
                 // Wait for fade out, then show new view
@@ -7416,8 +7453,10 @@
                     // Hide all views
                     views.forEach(viewId => {
                         const view = document.getElementById(viewId);
-                        view.style.display = 'none';
-                        view.classList.remove('view-hidden');
+                        if (view) {
+                            view.style.display = 'none';
+                            view.classList.remove('view-hidden');
+                        }
                     });
                     
                                     // Show appropriate view
@@ -7430,14 +7469,38 @@
                     // Debug: Check mobile detection
                     console.log('Calendar view opened - Window width:', window.innerWidth, 'Is mobile:', window.innerWidth <= 768);
                     window.adminCalendar.renderCalendar(allBookings);
+                    // Show the section-header for calendar view
+                    const sectionHeader = document.querySelector('.active-bookings-section .section-header');
+                    if (sectionHeader) {
+                        sectionHeader.style.display = 'flex';
+                    }
                 } else if (filter === 'quick-quote') {
                     targetView = document.getElementById('quickQuoteView');
                     targetView.style.display = 'block';
+                    // Show the section-header for quick-quote view
+                    const sectionHeader = document.querySelector('.active-bookings-section .section-header');
+                    if (sectionHeader) {
+                        sectionHeader.style.display = 'flex';
+                    }
+                } else if (filter === 'projects') {
+                    targetView = document.getElementById('projectsView');
+                    targetView.style.display = 'block';
+                    targetView.classList.add('active');
+                    // Hide the section-header when projects view is active
+                    const sectionHeader = document.querySelector('.active-bookings-section .section-header');
+                    if (sectionHeader) {
+                        sectionHeader.style.display = 'none';
+                    }
                 } else {
                     targetView = document.getElementById('activeBookingsGrid');
                     targetView.style.display = 'grid';
                     currentFilter = filter;
                     renderActiveBookings();
+                    // Show the section-header for other views
+                    const sectionHeader = document.querySelector('.active-bookings-section .section-header');
+                    if (sectionHeader) {
+                        sectionHeader.style.display = 'flex';
+                    }
                 }
                     
                     // Trigger smooth entrance animation

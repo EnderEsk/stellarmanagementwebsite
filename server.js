@@ -161,8 +161,6 @@ app.get('/api/auth/google/debug-config', (req, res) => {
 // OAuth Authentication Endpoints
 app.post('/api/auth/google/verify', async (req, res) => {
     try {
-        console.log('🔐 Google OAuth verification request received');
-        console.log('Request body:', req.body);
         
         const { idToken, email, name, picture } = req.body;
         
@@ -173,19 +171,15 @@ app.post('/api/auth/google/verify', async (req, res) => {
             });
         }
         
-        console.log('📧 Verifying email:', email);
-        console.log('📋 Allowed emails:', ALLOWED_ADMIN_EMAILS);
         
         // Verify the email is in the allowed list
         if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
-            console.log('❌ Access denied for email:', email);
             return res.status(403).json({
                 success: false,
                 error: 'Access denied. This email is not authorized to access the admin panel.'
             });
         }
         
-        console.log('✅ Email verified successfully');
         
         // In a production environment, you would verify the ID token with Google
         // For now, we'll trust the client-side verification for development
@@ -198,7 +192,6 @@ app.post('/api/auth/google/verify', async (req, res) => {
             provider: 'google'
         };
         
-        console.log('✅ User profile created:', userProfile);
         
         res.json({
             success: true,
@@ -249,13 +242,10 @@ app.post('/api/auth/microsoft/verify', async (req, res) => {
 
 // Google OAuth callback endpoint
 app.post('/api/auth/google/callback', async (req, res) => {
-    console.log('🔄 Google OAuth callback received');
-    console.log('Request body received fields:', Object.keys(req.body || {}));
     
     const { code, redirectUri } = req.body;
     
     if (!code) {
-        console.log('❌ No authorization code provided');
         return res.status(400).json({
             success: false,
             error: 'No authorization code provided'
@@ -264,10 +254,6 @@ app.post('/api/auth/google/callback', async (req, res) => {
     
     try {
         const effectiveRedirectUri = getEffectiveRedirectUri(req, redirectUri);
-        console.log('🔗 Using redirect_uri for token exchange:', effectiveRedirectUri);
-        console.log('🔗 Using client_id:', (process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID));
-        console.log('🔗 Request origin:', req.headers.origin);
-        console.log('🔗 Request host:', req.get('host'));
         
         // Exchange code for tokens
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -286,7 +272,6 @@ app.post('/api/auth/google/callback', async (req, res) => {
         
         const tokenData = await tokenResponse.json();
         if (!tokenResponse.ok || tokenData.error) {
-            console.log('❌ Token exchange failed:', tokenData);
             return res.status(400).json({
                 success: false,
                 error: 'Token exchange failed',
@@ -304,12 +289,9 @@ app.post('/api/auth/google/callback', async (req, res) => {
         
         const userInfo = await userInfoResponse.json();
         
-        console.log('📧 User info received:', userInfo.email);
-        console.log('📋 Allowed emails:', ALLOWED_ADMIN_EMAILS);
         
         // Check if email is in allowed list
         if (ALLOWED_ADMIN_EMAILS.includes(userInfo.email)) {
-            console.log('✅ Email verified successfully');
             
             const userProfile = {
                 email: userInfo.email,
@@ -318,14 +300,12 @@ app.post('/api/auth/google/callback', async (req, res) => {
                 provider: 'google'
             };
             
-            console.log('✅ User profile created:', userProfile);
             
             res.json({
                 success: true,
                 userProfile: userProfile
             });
         } else {
-            console.log('❌ Email not authorized:', userInfo.email);
             res.status(401).json({
                 success: false,
                 error: 'Email not authorized'
@@ -388,14 +368,11 @@ app.get('/uploads/:imageId', async (req, res) => {
                 res.set('Content-Type', contentType);
                 res.set('Cache-Control', 'public, max-age=86400');
                 res.sendFile(filePath);
-                console.log(`✅ Served old filesystem image: ${imageId}`);
                 return;
             } else {
-                console.log(`❌ Old filesystem image not found: ${imageId}`);
             }
         }
         
-        console.log(`❌ Image not found: ${imageId}`);
         res.status(404).json({ error: 'Image not found' });
         
     } catch (error) {
@@ -443,11 +420,9 @@ async function startServer() {
     try {
         const database = await connectToDatabase();
         db = database;
-        console.log('🚀 Server ready with MongoDB');
         
         // Start the server
         app.listen(PORT, () => {
-            console.log(`🌐 Server running on port ${PORT}`);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
@@ -921,7 +896,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         // Process uploaded images with improved error handling
         const imagePaths = [];
         if (req.files && req.files.length > 0) {
-            console.log(`Processing ${req.files.length} uploaded files for booking ${cleanedData.booking_id}`);
             
             for (const file of req.files) {
                 try {
@@ -943,7 +917,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
                     const urlPath = `/uploads/${imageId}`;
                     imagePaths.push(urlPath);
                     
-                    console.log(`✅ Image saved to MongoDB: ${urlPath} (${(file.size / 1024).toFixed(2)}KB)`);
                 } catch (error) {
                     console.error(`❌ Error storing image ${file.originalname}:`, error);
                 }
@@ -952,7 +925,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
         
         const imagesJson = JSON.stringify(imagePaths);
         if (imagePaths.length > 0) {
-            console.log(`📸 Stored ${imagePaths.length} images for booking ${cleanedData.booking_id}`);
         }
 
         // Insert new booking with images
@@ -991,7 +963,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             );
             
             if (emailResult.success) {
-                console.log(`📧 Quote request confirmation email sent successfully to ${cleanedData.email}`);
             } else {
                 console.error(`❌ Failed to send quote request confirmation email:`, emailResult.error);
             }
@@ -1019,7 +990,6 @@ app.post('/api/bookings', upload.array('images', 5), async (req, res) => {
             );
             
             if (adminNotificationResult.success) {
-                console.log(`📧 New booking notification email sent successfully to admin`);
             } else {
                 console.error(`❌ Failed to send new booking notification email:`, adminNotificationResult.error);
             }
@@ -1045,14 +1015,8 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         const { bookingId } = req.params;
         const { status } = req.body;
 
-        console.log(`🔄 Updating booking ${bookingId} status to: ${status}`);
-        console.log(`🔍 Request body:`, req.body);
-        console.log(`🔍 Request headers:`, req.headers);
-        console.log(`🔍 Content-Type:`, req.headers['content-type']);
-        console.log(`🔍 Authorization:`, req.headers.authorization ? 'Present' : 'Missing');
 
         if (!status || !['pending', 'pending-site-visit', 'quote-ready', 'quote-sent', 'quote-accepted', 'confirmed', 'pending-booking', 'invoice-ready', 'invoice-sent', 'cancelled', 'completed'].includes(status)) {
-            console.log(`❌ Invalid status: ${status}`);
             return res.status(500).json({ error: 'Invalid status' });
         }
 
@@ -1060,11 +1024,9 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
         
         if (!booking) {
-            console.log(`❌ Booking not found: ${bookingId}`);
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        console.log(`✅ Found booking: ${bookingId}, current status: ${booking.status}`);
 
         // Update the booking status
         const result = await db.collection('bookings').updateOne(
@@ -1078,11 +1040,9 @@ app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) 
         );
 
         if (result.matchedCount === 0) {
-            console.log(`❌ No booking updated: ${bookingId}`);
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        console.log(`✅ Successfully updated booking ${bookingId} status to ${status}`);
 
         // Customer total spent update - REMOVED
 
@@ -1156,7 +1116,6 @@ app.delete('/api/bookings/trash/cleanup', requireAdminAuth, async (req, res) => 
                     for (const imagePath of imagePaths) {
                         const imageId = imagePath.split('/').pop(); // Extract ID from path
                         await db.collection('images').deleteOne({ _id: new ObjectId(imageId) });
-                        console.log(`🗑️ Deleted expired image: ${imageId}`);
                     }
                 }
             } catch (error) {
@@ -1166,7 +1125,6 @@ app.delete('/api/bookings/trash/cleanup', requireAdminAuth, async (req, res) => 
             // Delete the booking
             await db.collection('bookings').deleteOne({ booking_id: booking.booking_id });
             deletedCount++;
-            console.log(`🗑️ Deleted expired booking: ${booking.booking_id}`);
         }
         
         res.json({ 
@@ -1215,7 +1173,6 @@ app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
                 for (const imagePath of imagePaths) {
                     const imageId = imagePath.split('/').pop(); // Extract ID from path
                     await db.collection('images').deleteOne({ _id: new ObjectId(imageId) });
-                    console.log(`🗑️ Deleted image: ${imageId}`);
                 }
             }
         } catch (error) {
@@ -1512,7 +1469,6 @@ app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
             }
             
             // Weekend is allowed for admin bookings
-            console.log(`✅ Admin booking allowed on weekend: ${sanitizedData.date}`);
         }
 
         // Validate booking date is not in the past
@@ -1623,7 +1579,6 @@ app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
             );
             
             if (emailResult.success) {
-                console.log(`📧 Quote request confirmation email sent successfully to ${sanitizedData.email}`);
             } else {
                 console.error(`❌ Failed to send quote request confirmation email:`, emailResult.error);
             }
@@ -1651,7 +1606,6 @@ app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
             );
             
             if (adminNotificationResult.success) {
-                console.log(`📧 New booking notification email sent successfully to admin`);
             } else {
                 console.error(`❌ Failed to send new booking notification email:`, adminNotificationResult.error);
             }
@@ -1660,7 +1614,6 @@ app.post('/api/admin/bookings', requireAdminAuth, async (req, res) => {
             // Don't fail the booking creation if admin email fails
         }
 
-        console.log(`✅ Admin booking created successfully: ${sanitizedData.booking_id}`);
         res.status(201).json({
             message: 'Admin booking created successfully',
             bookingId: sanitizedData.booking_id,
@@ -1732,7 +1685,6 @@ app.post('/api/bookings/:bookingId/send-invoice', requireAdminAuth, async (req, 
                 }
             );
 
-            console.log('📧 Invoice sent to customer successfully');
             res.json({
                 message: 'Invoice sent to customer successfully',
                 messageId: result.messageId
@@ -1848,14 +1800,12 @@ app.post('/api/bookings/:bookingId/send-quote', requireAdminAuth, async (req, re
                 const latestQuote = quotes[0];
                 if (latestQuote.total_amount) {
                     actualCost = latestQuote.total_amount;
-                    console.log(`✅ Found quote cost: $${actualCost}`);
                 }
                 if (latestQuote.work_description && latestQuote.work_description.trim() !== 't') {
                     workDescription = latestQuote.work_description;
                 }
             }
         } catch (quoteError) {
-            console.log('⚠️ Could not fetch quote data, using booking data');
         }
 
         // Import and use EmailService
@@ -1881,7 +1831,6 @@ app.post('/api/bookings/:bookingId/send-quote', requireAdminAuth, async (req, re
                 }
             }
         } catch (quoteError) {
-            console.log('⚠️ Could not fetch quote data, using basic service structure');
             // Create basic service structure if no quote exists
             serviceItems = [{
                 description: booking.service || 'Tree service as requested',
@@ -1918,7 +1867,6 @@ app.post('/api/bookings/:bookingId/send-quote', requireAdminAuth, async (req, re
                 }
             );
 
-            console.log('📧 Quote sent to customer successfully');
             res.json({
                 message: 'Quote sent to customer successfully',
                 messageId: result.messageId
@@ -1969,7 +1917,6 @@ app.post('/api/bookings/:bookingId/send-quote-confirmation-email', requireAdminA
         );
 
         if (result.success) {
-            console.log('📧 Quote confirmation email sent successfully');
             res.json({
                 message: 'Quote confirmation email sent successfully',
                 messageId: result.messageId
@@ -2016,7 +1963,6 @@ app.post('/api/bookings/:bookingId/send-booking-email', requireAdminAuth, async 
         );
 
         if (result.success) {
-            console.log('📧 Booking confirmation email sent successfully via MailerSend');
             res.json({
                 message: 'Booking confirmation email sent successfully via MailerSend',
                 messageId: result.messageId
@@ -2062,7 +2008,6 @@ app.patch('/api/bookings/:bookingId/mark-paid', requireAdminAuth, async (req, re
         );
 
         if (result.modifiedCount > 0) {
-            console.log(`✅ Invoice marked as paid for ${bookingId}`);
             res.json({ 
                 message: 'Invoice marked as paid successfully',
                 status: 'completed'
@@ -2081,18 +2026,13 @@ app.post('/api/bookings/:bookingId/accept-quote', async (req, res) => {
     try {
         const { bookingId } = req.params;
         
-        console.log(`📝 Customer accepting quote for booking: ${bookingId}`);
-        console.log(`🔍 Request method: ${req.method}`);
-        console.log(`🔍 Request URL: ${req.url}`);
 
         // Get booking details
         const booking = await db.collection('bookings').findOne({ booking_id: bookingId });
         if (!booking) {
-            console.log(`❌ Booking not found: ${bookingId}`);
             return res.status(404).json({ error: 'Booking not found' });
         }
 
-        console.log(`✅ Found booking: ${bookingId}, current status: ${booking.status}`);
 
         // Update the booking status to 'quote-accepted'
         const result = await db.collection('bookings').updateOne(
@@ -2106,14 +2046,12 @@ app.post('/api/bookings/:bookingId/accept-quote', async (req, res) => {
         );
 
         if (result.modifiedCount > 0) {
-            console.log(`✅ Quote accepted by customer for ${bookingId}`);
             
             res.json({ 
                 message: 'Quote accepted successfully',
                 status: 'quote-accepted'
             });
         } else {
-            console.log(`❌ Failed to update booking: ${bookingId}`);
             res.status(500).json({ error: 'Failed to update booking' });
         }
     } catch (error) {
@@ -2173,7 +2111,6 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
         );
 
         if (result.modifiedCount > 0) {
-            console.log(`📅 Job booking submitted for ${bookingId}: ${jobDate} at ${jobTime}`);
             
             // Block the entire day when a job is scheduled at 5:30 PM
             try {
@@ -2192,7 +2129,6 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
                     note: `Full day blocked due to job scheduled at ${jobTime}`
                 });
                 
-                console.log(`🚫 Blocked entire day ${jobDate} due to job scheduling (replaced any existing blocks)`);
             } catch (blockError) {
                 console.error('❌ Error blocking date for job:', blockError);
             }
@@ -2205,7 +2141,6 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
                 }).toArray();
 
                 if (existingQuotes.length > 0) {
-                    console.log(`⚠️ Found ${existingQuotes.length} existing quotes on ${jobDate} - cancelling them due to job scheduling`);
                     
                     // Update all existing quotes to cancelled status
                     const updateResult = await db.collection('bookings').updateMany(
@@ -2222,7 +2157,6 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
                         }
                     );
                     
-                    console.log(`✅ Cancelled ${updateResult.modifiedCount} existing quotes on ${jobDate}`);
                 }
             } catch (cancelError) {
                 console.error('❌ Error cancelling existing quotes:', cancelError);
@@ -2247,9 +2181,7 @@ app.post('/api/bookings/:bookingId/book-job', async (req, res) => {
                 );
                 
                 if (emailResult.success) {
-                    console.log(`📧 Quote acceptance email sent successfully to ${booking.email} after job scheduling`);
                 } else {
-                    console.log(`⚠️ Quote acceptance email failed to send: ${emailResult.error}`);
                 }
             } catch (emailError) {
                 console.error('❌ Error sending quote acceptance email:', emailError);
@@ -2340,8 +2272,6 @@ app.post('/api/bookings/:bookingId/send-confirmation-email', requireAdminAuth, a
             booking.notes || ''
         );
 
-        console.log('📧 Final confirmation email sent successfully');
-        console.log('📧 Email result:', emailResult);
         res.json({
             message: 'Final booking confirmation email sent successfully',
             emailResult: emailResult
@@ -2592,7 +2522,6 @@ app.post('/api/bookings/send-customer-message', requireAdminAuth, async (req, re
         );
 
         if (emailResult.success) {
-            console.log('📧 Customer message sent successfully');
             res.json({
                 message: 'Customer message sent successfully',
                 emailResult: emailResult
@@ -2825,7 +2754,6 @@ app.delete('/api/blocked-dates/:date', async (req, res) => {
 // Cleanup duplicate full-day job blocks
 app.post('/api/blocked-dates/cleanup-duplicates', requireAdminAuth, async (req, res) => {
     try {
-        console.log('🧹 Starting cleanup of duplicate full-day job blocks...');
         
         // Find all full-day job blocks
         const fullDayJobBlocks = await db.collection('blocked_dates')
@@ -2841,14 +2769,12 @@ app.post('/api/blocked-dates/cleanup-duplicates', requireAdminAuth, async (req, 
                 // This date has already been processed, remove this duplicate
                 await db.collection('blocked_dates').deleteOne({ _id: block._id });
                 cleanedCount++;
-                console.log(`🧹 Removed duplicate block for date: ${block.date}`);
             } else {
                 // First time seeing this date, mark as processed
                 processedDates.add(block.date);
             }
         }
         
-        console.log(`🧹 Cleanup completed. Removed ${cleanedCount} duplicate blocks.`);
         
         res.json({ 
             message: 'Cleanup completed successfully',
@@ -2864,7 +2790,6 @@ app.post('/api/blocked-dates/cleanup-duplicates', requireAdminAuth, async (req, 
 // Cleanup inconsistent data: dates with both full-day job blocks and active quotes
 app.post('/api/blocked-dates/cleanup-inconsistent', requireAdminAuth, async (req, res) => {
     try {
-        console.log('🧹 Starting cleanup of inconsistent data...');
         
         // Find all full-day job blocks
         const fullDayJobBlocks = await db.collection('blocked_dates')
@@ -2881,7 +2806,6 @@ app.post('/api/blocked-dates/cleanup-inconsistent', requireAdminAuth, async (req
             }).toArray();
             
             if (activeQuotes.length > 0) {
-                console.log(`⚠️ Found ${activeQuotes.length} active quotes on ${block.date} - cancelling them due to full-day job block`);
                 
                 // Cancel all active quotes on this date
                 const updateResult = await db.collection('bookings').updateMany(
@@ -2899,11 +2823,9 @@ app.post('/api/blocked-dates/cleanup-inconsistent', requireAdminAuth, async (req
                 );
                 
                 cleanedCount += updateResult.modifiedCount;
-                console.log(`✅ Cancelled ${updateResult.modifiedCount} quotes on ${block.date}`);
             }
         }
         
-        console.log(`🧹 Inconsistent data cleanup completed. Cancelled ${cleanedCount} quotes.`);
         
         res.json({ 
             message: 'Inconsistent data cleanup completed successfully',
@@ -2919,7 +2841,6 @@ app.post('/api/blocked-dates/cleanup-inconsistent', requireAdminAuth, async (req
 // Cleanup orphaned full-day job blocks (no actual job bookings)
 app.post('/api/blocked-dates/cleanup-orphaned', requireAdminAuth, async (req, res) => {
     try {
-        console.log('🧹 Starting cleanup of orphaned full-day job blocks...');
         
         // Find all full-day job blocks
         const fullDayJobBlocks = await db.collection('blocked_dates')
@@ -2936,16 +2857,13 @@ app.post('/api/blocked-dates/cleanup-orphaned', requireAdminAuth, async (req, re
             });
             
             if (!jobBooking) {
-                console.log(`⚠️ Found orphaned full-day job block for ${block.date} - no actual job booking exists`);
                 
                 // Remove the orphaned block
                 await db.collection('blocked_dates').deleteOne({ _id: block._id });
                 cleanedCount++;
-                console.log(`✅ Removed orphaned block for ${block.date}`);
             }
         }
         
-        console.log(`🧹 Orphaned block cleanup completed. Removed ${cleanedCount} blocks.`);
         
         res.json({ 
             message: 'Orphaned block cleanup completed successfully',
@@ -2961,7 +2879,6 @@ app.post('/api/blocked-dates/cleanup-orphaned', requireAdminAuth, async (req, re
 // Automatic cleanup endpoint (no auth required - runs automatically)
 app.post('/api/blocked-dates/auto-cleanup', async (req, res) => {
     try {
-        console.log('🤖 Starting automatic cleanup of inconsistent data...');
         
         let totalCleaned = 0;
         let details = [];
@@ -2979,7 +2896,6 @@ app.post('/api/blocked-dates/auto-cleanup', async (req, res) => {
             });
             
             if (!jobBooking) {
-                console.log(`🤖 Auto-cleanup: Removing orphaned full-day job block for ${block.date}`);
                 await db.collection('blocked_dates').deleteOne({ _id: block._id });
                 totalCleaned++;
                 details.push(`Removed orphaned job block for ${block.date}`);
@@ -2996,7 +2912,6 @@ app.post('/api/blocked-dates/auto-cleanup', async (req, res) => {
                 }).toArray();
                 
                 if (activeQuotes.length > 0) {
-                    console.log(`🤖 Auto-cleanup: Cancelling ${activeQuotes.length} quotes on ${block.date} due to job block`);
                     
                     const updateResult = await db.collection('bookings').updateMany(
                         { 
@@ -3018,7 +2933,6 @@ app.post('/api/blocked-dates/auto-cleanup', async (req, res) => {
             }
         }
         
-        console.log(`🤖 Automatic cleanup completed. Total actions: ${totalCleaned}`);
         
         res.json({ 
             message: 'Automatic cleanup completed successfully',
@@ -3066,8 +2980,6 @@ app.get('/api/calendar-events', requireAdminAuth, async (req, res) => {
 // Create a new calendar event
 app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
     try {
-        console.log('📧 Server - Calendar event creation request received');
-        console.log('📧 Server - Request body:', req.body);
         const { title, type, date, startTime, endTime, location, description, color, sendToMyself } = req.body;
         
         if (!title || !type || !date || !startTime || !endTime) {
@@ -3090,19 +3002,11 @@ app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
         const result = await db.collection('calendar_events').insertOne(eventData);
         
         // Send email confirmation if requested
-        console.log('📧 Server Debug - sendToMyself:', sendToMyself);
-        console.log('📧 Server Debug - req.user:', req.user);
-        console.log('📧 Server Debug - req.user.email:', req.user ? req.user.email : 'undefined');
-        console.log('📧 Server Debug - sendToMyself type:', typeof sendToMyself);
-        console.log('📧 Server Debug - sendToMyself value:', JSON.stringify(sendToMyself));
         
         if (sendToMyself && req.user && req.user.email) {
             try {
-                console.log('📧 Attempting to send event confirmation email to:', req.user.email);
                 const emailResult = await emailService.sendEventConfirmationEmail(req.user.email, eventData, false);
-                console.log('📧 Event confirmation email result:', emailResult);
                 if (emailResult.success) {
-                    console.log('📧 Event confirmation email sent successfully to:', req.user.email);
                 } else {
                     console.error('❌ Email service returned error:', emailResult.error);
                 }
@@ -3111,11 +3015,6 @@ app.post('/api/calendar-events', requireAdminAuth, async (req, res) => {
                 // Don't fail the request if email fails
             }
         } else {
-            console.log('📧 Email not sent - sendToMyself:', sendToMyself, 'req.user:', req.user);
-            console.log('📧 Email not sent - conditions check:');
-            console.log('  - sendToMyself truthy:', !!sendToMyself);
-            console.log('  - req.user exists:', !!req.user);
-            console.log('  - req.user.email exists:', !!(req.user && req.user.email));
         }
         
         res.status(201).json({
@@ -3160,19 +3059,11 @@ app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
         }
         
         // Send email confirmation if requested
-        console.log('📧 Update Server Debug - sendToMyself:', sendToMyself);
-        console.log('📧 Update Server Debug - req.user:', req.user);
-        console.log('📧 Update Server Debug - req.user.email:', req.user ? req.user.email : 'undefined');
-        console.log('📧 Update Server Debug - sendToMyself type:', typeof sendToMyself);
-        console.log('📧 Update Server Debug - sendToMyself value:', JSON.stringify(sendToMyself));
         
         if (sendToMyself && req.user && req.user.email) {
             try {
-                console.log('📧 Attempting to send event update confirmation email to:', req.user.email);
                 const emailResult = await emailService.sendEventConfirmationEmail(req.user.email, updateData, true);
-                console.log('📧 Event update confirmation email result:', emailResult);
                 if (emailResult.success) {
-                    console.log('📧 Event update confirmation email sent successfully to:', req.user.email);
                 } else {
                     console.error('❌ Email service returned error:', emailResult.error);
                 }
@@ -3181,11 +3072,6 @@ app.put('/api/calendar-events/:eventId', requireAdminAuth, async (req, res) => {
                 // Don't fail the request if email fails
             }
         } else {
-            console.log('📧 Update email not sent - sendToMyself:', sendToMyself, 'req.user:', req.user);
-            console.log('📧 Update email not sent - conditions check:');
-            console.log('  - sendToMyself truthy:', !!sendToMyself);
-            console.log('  - req.user exists:', !!req.user);
-            console.log('  - req.user.email exists:', !!(req.user && req.user.email));
         }
         
         res.json({
@@ -3328,6 +3214,459 @@ function generateUniqueId(prefix) {
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `${prefix}-${timestamp}-${random}`;
 }
+
+// Projects API endpoints
+
+// Auto-migration function for projects
+async function migrateProjectsIfNeeded() {
+    try {
+        const db = getDatabase();
+        
+        // Check if projects collection is empty
+        const projectCount = await db.collection('projects').countDocuments();
+        
+        if (projectCount === 0) {
+            
+            // Read projects.json
+            const fs = require('fs');
+            const path = require('path');
+            const projectsJsonPath = path.join(__dirname, 'projects', 'projects.json');
+            
+            if (!fs.existsSync(projectsJsonPath)) {
+                return;
+            }
+            
+            const projectsData = JSON.parse(fs.readFileSync(projectsJsonPath, 'utf8'));
+            const projects = projectsData.projects || [];
+            
+            
+            for (let i = 0; i < projects.length; i++) {
+                const project = projects[i];
+                
+                // Convert images to Binary data
+                const images = [];
+                const imageNames = [];
+                
+                if (project.images && Array.isArray(project.images)) {
+                    for (const imagePath of project.images) {
+                        try {
+                            // Convert relative path to absolute
+                            const fullImagePath = path.join(__dirname, imagePath.replace('../', ''));
+                            
+                            if (fs.existsSync(fullImagePath)) {
+                                const imageBuffer = fs.readFileSync(fullImagePath);
+                                images.push(new Binary(imageBuffer));
+                                imageNames.push(path.basename(imagePath));
+                            } else {
+                            }
+                        } catch (error) {
+                            console.error(`  ❌ Error migrating image ${imagePath}:`, error);
+                        }
+                    }
+                }
+                
+                // Create project document
+                const projectDoc = {
+                    project_id: project.id || generateUniqueId('proj'),
+                    title: project.title,
+                    description: project.description,
+                    duration: project.duration,
+                    location: project.location,
+                    services: project.services,
+                    images: images,
+                    image_names: imageNames,
+                    published: Boolean(true), // All migrated projects are published by default
+                    date: new Date(project.date),
+                    order: i, // Maintain original order
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+                
+                await db.collection('projects').insertOne(projectDoc);
+            }
+            
+            
+            // Fix any projects that have published: null
+            await db.collection('projects').updateMany(
+                { published: null },
+                { $set: { published: true, updated_at: new Date() } }
+            );
+            
+            // Mark migration as complete
+            await db.collection('migration_status').updateOne(
+                { type: 'projects' },
+                { 
+                    $set: { 
+                        type: 'projects',
+                        completed: true,
+                        migrated_at: new Date(),
+                        project_count: projects.length
+                    }
+                },
+                { upsert: true }
+            );
+            
+        } else {
+            
+            // Fix any projects that have published: null
+            const fixResult = await db.collection('projects').updateMany(
+                { published: null },
+                { $set: { published: true, updated_at: new Date() } }
+            );
+            
+            if (fixResult.modifiedCount > 0) {
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error during projects migration:', error);
+    }
+}
+
+// Get all projects (with optional published filter)
+app.get('/api/projects', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { published } = req.query;
+        
+        // Run migration if needed
+        await migrateProjectsIfNeeded();
+        
+        let query = {};
+        if (published === 'true') {
+            query.published = true;
+        }
+        
+        const projects = await db.collection('projects')
+            .find(query)
+            .sort({ order: 1, date: -1 })
+            .toArray();
+        
+        // Remove binary data from response for performance and parse tags
+        const projectsWithoutImages = projects.map(project => {
+            // Parse tags if stored as a string
+            let tags = project.tags;
+            if (typeof tags === 'string' && tags.trim() !== '') {
+                try {
+                    tags = JSON.parse(tags);
+                } catch (e) {
+                    console.error('Error parsing tags for project:', project.project_id, e);
+                    tags = [];
+                }
+            }
+            
+            return {
+                ...project,
+                images: project.images ? project.images.length : 0,
+                image_previews: project.image_names || [],
+                tags: tags
+            };
+        });
+        
+        res.json(projectsWithoutImages);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get single project
+app.get('/api/projects/:projectId', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId } = req.params;
+        
+        const project = await db.collection('projects').findOne({ project_id: projectId });
+        
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        
+        // Parse tags if it's a string
+        let tags = project.tags;
+        if (typeof tags === 'string') {
+            try {
+                tags = JSON.parse(tags);
+            } catch (e) {
+                console.error('Error parsing tags:', e);
+                tags = [];
+            }
+        }
+        
+        // Remove binary data from response
+        const projectWithoutImages = {
+            ...project,
+            images: project.images ? project.images.length : 0,
+            image_previews: project.image_names || [],
+            tags: tags
+        };
+        
+        res.json(projectWithoutImages);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Create new project (admin only)
+app.post('/api/projects', upload.array('images', 10), async (req, res) => {
+    try {
+        const db = getDatabase();
+        const {
+            title,
+            description,
+            duration,
+            location,
+            services,
+            published,
+            tags
+        } = req.body;
+        
+        // Validate required fields
+        if (!title || !description || !duration || !location) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Get next order number
+        const lastProject = await db.collection('projects')
+            .findOne({}, { sort: { order: -1 } });
+        const nextOrder = lastProject ? lastProject.order + 1 : 0;
+        
+        // Process uploaded images
+        const images = [];
+        const imageNames = [];
+        
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                images.push(new Binary(file.buffer));
+                imageNames.push(file.originalname);
+            }
+        }
+        
+        const projectDoc = {
+            project_id: generateUniqueId('proj'),
+            title,
+            description,
+            duration,
+            location,
+            services: services || '', // Optional field, default to empty string
+            images,
+            image_names: imageNames,
+            tags: tags || JSON.stringify([]),
+            published: published === 'true',
+            date: new Date(),
+            order: nextOrder,
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+        
+        const result = await db.collection('projects').insertOne(projectDoc);
+        
+        res.status(201).json({
+            success: true,
+            project_id: projectDoc.project_id,
+            message: 'Project created successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Update project (admin only)
+app.put('/api/projects/:projectId', upload.array('images', 10), async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId } = req.params;
+        const {
+            title,
+            description,
+            duration,
+            location,
+            services,
+            published,
+            deleted_image_indices,
+            tags
+        } = req.body;
+        
+        const project = await db.collection('projects').findOne({ project_id: projectId });
+        
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        
+        let images = project.images || [];
+        let imageNames = project.image_names || [];
+        
+        // Handle deleted images first
+        if (deleted_image_indices) {
+            try {
+                const deletedIndices = JSON.parse(deleted_image_indices);
+                // Remove images in reverse order to maintain correct indices
+                deletedIndices.sort((a, b) => b - a).forEach(index => {
+                    if (index >= 0 && index < images.length) {
+                        images.splice(index, 1);
+                        imageNames.splice(index, 1);
+                    }
+                });
+            } catch (error) {
+                console.error('Error parsing deleted_image_indices:', error);
+            }
+        }
+        
+        // Handle new image uploads - always append to existing images (after deletions)
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                images.push(new Binary(file.buffer));
+                imageNames.push(file.originalname);
+            }
+        }
+        
+        const updateDoc = {
+            title: title || project.title,
+            description: description || project.description,
+            duration: duration || project.duration,
+            location: location || project.location,
+            services: services || project.services,
+            published: published !== undefined ? published === 'true' : project.published,
+            tags: tags !== undefined ? tags : project.tags,
+            images,
+            image_names: imageNames,
+            updated_at: new Date()
+        };
+        
+        await db.collection('projects').updateOne(
+            { project_id: projectId },
+            { $set: updateDoc }
+        );
+        
+        res.json({
+            success: true,
+            message: 'Project updated successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Delete project (admin only)
+app.delete('/api/projects/:projectId', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId } = req.params;
+        
+        const result = await db.collection('projects').deleteOne({ project_id: projectId });
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Project deleted successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Update project order (admin only)
+app.put('/api/projects/:projectId/reorder', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId } = req.params;
+        const { order } = req.body;
+        
+        if (typeof order !== 'number') {
+            return res.status(400).json({ error: 'Order must be a number' });
+        }
+        
+        const result = await db.collection('projects').updateOne(
+            { project_id: projectId },
+            { $set: { order, updated_at: new Date() } }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Project order updated successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Toggle published status (admin only)
+app.put('/api/projects/:projectId/toggle-published', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId } = req.params;
+        
+        const project = await db.collection('projects').findOne({ project_id: projectId });
+        
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        
+        const newPublishedStatus = !project.published;
+        
+        await db.collection('projects').updateOne(
+            { project_id: projectId },
+            { $set: { published: newPublishedStatus, updated_at: new Date() } }
+        );
+        
+        res.json({
+            success: true,
+            published: newPublishedStatus,
+            message: `Project ${newPublishedStatus ? 'published' : 'unpublished'} successfully`
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
+// Serve project images from MongoDB
+app.get('/api/projects/images/:projectId/:imageIndex', async (req, res) => {
+    try {
+        const db = getDatabase();
+        const { projectId, imageIndex } = req.params;
+        const index = parseInt(imageIndex);
+        
+        if (isNaN(index) || index < 0) {
+            return res.status(400).json({ error: 'Invalid image index' });
+        }
+        
+        const project = await db.collection('projects').findOne({ project_id: projectId });
+        
+        if (!project || !project.images || !project.images[index]) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+        
+        const imageBinary = project.images[index];
+        const imageName = project.image_names[index] || 'image.jpg';
+        
+        // Set appropriate content type
+        const contentType = imageName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+        
+        res.set({
+            'Content-Type': contentType,
+            'Content-Length': imageBinary.length(),
+            'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+        });
+        
+        res.send(imageBinary.buffer);
+    } catch (error) {
+        console.error('Error serving image:', error);
+        res.status(500).json({ error: 'Error serving image' });
+    }
+});
 
 // Quotes API endpoints
 
@@ -3564,7 +3903,6 @@ app.put('/api/quotes/:quoteId', async (req, res) => {
 app.get('/api/quotes/booking/:bookingId', async (req, res) => {
     try {
         const { bookingId } = req.params;
-        console.log(`🔍 Fetching quotes for booking: ${bookingId}`);
         
         const quotes = await db.collection('quotes').aggregate([
             {
@@ -3593,7 +3931,6 @@ app.get('/api/quotes/booking/:bookingId', async (req, res) => {
             }
         ]).toArray();
         
-        console.log(`📋 Found ${quotes.length} quotes for booking ${bookingId}`);
         
         // Parse service_items JSON for each quote
         quotes.forEach(quote => {
@@ -3815,7 +4152,6 @@ app.post('/api/service-item-photos/:quoteId/:itemId', upload.array('photos', 5),
             return res.status(400).json({ error: 'No photos uploaded' });
         }
 
-        console.log(`📸 Processing ${req.files.length} photos for service item ${itemId} in quote ${quoteId}`);
 
         const imagePaths = [];
         
@@ -3840,7 +4176,6 @@ app.post('/api/service-item-photos/:quoteId/:itemId', upload.array('photos', 5),
             const imagePath = `/uploads/${imageId}`;
             imagePaths.push(imagePath);
             
-            console.log(`✅ Stored service item photo: ${file.originalname} -> ${imageId}`);
         }
 
         // Update the quote with the new photo paths
@@ -3869,7 +4204,6 @@ app.post('/api/service-item-photos/:quoteId/:itemId', upload.array('photos', 5),
             { $set: { serviceItemPhotos: quote.serviceItemPhotos } }
         );
 
-        console.log(`✅ Updated quote ${quoteId} with ${imagePaths.length} photos for item ${itemId}`);
 
         res.json({
             success: true,
@@ -3917,7 +4251,6 @@ app.delete('/api/service-item-photos/:quoteId/:itemId/:imageId', async (req, res
         try {
             const objectId = new ObjectId(imageId);
             await db.collection('images').deleteOne({ _id: objectId });
-            console.log(`✅ Deleted service item photo: ${imageId}`);
         } catch (error) {
             console.error('❌ Error deleting image from MongoDB:', error);
         }
@@ -3936,7 +4269,6 @@ app.delete('/api/service-item-photos/:quoteId/:itemId/:imageId', async (req, res
                 { $set: { serviceItemPhotos: quote.serviceItemPhotos } }
             );
 
-            console.log(`✅ Updated quote ${quoteId} to remove photo ${imageId} from item ${itemId}`);
         }
 
         res.json({
@@ -4323,7 +4655,6 @@ app.post('/api/invoices/:invoiceId/email', async (req, res) => {
 function sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serviceItems) {
     // This is a placeholder for email functionality
     // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
-    console.log(`Quote email would be sent to ${email} for quote ${quoteId}`);
     
     // Format service items for email
     const serviceItemsList = serviceItems.map(item => 
@@ -4360,7 +4691,6 @@ function sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serv
     
     // Here you would integrate with your email service
     // For now, we'll just log it
-    console.log('Quote email content:', emailContent);
     return emailContent;
 }
 
@@ -4368,7 +4698,6 @@ function sendQuoteEmail(email, quoteId, clientName, quoteDate, totalAmount, serv
 function sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount, serviceItems) {
     // This is a placeholder for email functionality
     // In a real implementation, you would use a service like SendGrid, Mailgun, or AWS SES
-    console.log(`Invoice email would be sent to ${email} for invoice ${invoiceId}`);
     
     // Format service items for email
     const serviceItemsList = serviceItems.map(item => 
@@ -4403,7 +4732,6 @@ function sendInvoiceEmail(email, invoiceId, clientName, invoiceDate, totalAmount
     
     // Here you would integrate with your email service
     // For now, we'll just log it
-    console.log('Invoice email content:', emailContent);
     return emailContent;
 }
 
@@ -4421,10 +4749,8 @@ app.use((err, req, res, next) => {
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-    console.log('Shutting down server...');
     try {
         await closeConnection();
-        console.log('Database connection closed.');
     } catch (error) {
         console.error('Error closing database:', error);
     }
@@ -4436,7 +4762,6 @@ process.on('SIGINT', async () => {
 // Domain handling middleware
 app.use((req, res, next) => {
     // Log the hostname for debugging
-    console.log('Request hostname:', req.hostname);
     
     // Handle both www and non-www versions
     if (req.hostname === 'stellartreemanagement.ca') {
@@ -4502,7 +4827,6 @@ app.post('/api/cleanup-images', requireAdminAuth, async (req, res) => {
                 await db.collection('images').deleteOne({ _id: image._id });
                 deletedCount++;
                 deletedSize += image.size || 0;
-                console.log(`🗑️ Deleted orphaned image: ${image._id}`);
             } catch (error) {
                 console.error(`Error deleting image ${image._id}:`, error);
             }

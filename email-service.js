@@ -30,7 +30,6 @@ class EmailService {
             }
             
             const response = await this.resend.emails.send(emailData);
-            console.log('📧 Email sent successfully via Resend:', response);
             return { success: true, messageId: response.data?.id };
         } catch (error) {
             console.error('❌ Error sending email via Resend:', error);

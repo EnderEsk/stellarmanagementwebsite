@@ -206,19 +206,24 @@
             }
         });
 
-        // Load projects from JSON
+        // Load projects from API
         async function loadProjects() {
             try {
-                const response = await fetch('projects.json');
+                const response = await fetch('/api/projects?published=true');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                projectsData = data.projects;
+                projectsData = data;
                 
-                // Sort projects by date (newest first) or by featured status
+                // Sort projects by order, then by featured status, then by date
                 projectsData.sort((a, b) => {
-                    // First sort by featured status
+                    // First sort by order
+                    if (a.order !== b.order) {
+                        return a.order - b.order;
+                    }
+                    
+                    // Then by featured status
                     if (a.featured && !b.featured) return -1;
                     if (!a.featured && b.featured) return 1;
                     
@@ -251,7 +256,10 @@
             card.className = 'project-card';
             card.onclick = () => openModal(project);
             
-            const mainImage = project.images && project.images.length > 0 ? project.images[0] : '../images/placeholder.jpg';
+            // Use API endpoint for images
+            const mainImage = project.images && project.images > 0 
+                ? `/api/projects/images/${project.project_id}/0` 
+                : '../images/placeholder.jpg';
             
             card.innerHTML = `
                 <img src="${mainImage}" alt="${project.title}" class="project-image" onerror="this.src='../images/placeholder.jpg'">
@@ -356,7 +364,13 @@
             `;
             
             // Set up carousel
-            images = project.images || [];
+            images = [];
+            if (project.images && project.images > 0) {
+                // Generate API image URLs
+                for (let i = 0; i < project.images; i++) {
+                    images.push(`/api/projects/images/${project.project_id}/${i}`);
+                }
+            }
             currentSlide = 0;
             setupCarousel();
             

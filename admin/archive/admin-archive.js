@@ -108,7 +108,6 @@ class AdminArchive {
         // Hide other views completely and clear their content
         const activeBookingsGrid = document.getElementById('activeBookingsGrid');
         const calendarView = document.getElementById('calendarView');
-        const trashView = document.getElementById('trashView');
         
         if (activeBookingsGrid) {
             activeBookingsGrid.style.display = 'none';
@@ -122,10 +121,6 @@ class AdminArchive {
         
         if (calendarView) {
             calendarView.style.display = 'none';
-        }
-        
-        if (trashView) {
-            trashView.style.display = 'none';
         }
         
         // Show archive view

@@ -2,9 +2,6 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 // Debug environment variables
-console.log('=== Database Connection Debug ===');
-console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
-console.log('MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
 
 if (!process.env.MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable is not set!');
@@ -13,8 +10,6 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI;
-console.log('URI starts with mongodb:', uri.startsWith('mongodb'));
-console.log('URI preview:', uri.substring(0, 50) + '...');
 
 const client = new MongoClient(uri);
 
@@ -24,7 +19,6 @@ async function connectToDatabase() {
     try {
         await client.connect();
         db = client.db('stellartmanagement');
-        console.log('✅ Connected to MongoDB Atlas');
         
         // Create indexes for better performance
         await createIndexes();
@@ -62,7 +56,12 @@ async function createIndexes() {
         await db.collection('invoices').createIndex({ invoice_id: 1 }, { unique: true });
         await db.collection('invoices').createIndex({ customer_id: 1 });
         
-        console.log('✅ Database indexes created');
+        // Projects indexes
+        await db.collection('projects').createIndex({ project_id: 1 }, { unique: true });
+        await db.collection('projects').createIndex({ published: 1 });
+        await db.collection('projects').createIndex({ order: 1 });
+        await db.collection('projects').createIndex({ date: -1 });
+        
     } catch (error) {
         console.error('❌ Error creating indexes:', error);
     }
