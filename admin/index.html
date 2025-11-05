@@ -15,8 +15,6 @@
     <link rel="stylesheet" href="admin-mobile-booking-modal.css">
     <link rel="stylesheet" href="admin-mobile-project-modal.css">
     <link rel="stylesheet" href="admin-projects.css">
-    <link rel="stylesheet" href="admin/billing/admin-billing.css">
-    <script src="https://js.stripe.com/v3/"></script>
     <script src="simple-google-oauth.js"></script>
     <script src="templates/universal-quote-invoice-template.js"></script>
     <!-- Load admin.js after the page content to ensure DOM elements are available -->
@@ -37,7 +35,10 @@
     <script src="admin-mobile-project-modal.js" defer></script>
     <!-- Load admin projects functionality -->
     <script src="admin-projects.js" defer></script>
-    <!-- Load billing functionality - view manager first, then profile menu, then billing -->
+    
+    <!-- Stripe Billing Integration -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="admin/billing/admin-billing.css">
     <script src="admin/billing/admin-view-manager.js" defer></script>
     <script src="admin/billing/admin-profile-menu.js" defer></script>
     <script src="admin/billing/admin-billing.js" defer></script>

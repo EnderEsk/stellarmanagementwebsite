@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auto-Switch Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c5530;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .workflow {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2c5530;
+        }
+        .workflow h3 {
+            color: #2c5530;
+            margin-top: 0;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .step-number {
+            background: #2c5530;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #2c5530;
+        }
+        .step-description {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .auto-switch {
+            background: #d4edda;
+            color: #155724;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .feature-list {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .feature-list h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin: 8px 0;
+            color: #004085;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Admin Panel Auto-Switch Feature</h1>
+        
+        <div class="workflow">
+            <h3>📋 How It Works</h3>
+            <p>When you update a booking status in the admin panel, it automatically switches to the appropriate tab, eliminating the need to manually click between tabs.</p>
+        </div>
+
+        <div class="workflow">
+            <h3>🔄 Workflow with Auto-Switching</h3>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Pending Site Visit</div>
+                    <div class="step-description">Customer requests quote, admin schedules site visit</div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Quote Ready</div>
+                    <div class="step-description">Admin confirms site visit → <strong>Auto-switches to "Quote Ready" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Quote Sent</div>
+                    <div class="step-description">Admin sends quote → <strong>Auto-switches to "Quote Sent" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Job Scheduled</div>
+                    <div class="step-description">Customer accepts quote → <strong>Auto-switches to "Job Scheduled" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">Invoice Ready</div>
+                    <div class="step-description">Admin confirms job → <strong>Auto-switches to "Invoice Ready" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="step-title">Invoice Sent</div>
+                    <div class="step-description">Admin sends invoice → <strong>Auto-switches to "Invoice Sent" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <div class="step-title">Completed</div>
+                    <div class="step-description">Admin marks job complete → <strong>Auto-switches to "Completed" tab</strong></div>
+                </div>
+                <span class="auto-switch">AUTO</span>
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <h3>✨ Features</h3>
+            <ul>
+                <li><strong>Automatic Tab Switching:</strong> No more manual clicking between tabs</li>
+                <li><strong>Smart Navigation:</strong> Always takes you to the right place</li>
+                <li><strong>Smooth Transitions:</strong> Smooth scrolling to the relevant section</li>
+                <li><strong>Status Consistency:</strong> Tab always matches the current booking status</li>
+                <li><strong>Time Saving:</strong> Streamlines the admin workflow</li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The auto-switching happens automatically when you use any of the status update buttons (Confirm Site Visit, Send Quote, Confirm Job, Send Invoice, Mark Complete, etc.) or when you manually change a booking status.
+        </div>
+
+        <div class="workflow">
+            <h3>🔧 Technical Implementation</h3>
+            <p>The auto-switch functionality has been integrated into all the major status update functions:</p>
+            <ul>
+                <li><code>updateBookingStatus()</code> - General status updates</li>
+                <li><code>confirmSiteVisit()</code> - Site visit confirmation</li>
+                <li><code>confirmQuoteAndSendEmail()</code> - Quote confirmation</li>
+                <li><code>confirmJob()</code> - Job confirmation</li>
+                <li><code>confirmBooking()</code> - Booking completion</li>
+                <li><code>sendInvoiceFromBooking()</code> - Invoice sending</li>
+                <li><code>revertBookingStatus()</code> - Status reversions</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

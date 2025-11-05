@@ -31,3 +31,12 @@ LOCKOUT_DURATION=15
 
 # Allowed Admin Emails (comma-separated)
 ALLOWED_ADMIN_EMAILS=aiplanet100@gmail.com,stellartreemanagement@outlook.com,stellartestmanagement@outlook.com,stephanetmichaud@gmail.com,aiplanet1000@gmail.com,endereeska@gmail.com
+
+# Stripe Payment Configuration
+STRIPE_PUBLISHABLE_KEY=pk_test_...  # or pk_live_... for production
+STRIPE_SECRET_KEY=sk_test_...       # or sk_live_... for production
+PAYMENT_MODE=subscription            # or 'one-time' for single payments
+SUBSCRIPTION_AMOUNT=2999            # Amount in cents (e.g., 2999 = $29.99)
+SUBSCRIPTION_PRICE_ID=price_...     # Stripe Price ID (required for subscription mode, optional for one-time)
+CUSTOM_PRICE_ID=price_...            # Stripe Price ID for custom amount payments
+INITIAL_BALANCE=244300              # Initial remaining balance in cents (e.g., 244300 = $2443.00)

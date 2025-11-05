@@ -14,6 +14,9 @@ const app = express();
 app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
+// Import billing routes
+const billingRoutes = require('./routes/billing-routes');
+
 // Initialize email service
 const emailService = new EmailService();
 
@@ -454,6 +457,9 @@ function requireAdminAuth(req, res, next) {
 }
 
 // API Routes
+
+// Mount billing routes
+app.use('/api/billing', billingRoutes);
 
 // Get all bookings (admin only for full list) - excludes archived bookings
 app.get('/api/bookings', requireAdminAuth, async (req, res) => {

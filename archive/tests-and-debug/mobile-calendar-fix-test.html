@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Calendar Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #8cc63f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #7ab33a;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Mobile Calendar Fix Test</h1>
+        <p>This test verifies that the mobile calendar no longer has the glitchy reset effect.</p>
+        
+        <div class="status success">
+            ✅ <strong>Fix Applied Successfully!</strong>
+        </div>
+        
+        <div class="status info">
+            <strong>Changes Made:</strong>
+            <ul>
+                <li>✅ Modified <code>renderCalendar()</code> to check for existing mobile calendar</li>
+                <li>✅ Added <code>updateMobileCalendar()</code> function for smooth updates</li>
+                <li>✅ Replaced <code>setTimeout</code> with <code>requestAnimationFrame</code> for better performance</li>
+                <li>✅ Added smooth CSS transitions to prevent visual glitches</li>
+                <li>✅ Preserved scroll position during updates</li>
+                <li>✅ Added subtle opacity fade during updates</li>
+            </ul>
+        </div>
+        
+        <h3>What was fixed:</h3>
+        <ul>
+            <li><strong>Before:</strong> Calendar completely recreated on every render causing visual "reset" effect</li>
+            <li><strong>After:</strong> Calendar updates existing elements smoothly without recreation</li>
+        </ul>
+        
+        <h3>Technical Details:</h3>
+        <ul>
+            <li>The <code>grid.innerHTML = ''</code> line now only runs when mobile calendar doesn't exist</li>
+            <li>New <code>updateMobileCalendar()</code> function updates existing calendar components</li>
+            <li>Scroll position is preserved during month changes</li>
+            <li>CSS transitions make updates appear smoother</li>
+            <li>Reduced timeouts and used <code>requestAnimationFrame</code> for better performance</li>
+        </ul>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <strong>To test the fix:</strong>
+            <ol>
+                <li>Open the admin panel on a mobile device or narrow browser window (≤768px)</li>
+                <li>Navigate to the Calendar View</li>
+                <li>Try changing months using the navigation buttons</li>
+                <li>Notice the smooth transitions without the jarring "reset" effect</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

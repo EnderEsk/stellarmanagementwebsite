@@ -1,0 +1,552 @@
+/* Admin Trash Styles */
+/* Matches the website theme and provides slim list layout with trash-specific styling */
+
+.trash-view {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.trash-header {
+    margin-bottom: 2rem;
+}
+
+.trash-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--admin-secondary);
+    font-size: 14px;
+}
+
+.trash-search-input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.trash-search-input:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+.search-shortcut {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--admin-light-gray);
+    color: var(--admin-secondary);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--admin-secondary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.2s ease;
+}
+
+.search-clear-btn:hover {
+    background: var(--admin-primary);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Trash List - Slim List Layout */
+.trash-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.trash-item {
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.trash-item:hover {
+    border-color: var(--admin-accent);
+    box-shadow: 0 2px 8px rgba(140, 198, 63, 0.15);
+    background-color: var(--admin-light-gray);
+}
+
+/* Warning styling for items expiring soon (≤3 days) */
+.trash-item.expiring-soon {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+}
+
+.trash-item.expiring-soon:hover {
+    border-color: #c82333;
+    background-color: rgba(220, 53, 69, 0.1);
+    box-shadow: 0 2px 12px rgba(220, 53, 69, 0.25);
+}
+
+.trash-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    min-height: 50px;
+}
+
+.trash-item-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.trash-item-name {
+    font-weight: 600;
+    color: var(--admin-primary);
+    font-size: 1rem;
+    min-width: 150px;
+}
+
+.trash-item-email {
+    color: var(--admin-secondary);
+    font-size: 0.875rem;
+    min-width: 200px;
+}
+
+.trash-item-trashed {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--admin-secondary);
+    font-size: 0.875rem;
+    min-width: 120px;
+}
+
+.trash-item-trashed i {
+    color: var(--admin-danger);
+    font-size: 0.875rem;
+}
+
+.trash-item-days-remaining {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    min-width: 120px;
+}
+
+.trash-item-days-remaining.warning {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.trash-item-days-remaining.normal {
+    color: var(--admin-secondary);
+}
+
+.trash-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trash-item-menu {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--admin-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.trash-item-menu:hover {
+    background: var(--admin-light-gray);
+    color: var(--admin-primary);
+}
+
+.trash-item-menu i {
+    font-size: 14px;
+}
+
+/* Trash Item Menu Dropdown */
+.trash-item-menu-dropdown {
+    position: fixed;
+    background: white;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 10000;
+    overflow: hidden;
+}
+
+.menu-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--admin-border);
+    font-size: 14px;
+    color: var(--admin-text);
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background: var(--admin-light-gray);
+}
+
+.menu-item.danger {
+    color: var(--admin-danger);
+}
+
+.menu-item.danger:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.menu-item i {
+    font-size: 14px;
+    width: 16px;
+}
+
+/* Trash Details Modal */
+.trash-details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.trash-details-modal .modal-content {
+    max-width: 800px;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.trash-details-modal.show .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.trash-details-content {
+    padding: 0;
+}
+
+.trash-details-modal .modal-header {
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.trash-details-modal .modal-header h3 {
+    margin: 0;
+    color: var(--admin-primary);
+    font-size: 1.5rem;
+}
+
+.trash-details-modal .modal-body {
+    padding: 2rem;
+}
+
+.trash-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.detail-section h4 {
+    margin: 0 0 1rem 0;
+    color: var(--admin-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--admin-light-gray);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: var(--admin-secondary);
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    color: var(--admin-primary);
+    font-weight: 500;
+    text-align: right;
+}
+
+.detail-notes {
+    background: var(--admin-light-gray);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 0;
+    line-height: 1.5;
+    color: var(--admin-text);
+}
+
+.trash-details-modal .modal-footer {
+    padding: 1rem 2rem 1.5rem;
+    border-top: 1px solid var(--admin-border);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--admin-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--admin-border);
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--admin-primary);
+}
+
+.empty-state small {
+    font-size: 0.875rem;
+    color: var(--admin-secondary);
+}
+
+.empty-state.error i {
+    color: var(--admin-danger);
+}
+
+.empty-state.error p {
+    color: var(--admin-danger);
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--admin-accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #7ab33a;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--admin-light-gray);
+    color: var(--admin-text);
+    border: 1px solid var(--admin-border);
+}
+
+.btn-secondary:hover {
+    background: var(--admin-border);
+}
+
+.btn-danger {
+    background: var(--admin-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: var(--admin-primary);
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    transform: translateY(-1px);
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+}
+
+.notification-info {
+    background: var(--admin-info);
+}
+
+.notification-success {
+    background: var(--admin-success);
+}
+
+.notification-error {
+    background: var(--admin-danger);
+}
+
+.notification-warning {
+    background: var(--admin-warning);
+    color: var(--admin-primary);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .trash-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-container {
+        max-width: none;
+    }
+    
+    .trash-details-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .trash-details-modal .modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .trash-item-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .trash-item-name,
+    .trash-item-email {
+        min-width: auto;
+    }
+    
+    .trash-item-trashed,
+    .trash-item-days-remaining {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .trash-view {
+        padding: 1rem;
+    }
+    
+    .trash-item-content {
+        padding: 0.75rem;
+    }
+    
+    .trash-item-trashed,
+    .trash-item-days-remaining {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
